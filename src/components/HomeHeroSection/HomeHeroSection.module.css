@@ -1,0 +1,285 @@
+/* HomeHeroSection — 3-layer: video → animations → text */
+
+.hero {
+    position: relative;
+    width: 100%;
+    height: 100vh;
+    min-height: 600px;
+    overflow: hidden;
+}
+
+/* Bottom fade for seamless blending into next section */
+.hero::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 120px;
+    z-index: 3;
+    pointer-events: none;
+    background: linear-gradient(to top, var(--fade-bottom, #08080D), transparent);
+}
+
+/* ═══════════════════════════════════════
+   Layer 1 — Full-screen video / image
+   ═══════════════════════════════════════ */
+
+.videoLayer {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+}
+
+.bgVideo {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.videoOverlay {
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(ellipse 80% 60% at 50% 50%, rgba(30, 120, 232, 0.06) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 50% at 60% 40%, rgba(30, 40, 80, 0.08) 0%, transparent 60%),
+        linear-gradient(180deg, rgba(12, 12, 20, 0.35) 0%, rgba(10, 10, 16, 0.25) 40%, rgba(8, 8, 13, 0.4) 100%);
+}
+
+/* ═══════════════════════════════════════
+   Layer 2 — Particle animations
+   ═══════════════════════════════════════ */
+
+.animationLayer {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+}
+
+/* Grid lines */
+.animationLayer::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+        linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+    background-size: 48px 48px;
+    mask-image: radial-gradient(ellipse 60% 50% at 50% 50%, black 10%, transparent 65%);
+    -webkit-mask-image: radial-gradient(ellipse 60% 50% at 50% 50%, black 10%, transparent 65%);
+    pointer-events: none;
+}
+
+/* Glows */
+.glow {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(100px);
+    pointer-events: none;
+}
+
+.glow1 {
+    width: 45%;
+    aspect-ratio: 1;
+    background: rgba(30, 120, 232, 0.09);
+    top: 15%;
+    left: 28%;
+    animation: breathe 7s ease-in-out infinite alternate;
+}
+
+.glow2 {
+    width: 30%;
+    aspect-ratio: 1;
+    background: rgba(80, 120, 255, 0.04);
+    bottom: 10%;
+    right: 15%;
+    animation: breathe 7s ease-in-out infinite alternate-reverse;
+}
+
+@keyframes breathe {
+    0% {
+        transform: scale(1);
+        opacity: 0.6;
+    }
+
+    100% {
+        transform: scale(1.2);
+        opacity: 1;
+    }
+}
+
+/* Scan Rings */
+.scanRings {
+    position: absolute;
+    top: 49%;
+    left: 73%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+}
+
+.scanRing {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    border: 1px solid rgba(30, 120, 232, 0.12);
+    animation: ring 5s ease-out infinite;
+}
+
+.scanRing:nth-child(2) {
+    animation-delay: 1.67s;
+}
+
+.scanRing:nth-child(3) {
+    animation-delay: 3.33s;
+}
+
+@keyframes ring {
+    0% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 0.7;
+    }
+
+    100% {
+        transform: translate(-50%, -50%) scale(8);
+        opacity: 0;
+    }
+}
+
+/* Particles */
+.particles {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+.dot {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(30, 120, 232, 0.35);
+    animation: drift linear infinite;
+}
+
+@keyframes drift {
+    0% {
+        transform: translateY(0) translateX(0);
+        opacity: 0;
+    }
+
+    15% {
+        opacity: 1;
+    }
+
+    85% {
+        opacity: 1;
+    }
+
+    100% {
+        transform: translateY(-140px) translateX(30px);
+        opacity: 0;
+    }
+}
+
+/* Scanline texture */
+.scanline {
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(0deg,
+            transparent,
+            transparent 3px,
+            rgba(0, 0, 0, 0.015) 3px,
+            rgba(0, 0, 0, 0.015) 4px);
+    pointer-events: none;
+}
+
+/* Noise texture */
+.noise {
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");
+    pointer-events: none;
+}
+
+/* ═══════════════════════════════════════
+   Layer 3 — Text content
+   ═══════════════════════════════════════ */
+
+.contentLayer {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    padding: var(--spacing-4xl) var(--spacing-4xl) var(--spacing-4xl);
+}
+
+.textColumn {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    gap: var(--spacing-md);
+    max-width: 800px;
+    padding: var(--spacing-2xl);
+}
+
+.title {
+    font-family: var(--font-family-heading);
+    font-size: 3.5rem;
+    line-height: 100%;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    font-weight: 400;
+    color: var(--color-text-primary);
+}
+
+.subtitle {
+    font-size: var(--font-size-md);
+    font-weight: 400;
+    line-height: 1.6;
+    color: var(--color-text-secondary);
+    max-width: 520px;
+}
+
+.ctaWrapper {
+    margin-top: var(--spacing-lg);
+}
+
+/* ── Responsive ── */
+@media (max-width: 1024px) {
+    .contentLayer {
+        padding: var(--spacing-lg) var(--spacing-md);
+        padding-bottom: var(--spacing-4xl);
+        align-items: flex-end;
+    }
+
+    .textColumn {
+        max-width: 100%;
+        padding: var(--spacing-lg) 0;
+    }
+
+    .title {
+        font-size: 2.25rem;
+        line-height: 95%;
+    }
+
+    .subtitle {
+        font-size: var(--font-size-sm);
+    }
+}
+
+@media (max-width: 640px) {
+    .title {
+        font-size: 2rem;
+    }
+
+    .hero {
+        min-height: 500px;
+    }
+}

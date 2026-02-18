@@ -1,4 +1,4 @@
-import { Banner, StatsSection, CardGrid, Slider, Newsletter } from '@/components';
+import { Banner, StatsSection, CardGrid, Slider, Newsletter, OurTeam } from '@/components';
 
 export const metadata = {
     title: 'About | DroneAnatomy',
@@ -11,11 +11,12 @@ export default function AboutPage() {
             <Banner
                 title="Our Belief"
                 subtitle="The future of flight is autonomous and building it responsibly is one of the most important engineering challenges of our time."
-                contentPosition="center"
-                backgroundImage="/images/mission.jpg"
+                contentPosition="bottom-center"
+                backgroundImage="/images/mission_banner.png"
                 textAlign="center"
                 titleSize='lg'
                 subtitleSize='xl'
+                overlayStyle='light'
             />
 
             <StatsSection
@@ -135,14 +136,27 @@ export default function AboutPage() {
             />
 
 
-            <Banner
-                title="Our Team"
-                // subtitle="We're always looking for talented engineers, designers, and pilots to join our mission. Explore career opportunities."
-                ctaText="View Careers"
-                ctaLink="/careers"
-                backgroundImage="/images/aboutlayout5.jpg"
-                contentPosition="center-left"
-                overlayStyle="dark"
+            <OurTeam
+                members={[
+                    { name: 'Saurabh Jha', role: 'Co-Founder & CEO', image: '/images/j3.JPG' },
+                    { name: 'Mayank', role: 'Co-Founder & COO', image: '/images/j6.JPG' },
+                    { name: 'Dipanshu', role: 'Co-Founder & CTO', image: '/images/j9.JPG' },
+                    { name: 'Rahul Sharma', role: 'Lead Engineer', image: '/images/j12.JPG' },
+                    { name: 'Priya Patel', role: 'Avionics Designer', image: '/images/j.JPG' },
+                    { name: 'Vikram Singh', role: 'Drone Pilot Lead', image: '/images/j10.JPG' },
+                    { name: 'Ananya Gupta', role: 'Software Engineer' },
+                    { name: 'Arjun Mehta', role: 'Mechanical Engineer' },
+                    { name: 'Neha Verma', role: 'Operations Manager' },
+                    { name: 'Neha Verma', role: 'Operations Manager' },
+                    { name: 'Neha Verma', role: 'Operations Manager' },
+                    { name: 'Neha Verma', role: 'Operations Manager' },
+                    { name: 'Neha Verma', role: 'Operations Manager' },
+                    { name: 'Neha Verma', role: 'Operations Manager' },
+                    { name: 'Neha Verma', role: 'Operations Manager' },
+                    { name: 'Neha Verma', role: 'Operations Manager' },
+                    { name: 'Neha Verma', role: 'Operations Manager' },
+                    { name: 'Neha Verma', role: 'Operations Manager' },
+                ]}
             />
 
             <Newsletter />

@@ -34,6 +34,9 @@ export interface BannerProps {
     className?: string;
     textColor?: 'black' | 'white';
     subtitleSize?: 'sm' | 'md' | 'lg' | 'xl';
+    useParticleBackground?: boolean;
+    fadeTopColor?: string;
+    fadeBottomColor?: string;
 }
 
 const subtitleSizeClassMap: Record<string, string> = {
@@ -81,8 +84,12 @@ export const Banner: React.FC<BannerProps> = ({
     className = '',
     textColor,
     subtitleSize,
+    useParticleBackground = false,
+    fadeTopColor = 'transparent',
+    fadeBottomColor = 'transparent',
 }) => {
     const videoRef = useRef<HTMLVideoElement>(null);
+    const particlesRef = useRef<HTMLDivElement>(null);
     const [isMobile, setIsMobile] = useState(false);
     const [email, setEmail] = useState('');
     const [submitted, setSubmitted] = useState(false);
@@ -121,6 +128,25 @@ export const Banner: React.FC<BannerProps> = ({
         observer.observe(video);
         return () => observer.disconnect();
     }, [isMobile]);
+
+    // Generate particle dots
+    useEffect(() => {
+        const container = particlesRef.current;
+        if (!container || !useParticleBackground) return;
+        for (let i = 0; i < 25; i++) {
+            const d = document.createElement('div');
+            d.className = styles.dot;
+            d.style.left = (10 + Math.random() * 80) + '%';
+            d.style.top = (20 + Math.random() * 60) + '%';
+            d.style.animationDuration = (5 + Math.random() * 7) + 's';
+            d.style.animationDelay = (-Math.random() * 10) + 's';
+            const size = (1.5 + Math.random() * 2) + 'px';
+            d.style.width = size;
+            d.style.height = size;
+            container.appendChild(d);
+        }
+        return () => { container.innerHTML = ''; };
+    }, [useParticleBackground]);
 
     const handleScrollClick = () => {
         window.scrollBy({
@@ -163,35 +189,55 @@ export const Banner: React.FC<BannerProps> = ({
     const positionClass = positionClassMap[contentPosition];
 
     return (
-        <section className={`${styles.banner} ${className}`}>
+        <section
+            className={`${styles.banner} ${useParticleBackground ? styles.particleBg : ''} ${className}`}
+            style={{ '--fade-top': fadeTopColor, '--fade-bottom': fadeBottomColor } as React.CSSProperties}
+        >
             {/* Background */}
             <div className={styles.backgroundContainer}>
-                {/* Show video only on desktop if provided */}
-                {backgroundVideo && !isMobile ? (
-                    <video
-                        ref={videoRef}
-                        className={styles.backgroundVideo}
-                        src={backgroundVideo}
-                        muted
-                        loop
-                        playsInline
-                        poster={backgroundImage}
-                    />
-                ) : (isMobile && backgroundImageMobile) ? (
-                    <img
-                        className={styles.backgroundImage}
-                        src={backgroundImageMobile}
-                        alt=""
-                        loading="lazy"
-                    />
-                ) : backgroundImage ? (
-                    <img
-                        className={styles.backgroundImage}
-                        src={backgroundImage}
-                        alt=""
-                        loading="lazy"
-                    />
-                ) : null}
+                {useParticleBackground ? (
+                    <>
+                        <div className={`${styles.glow} ${styles.glow1}`} />
+                        <div className={`${styles.glow} ${styles.glow2}`} />
+                        <div className={styles.scanRings}>
+                            <div className={styles.scanRing} />
+                            <div className={styles.scanRing} />
+                            <div className={styles.scanRing} />
+                        </div>
+                        <div className={styles.particles} ref={particlesRef} />
+                        <div className={styles.scanline} />
+                        <div className={styles.noise} />
+                    </>
+                ) : (
+                    <>
+                        {/* Show video only on desktop if provided */}
+                        {backgroundVideo && !isMobile ? (
+                            <video
+                                ref={videoRef}
+                                className={styles.backgroundVideo}
+                                src={backgroundVideo}
+                                muted
+                                loop
+                                playsInline
+                                poster={backgroundImage}
+                            />
+                        ) : (isMobile && backgroundImageMobile) ? (
+                            <img
+                                className={styles.backgroundImage}
+                                src={backgroundImageMobile}
+                                alt=""
+                                loading="lazy"
+                            />
+                        ) : backgroundImage ? (
+                            <img
+                                className={styles.backgroundImage}
+                                src={backgroundImage}
+                                alt=""
+                                loading="lazy"
+                            />
+                        ) : null}
+                    </>
+                )}
             </div>
 
             {/* Overlay */}

@@ -9,6 +9,9 @@ import styles from './Header.module.css';
 const productItems = [
     { label: 'P10 Pro', href: '/products/p10-pro' },
     { label: 'NOXR-1', href: '/products/noxr-1' },
+    { label: 'Cyclops 3', href: '/products/cyclops-3' },
+    { label: 'Cyclops Mini', href: '/products/cyclops-mini' },
+    { label: 'LiftX100', href: '/products/liftx100' },
 ];
 
 // const companyItems = [
@@ -28,17 +31,31 @@ const navItems = [
 const upcomingUpdates = [
     {
         id: '1',
-        title: 'From 10th-grade Student to Drone Startup Founder',
-        image: 'https://img.youtube.com/vi/wzhFkAOHIrs/hqdefault.jpg',
-        date: 'Jan 6, 2026',
-        href: 'https://www.youtube.com/watch?v=wzhFkAOHIrs',
+        title: 'NOXR-1',
+        image: '/images/NOXR-COMING-SOON.png',
+        date: 'Coming Soon',
+        href: '/products/noxr-1',
     },
     {
         id: '2',
-        title: 'India’s Digital Revolution: From 25 Cr to 97 Cr Internet Users',
-        image: 'https://img.youtube.com/vi/IQPYPF3ohXA/hqdefault.jpg',
-        date: 'Sep 15, 2025',
-        href: 'https://www.youtube.com/watch?v=IQPYPF3ohXA',
+        title: 'Cyclops 3',
+        image: '/images/CYCLOPS3.png',
+        date: 'Coming Soon',
+        href: '/products/cyclops-3',
+    },
+    {
+        id: '3',
+        title: 'Cyclops Mini',
+        image: '/images/CYCLOPS.png',
+        date: 'Coming Soon',
+        href: '/products/cyclops-mini',
+    },
+    {
+        id: '4',
+        title: 'LiftX100',
+        image: '/images/LIFTX100.png',
+        date: 'Coming Soon',
+        href: '/products/liftx100',
     },
 ];
 
@@ -135,7 +152,7 @@ export const Header: React.FC = () => {
                     onMouseLeave={() => setIsUpdatesOpen(false)}
                 >
                     <CTAButton href="/updates">
-                        Upcoming Updates
+                        Upcoming Launches
                     </CTAButton>
                     <NewsDropdown isOpen={isUpdatesOpen} items={upcomingUpdates} />
                 </div>

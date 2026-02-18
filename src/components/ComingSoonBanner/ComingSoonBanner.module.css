@@ -1,0 +1,180 @@
+/* ComingSoonBanner Component Styles */
+
+.banner {
+    position: relative;
+    width: 100%;
+    height: 100vh;
+    min-height: 600px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Background */
+.backgroundContainer {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+}
+
+.backgroundImage,
+.backgroundVideo {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Overlay */
+.overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: linear-gradient(to bottom,
+            rgba(0, 0, 0, 0.3) 0%,
+            rgba(0, 0, 0, 0.15) 50%,
+            rgba(0, 0, 0, 0.7) 100%);
+}
+
+/* Center text */
+.centerContent {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    padding: var(--spacing-2xl) var(--spacing-xl) 0;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.title {
+    font-family: var(--font-family-heading);
+    font-size: 6rem;
+    line-height: 100%;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    font-weight: 400;
+    color: var(--color-text-primary);
+}
+
+.subtitle {
+    font-size: var(--font-size-base);
+    font-weight: 400;
+    line-height: 1.5;
+    color: var(--color-text-secondary);
+    margin-top: var(--spacing-md);
+    max-width: 500px;
+}
+
+/* Feature strip — pinned to bottom of banner */
+.featureStrip {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    padding: var(--spacing-2xl) var(--spacing-4xl);
+    /* border-top: 1px solid rgba(255, 255, 255, 0.06); */
+    /* background: rgba(0, 0, 0, 0.25); */
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+}
+
+.featureGrid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--spacing-xl);
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.featureItem {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: var(--spacing-sm) var(--spacing-md);
+}
+
+.featureIcon {
+    width: 40px;
+    height: 40px;
+    margin-bottom: var(--spacing-md);
+    color: rgba(255, 255, 255, 0.45);
+    transition: color 350ms ease, transform 350ms ease;
+}
+
+.featureItem:hover .featureIcon {
+    color: rgba(255, 255, 255, 0.8);
+    transform: translateY(-2px);
+}
+
+.featureTitle {
+    font-family: var(--font-family-heading);
+    font-size: var(--font-size-sm);
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--color-text-primary);
+    margin-bottom: 4px;
+}
+
+.featureDescription {
+    font-family: var(--font-family);
+    font-size: var(--font-size-xs);
+    color: var(--color-text-muted);
+    line-height: 1.5;
+    max-width: 260px;
+}
+
+/* ============================
+   Responsive
+   ============================ */
+
+@media (max-width: 1024px) {
+    .title {
+        font-size: 3.5rem;
+    }
+
+    .featureStrip {
+        padding: var(--spacing-xl) var(--spacing-lg);
+    }
+
+    .featureGrid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--spacing-lg);
+    }
+}
+
+@media (max-width: 640px) {
+    .banner {
+        min-height: 500px;
+    }
+
+    .title {
+        font-size: 2.5rem;
+    }
+
+    .featureStrip {
+        padding: var(--spacing-lg) var(--spacing-md);
+    }
+
+    .featureGrid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--spacing-md);
+    }
+
+    .featureIcon {
+        width: 32px;
+        height: 32px;
+    }
+
+    .featureTitle {
+        font-size: var(--font-size-xs);
+    }
+
+    .featureDescription {
+        display: none;
+    }
+}

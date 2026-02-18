@@ -6,7 +6,7 @@ export default function CareersPage() {
             {/* Background Image */}
             <div className={styles.backgroundContainer}>
                 <img
-                    src="/images/careers-hero.jpg"
+                    src="/images/dawn.jpg"
                     alt=""
                     className={styles.backgroundImage}
                 />

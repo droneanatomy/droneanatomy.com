@@ -19,7 +19,7 @@ export const Footer: React.FC = () => {
                 {/* Social Icons */}
                 <div className={styles.socialIcons}>
                     <a
-                        href="https://linkedin.com/company/droneanatomy"
+                        href="https://linkedin.com/company/drone-anatomy"
                         target="_blank"
                         rel="noopener noreferrer"
                         className={styles.socialIcon}
@@ -30,7 +30,7 @@ export const Footer: React.FC = () => {
                         </svg>
                     </a>
                     <a
-                        href="https://youtube.com/@droneanatomy"
+                        href="https://www.youtube.com/@droneanatomy5644"
                         target="_blank"
                         rel="noopener noreferrer"
                         className={styles.socialIcon}

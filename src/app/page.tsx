@@ -1,20 +1,10 @@
-import { Banner } from '@/components';
+import { Banner, HomeHeroSection, WireframeTerrain } from '@/components';
 
 export default function Home() {
     return (
         <>
-            {/* Hero Banner */}
-            <Banner
-                title="Making Autonomous Flight Inevitable"
-                subtitle="Drone Anatomy exists to build the fundamental systems that will define the next era of autonomous aviation"
-                ctaText="Explore"
-                ctaLink="/about"
-                backgroundImage='/images/hero_banner.jpg'
-                // backgroundVideo='/videos/dronehero.mov'
-                backgroundImageMobile='/images/hero_banner_mob.jpg'
-                contentPosition="center-left"
-                overlayStyle="dark"
-            />
+            {/* Hero Section */}
+            <HomeHeroSection heroVideo="/videos/hero.mp4" />
 
             {/* Drone X1 Banner */}
             <Banner
@@ -30,7 +20,7 @@ export default function Home() {
             />
 
             {/* Enterprise Solutions Banner */}
-            <Banner
+            {/* <Banner
                 title="The infrastructure behind autonomous flight"
                 subtitle="We design and build the system that make autonomous aviation reliable, scalable, and inevitable."
                 ctaText="Explore"
@@ -38,6 +28,14 @@ export default function Home() {
                 backgroundImage='/images/layout3.jpg'
                 contentPosition="top-left"
                 overlayStyle="dark"
+            /> */}
+
+            <WireframeTerrain
+                title="The infrastructure behind autonomous flight"
+                subtitle="We design and build the system that make autonomous aviation reliable, scalable, and inevitable."
+                ctaText="Explore"
+                ctaLink="/updates"
+                contentPosition="center-left"
             />
 
             {/* Drone X1 Banner */}
@@ -46,7 +44,7 @@ export default function Home() {
                 subtitle="Our systems are developed and manufactured in India, reducing dependency while building sovereign capability for autonomous aviation."
                 ctaText="Know More"
                 ctaLink="/products/p10-pro"
-                backgroundImage='/images/layout4.jpg'
+                backgroundVideo='/videos/indegenous.mp4'
                 contentPosition="top-right"
                 overlayStyle="dark"
             />
@@ -57,9 +55,11 @@ export default function Home() {
                 subtitle="We design from failure -> prevention -> reliability."
                 ctaText="Learn More"
                 ctaLink="/about"
-                backgroundImage='/images/layout5.jpg'
+                // backgroundImage='/images/layout5.jpg'
+                backgroundVideo='/videos/drone_topview.mp4'
                 contentPosition="center-left"
                 overlayStyle="dark"
+                fadeBottomColor='black'
             />
         </>
     );

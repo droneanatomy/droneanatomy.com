@@ -5,7 +5,7 @@
     width: 350px;
     background-color: transparent;
 
-    padding: 1.5rem;
+    padding: 0 var(--spacing-lg);
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
@@ -89,9 +89,9 @@
 
 .thumbnail {
     width: 60px;
-    height: 60px;
-    object-fit: cover;
-    border-radius: 4px;
+    height: fit-content;
+    object-fit: contain;
+    border-radius: 2px;
     flex-shrink: 0;
 }
 

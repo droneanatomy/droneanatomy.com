@@ -63,17 +63,6 @@ export default function P10ProPage() {
                 textAlign='left'
             />
 
-            <Banner
-                title="Indigenous Design and Manufacturing"
-                titleSize='sm'
-                subtitle=""
-                contentPosition="top-left"
-                backgroundImage='/images/p10.png'
-                backgroundImageMobile='/images/updates-hero.png'
-                overlayStyle="light"
-                textAlign='left'
-            />
-
             <FeatureShowcase
                 title="Introducing India's First Ultra-Compact Agricultural Drone!"
                 features={[

@@ -27,8 +27,8 @@ export const NewsDropdown: React.FC<NewsDropdownProps> = ({
     return (
         <div className={`${styles.dropdownContainer} ${isOpen ? styles.open : ''} ${isMobile ? styles.mobile : ''}`}>
             <div className={styles.itemsContainer}>
-                {items.slice(0, 2).map((item) => (
-                    <a key={item.id} href={item.href} className={styles.newsItem}>
+                {items.slice(0, 4).map((item) => (
+                    <a key={item.id} href={item.href} className={styles.newsItem} target='_blank' rel='noopener noreferrer'>
                         <img src={item.image} alt={item.title} className={styles.thumbnail} />
                         <div className={styles.content}>
                             <span className={styles.itemTitle}>{item.title}</span>
@@ -38,11 +38,11 @@ export const NewsDropdown: React.FC<NewsDropdownProps> = ({
                 ))}
             </div>
 
-            <div className={styles.footer}>
+            {/* <div className={styles.footer}>
                 <a href={viewAllHref} className={styles.viewAll}>
                     All Updates
                 </a>
-            </div>
+            </div> */}
         </div>
     );
 };
