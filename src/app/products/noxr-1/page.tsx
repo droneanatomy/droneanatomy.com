@@ -11,7 +11,7 @@ export default function Noxr1Page() {
             <ComingSoonBanner
                 title="Coming Soon"
                 // subtitle="AGRICULTURE DRONE, MADE FOR INDIAN CONDITIONS."
-                backgroundImage='/images/NOXR-COMING-SOON.png'
+                backgroundImage='/images/NOXR-COMING-SOON.jpg'
             />
             <Newsletter />
         </>

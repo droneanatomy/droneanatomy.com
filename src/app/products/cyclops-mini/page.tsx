@@ -10,7 +10,7 @@ export default function CyclopsMiniPage() {
         <>
             <ComingSoonBanner
                 title="Coming Soon"
-                backgroundImage='/images/CYCLOPS.png'
+                backgroundImage='/images/CYCLOPS.jpg'
             />
             <Newsletter />
         </>

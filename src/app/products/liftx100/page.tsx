@@ -10,7 +10,7 @@ export default function LiftX100Page() {
         <>
             <ComingSoonBanner
                 title="Coming Soon"
-                backgroundImage='/images/liftx100.png'
+                backgroundImage='/images/liftx100.jpg'
             />
             <Newsletter />
         </>

@@ -1,8 +1,7 @@
 /* DroneAnatomy - Global Styles */
 /* SpaceX-inspired dark theme */
 
-/* Roboto Mono - Monospace (must be first) */
-@import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&display=swap');
+
 
 /* ========================================
    FONT FACES
@@ -100,7 +99,7 @@
   --font-family-heading: 'D-DIN-Bold', Arial, Verdana, sans-serif;
   --font-family-condensed: 'D-DIN Condensed', var(--font-family);
   --font-family-expanded: 'D-DIN Exp', var(--font-family);
-  --font-family-mono: 'Roboto Mono', monospace;
+  --font-family-mono: var(--font-roboto-mono), monospace;
 
   /* Typography - Font Sizes */
   --font-size-xs: 0.75rem;

@@ -36,7 +36,7 @@ export default function Home() {
                 ctaText="Explore"
                 ctaLink="/updates"
                 contentPosition="center-left"
-                backgroundImageMobile="/images/layout2_mob.jpg"
+                backgroundImageMobile="/images/infra-mob.jpg"
             />
 
             {/* Drone X1 Banner */}

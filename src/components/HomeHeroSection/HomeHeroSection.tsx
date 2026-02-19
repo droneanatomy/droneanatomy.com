@@ -28,7 +28,7 @@ export const HomeHeroSection: React.FC<HomeHeroSectionProps> = ({
     const particlesRef = useRef<HTMLDivElement>(null);
     const sectionRef = useRef<HTMLElement>(null);
     const videoRef = useRef<HTMLVideoElement>(null);
-    const [isMobile, setIsMobile] = useState(false);
+    const [isMobile, setIsMobile] = useState(true);
 
     useEffect(() => {
         const check = () => setIsMobile(window.innerWidth <= 1024);

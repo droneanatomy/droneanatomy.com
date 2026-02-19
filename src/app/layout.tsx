@@ -1,6 +1,13 @@
 import type { Metadata } from 'next';
+import localFont from 'next/font/local';
 import { Header, Footer } from '@/components';
 import './globals.css';
+
+const robotoMono = localFont({
+  src: '../../public/fonts/Roboto_Mono/RobotoMono-VariableFont_wght.ttf',
+  variable: '--font-roboto-mono',
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
   title: 'DroneAnatomy - Advanced Aerial Solutions',
@@ -15,15 +22,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" className={robotoMono.variable}>
       <head>
-        <link rel="preload" href="/videos/hero_vid.mp4" as="video" type="video/mp4" />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link
-          rel="preconnect"
-          href="https://fonts.gstatic.com"
-          crossOrigin="anonymous"
-        />
+        <link rel="preload" href="/videos/hero_vid.mp4" as="video" type="video/mp4" media="(min-width: 1024px)" />
       </head>
       <body>
         <Header />
