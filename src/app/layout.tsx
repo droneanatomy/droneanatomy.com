@@ -17,6 +17,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
+        <link rel="preload" href="/videos/hero_vid.mp4" as="video" type="video/mp4" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link
           rel="preconnect"

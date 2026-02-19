@@ -296,6 +296,16 @@ video {
   display: block;
 }
 
+video {
+  will-change: transform;
+}
+
+/* Off-screen sections skip rendering until scrolled into view */
+section {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 100vh;
+}
+
 /* ========================================
    BUTTONS
    ======================================== */

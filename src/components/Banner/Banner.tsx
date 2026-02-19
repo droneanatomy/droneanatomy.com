@@ -89,8 +89,10 @@ export const Banner: React.FC<BannerProps> = ({
     fadeBottomColor = 'transparent',
 }) => {
     const videoRef = useRef<HTMLVideoElement>(null);
+    const sectionRef = useRef<HTMLElement>(null);
     const particlesRef = useRef<HTMLDivElement>(null);
     const [isMobile, setIsMobile] = useState(false);
+    const [isInView, setIsInView] = useState(false);
     const [email, setEmail] = useState('');
     const [submitted, setSubmitted] = useState(false);
 
@@ -105,29 +107,37 @@ export const Banner: React.FC<BannerProps> = ({
         return () => window.removeEventListener('resize', checkMobile);
     }, []);
 
-    // Autoplay video when in view
+    // Observe section visibility for lazy video loading
     useEffect(() => {
-        const video = videoRef.current;
-        if (!video || isMobile) return;
+        const section = sectionRef.current;
+        if (!section || isMobile || !backgroundVideo) return;
 
         const observer = new IntersectionObserver(
             (entries) => {
                 entries.forEach((entry) => {
-                    if (entry.isIntersecting) {
-                        video.play().catch(() => {
-                            // Autoplay was prevented
-                        });
-                    } else {
-                        video.pause();
-                    }
+                    setIsInView(entry.isIntersecting);
                 });
             },
-            { threshold: 0.3 }
+            { threshold: 0.1, rootMargin: '200px' }
         );
 
-        observer.observe(video);
+        observer.observe(section);
         return () => observer.disconnect();
-    }, [isMobile]);
+    }, [isMobile, backgroundVideo]);
+
+    // Play/pause video based on visibility
+    useEffect(() => {
+        const video = videoRef.current;
+        if (!video || isMobile) return;
+
+        if (isInView) {
+            video.play().catch(() => {
+                // Autoplay was prevented
+            });
+        } else {
+            video.pause();
+        }
+    }, [isInView, isMobile]);
 
     // Generate particle dots
     useEffect(() => {
@@ -190,6 +200,7 @@ export const Banner: React.FC<BannerProps> = ({
 
     return (
         <section
+            ref={sectionRef}
             className={`${styles.banner} ${useParticleBackground ? styles.particleBg : ''} ${className}`}
             style={{ '--fade-top': fadeTopColor, '--fade-bottom': fadeBottomColor } as React.CSSProperties}
         >
@@ -215,10 +226,11 @@ export const Banner: React.FC<BannerProps> = ({
                             <video
                                 ref={videoRef}
                                 className={styles.backgroundVideo}
-                                src={backgroundVideo}
+                                src={isInView ? backgroundVideo : undefined}
                                 muted
                                 loop
                                 playsInline
+                                preload="none"
                                 poster={backgroundImage}
                             />
                         ) : (isMobile && backgroundImageMobile) ? (

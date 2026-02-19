@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import * as THREE from 'three';
 import { CustomButton } from '../CustomButton';
+import { Banner } from '../Banner';
 import styles from './WireframeTerrain.module.css';
 
 export type ContentPosition =
@@ -17,6 +18,7 @@ export interface WireframeTerrainProps {
     ctaText?: string;
     ctaLink?: string;
     contentPosition?: ContentPosition;
+    backgroundImageMobile?: string;
 }
 
 const positionClassMap: Record<ContentPosition, string> = {
@@ -38,6 +40,7 @@ export const WireframeTerrain: React.FC<WireframeTerrainProps> = ({
     ctaText,
     ctaLink = '/',
     contentPosition = 'top-left',
+    backgroundImageMobile,
 }) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -45,8 +48,20 @@ export const WireframeTerrain: React.FC<WireframeTerrainProps> = ({
     const tag1Ref = useRef<HTMLDivElement>(null);
     const tag2Ref = useRef<HTMLDivElement>(null);
     const hudBrRef = useRef<HTMLDivElement>(null);
+    const isInViewRef = useRef(false);
+    const [isMobile, setIsMobile] = useState(false);
+
+    // Detect mobile — skip Three.js entirely on small screens
+    useEffect(() => {
+        const check = () => setIsMobile(window.innerWidth <= 1024);
+        check();
+        window.addEventListener('resize', check);
+        return () => window.removeEventListener('resize', check);
+    }, []);
 
     useEffect(() => {
+        if (isMobile) return; // Skip Three.js on mobile
+
         const container = containerRef.current;
         const canvas = canvasRef.current;
         const bloomCanvas = bloomRef.current;
@@ -235,6 +250,10 @@ export const WireframeTerrain: React.FC<WireframeTerrainProps> = ({
 
         function animate() {
             animId = requestAnimationFrame(animate);
+
+            // Skip all work when off-screen (saves GPU/CPU)
+            if (!isInViewRef.current) return;
+
             const t = clock.getElapsedTime();
 
             // Terrain waves
@@ -294,6 +313,17 @@ export const WireframeTerrain: React.FC<WireframeTerrainProps> = ({
         }
         animate();
 
+        // ── Viewport observer — pause when off-screen ─────────────
+        const viewObserver = new IntersectionObserver(
+            (entries) => {
+                entries.forEach((entry) => {
+                    isInViewRef.current = entry.isIntersecting;
+                });
+            },
+            { threshold: 0.05, rootMargin: '100px' }
+        );
+        viewObserver.observe(container);
+
         // ── HUD counter ───────────────────────────────────────────
         const hudInterval = setInterval(() => {
             const alt = Math.max(100, 2400 - Math.round((30 - camZ) * 3));
@@ -320,6 +350,7 @@ export const WireframeTerrain: React.FC<WireframeTerrainProps> = ({
             cancelAnimationFrame(animId);
             clearInterval(hudInterval);
             ro.disconnect();
+            viewObserver.disconnect();
             renderer.dispose();
             scene.traverse(obj => {
                 if (obj instanceof THREE.Mesh) {
@@ -329,7 +360,21 @@ export const WireframeTerrain: React.FC<WireframeTerrainProps> = ({
                 }
             });
         };
-    }, []);
+    }, [isMobile]);
+
+    if (isMobile) {
+        return (
+            <Banner
+                title={title}
+                subtitle={subtitle}
+                ctaText={ctaText}
+                ctaLink={ctaLink}
+                backgroundImageMobile={backgroundImageMobile}
+                contentPosition={contentPosition}
+                overlayStyle="dark"
+            />
+        );
+    }
 
     return (
         <div ref={containerRef} className={`${styles.container} ${className}`}>

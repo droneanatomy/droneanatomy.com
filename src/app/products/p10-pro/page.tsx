@@ -29,7 +29,7 @@ export default function P10ProPage() {
                         title: 'P10 Pro Overview',
                         description: "The Drone Anatomy P10 Pro is a high-performance agricultural drone designed for precision spraying, crop monitoring, and autonomous field operations. Engineered for reliability and efficiency, P10 Pro integrates advanced flight control, intelligent payload systems, and rugged airframe construction to operate consistently across large and demanding agricultural environments.",
                         // backgroundImage: '/images/p10pro-overview.png',
-                        backgroundVideo: '/videos/drone-show.mp4',
+                        backgroundVideo: '/videos/dronep10.mp4',
                         // sideVideo: '/videos/opening-drone.mp4',
                         specs: [
                             { label: 'Max Flight Time', value: '30 minutes' },
@@ -46,7 +46,7 @@ export default function P10ProPage() {
                 titleSize='sm'
                 subtitle="Up to 5L/min"
                 contentPosition="bottom-left"
-                backgroundVideo='/videos/spray.mp4'
+                backgroundVideo='/videos/p10-spray.mp4'
                 backgroundImageMobile='/images/p10pro-spray-m.png'
                 overlayStyle="light"
                 textAlign='left'
@@ -57,8 +57,8 @@ export default function P10ProPage() {
                 titleSize='sm'
                 subtitle="Enhanced Visibility and Safety during nighttime operations"
                 contentPosition="top-left"
-                backgroundVideo='/videos/night-video.mp4'
-                backgroundImageMobile='/images/updates-hero.png'
+                backgroundVideo='/videos/night-flight-p10.mp4'
+                backgroundImageMobile='/images/p10pro-night-m.png'
                 overlayStyle="light"
                 textAlign='left'
             />

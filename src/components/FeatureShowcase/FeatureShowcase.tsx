@@ -69,6 +69,7 @@ export const FeatureShowcase: React.FC<FeatureShowcaseProps> = ({
                         src={mainImage}
                         alt=""
                         className={styles.mainImage}
+                        loading="lazy"
                     />
                 </div>
             </div>
@@ -82,6 +83,7 @@ export const FeatureShowcase: React.FC<FeatureShowcaseProps> = ({
                                 src={image}
                                 alt=""
                                 className={styles.galleryImage}
+                                loading="lazy"
                             />
                         </div>
                     ))}

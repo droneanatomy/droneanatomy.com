@@ -27,35 +27,6 @@ export default function AboutPage() {
                     { value: 3000, label: 'Total Landings', suffix: '+' },
                 ]}
             />
-            {/* 
-            <Slider
-                slides={[
-                    {
-                        title: 'Making Autonomous Flight Inevitable',
-                        description: 'DroneAnatomy has gained worldwide attention for a series of historic milestones. We are the first company to achieve fully autonomous long-range drone delivery, and our technology powers critical infrastructure inspections across the globe.',
-                        backgroundImage: '/images/aboutlayout2.jpg',
-                    },
-                    {
-                        title: 'Innovation First',
-                        description: 'Our commitment to innovation drives everything we do. With over 100 patents and a world-class engineering team, we continue to push the boundaries of what is possible in aerial technology.',
-                        backgroundImage: '',
-                    },
-                    {
-                        title: 'Global Impact',
-                        description: 'From agriculture to emergency response, our drones are making a difference in communities worldwide. We partner with organizations to deliver life-saving supplies to remote areas.',
-                        backgroundImage: '',
-                    },
-                ]}
-            /> */}
-
-
-            {/* <Banner
-                title="Our Vision"
-                subtitle="A world where drones seamlessly integrate into everyday operations, making work safer, more efficient, and more sustainable."
-                contentPosition="center-left"
-                backgroundImage="/images/aboutlayout4.jpg"
-                overlayStyle="dark"
-            /> */}
 
             <CardGrid
                 sectionTitle="Our Journey"
@@ -124,13 +95,13 @@ export default function AboutPage() {
                         preTitle: '2025',
                         title: 'Autonomous Fleet',
                         description: 'Introduced fully autonomous fleet management solutions for logistics companies.',
-                        image: '/images/DSC07310.jpg',
+                        image: '/images/meet.jpg',
                     },
                     {
                         preTitle: '2026',
                         title: 'Global Expansion',
                         description: 'Operating in over 30 countries, providing cutting-edge drone solutions worldwide.',
-                        image: '/images/DSC07310.jpg',
+                        image: '/images/meet.jpg',
                     },
                 ]}
             />
@@ -138,12 +109,12 @@ export default function AboutPage() {
 
             <OurTeam
                 members={[
-                    { name: 'Saurabh Jha', role: 'Co-Founder & CEO', image: '/images/j3.JPG' },
-                    { name: 'Mayank', role: 'Co-Founder & COO', image: '/images/j6.JPG' },
-                    { name: 'Dipanshu', role: 'Co-Founder & CTO', image: '/images/j9.JPG' },
-                    { name: 'Rahul Sharma', role: 'Lead Engineer', image: '/images/j12.JPG' },
-                    { name: 'Priya Patel', role: 'Avionics Designer', image: '/images/j.JPG' },
-                    { name: 'Vikram Singh', role: 'Drone Pilot Lead', image: '/images/j10.JPG' },
+                    { name: 'Saurabh Jha', role: 'Co-Founder & CEO', image: '/images/j3.jpg' },
+                    { name: 'Mayank', role: 'Co-Founder & COO', image: '/images/j6.jpg' },
+                    { name: 'Dipanshu', role: 'Co-Founder & CTO', image: '/images/j9.jpg' },
+                    { name: 'Rahul Sharma', role: 'Lead Engineer', image: '/images/j12.jpg' },
+                    { name: 'Priya Patel', role: 'Avionics Designer', image: '/images/j.jpg' },
+                    { name: 'Vikram Singh', role: 'Drone Pilot Lead', image: '/images/j10.jpg' },
                     { name: 'Ananya Gupta', role: 'Software Engineer' },
                     { name: 'Arjun Mehta', role: 'Mechanical Engineer' },
                     { name: 'Neha Verma', role: 'Operations Manager' },

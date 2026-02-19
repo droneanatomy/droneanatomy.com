@@ -4,7 +4,7 @@ export default function Home() {
     return (
         <>
             {/* Hero Section */}
-            <HomeHeroSection heroVideo="/videos/hero.mp4" />
+            <HomeHeroSection heroVideo="/videos/hero_vid.mp4" />
 
             {/* Drone X1 Banner */}
             <Banner
@@ -36,6 +36,7 @@ export default function Home() {
                 ctaText="Explore"
                 ctaLink="/updates"
                 contentPosition="center-left"
+                backgroundImageMobile="/images/layout2_mob.jpg"
             />
 
             {/* Drone X1 Banner */}
@@ -44,7 +45,7 @@ export default function Home() {
                 subtitle="Our systems are developed and manufactured in India, reducing dependency while building sovereign capability for autonomous aviation."
                 ctaText="Know More"
                 ctaLink="/products/p10-pro"
-                backgroundVideo='/videos/indegenous.mp4'
+                backgroundVideo='/videos/indegenous_design.mp4'
                 contentPosition="top-right"
                 overlayStyle="dark"
             />
@@ -56,7 +57,7 @@ export default function Home() {
                 ctaText="Learn More"
                 ctaLink="/about"
                 // backgroundImage='/images/layout5.jpg'
-                backgroundVideo='/videos/drone_topview.mp4'
+                backgroundVideo='/videos/birds-eye-view.mp4'
                 contentPosition="center-left"
                 overlayStyle="dark"
                 fadeBottomColor='black'

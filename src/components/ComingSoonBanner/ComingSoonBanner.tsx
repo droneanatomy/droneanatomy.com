@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import styles from './ComingSoonBanner.module.css';
 
 export interface FeatureHighlight {
@@ -72,25 +72,60 @@ export const ComingSoonBanner: React.FC<ComingSoonBannerProps> = ({
     features = defaultFeatures,
     className = '',
 }) => {
+    const sectionRef = useRef<HTMLElement>(null);
+    const videoRef = useRef<HTMLVideoElement>(null);
+    const [isInView, setIsInView] = useState(false);
+
+    // Lazy load and play/pause video based on viewport visibility
+    useEffect(() => {
+        const section = sectionRef.current;
+        if (!section || !backgroundVideo) return;
+
+        const observer = new IntersectionObserver(
+            (entries) => {
+                entries.forEach((entry) => {
+                    setIsInView(entry.isIntersecting);
+                });
+            },
+            { threshold: 0.1, rootMargin: '200px' }
+        );
+
+        observer.observe(section);
+        return () => observer.disconnect();
+    }, [backgroundVideo]);
+
+    // Play/pause video based on visibility
+    useEffect(() => {
+        const video = videoRef.current;
+        if (!video) return;
+
+        if (isInView) {
+            video.play().catch(() => { });
+        } else {
+            video.pause();
+        }
+    }, [isInView]);
+
     return (
-        <section className={`${styles.banner} ${className}`}>
+        <section ref={sectionRef} className={`${styles.banner} ${className}`}>
             {/* Background */}
             <div className={styles.backgroundContainer}>
                 {backgroundVideo ? (
                     <video
+                        ref={videoRef}
                         className={styles.backgroundVideo}
-                        autoPlay
+                        src={isInView ? backgroundVideo : undefined}
                         muted
                         loop
                         playsInline
-                    >
-                        <source src={backgroundVideo} type="video/mp4" />
-                    </video>
+                        preload="none"
+                    />
                 ) : backgroundImage ? (
                     <img
                         className={styles.backgroundImage}
                         src={backgroundImage}
                         alt=""
+                        loading="lazy"
                     />
                 ) : null}
             </div>

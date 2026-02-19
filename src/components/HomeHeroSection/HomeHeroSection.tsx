@@ -26,6 +26,8 @@ export const HomeHeroSection: React.FC<HomeHeroSectionProps> = ({
     fadeBottomColor = 'transparent',
 }) => {
     const particlesRef = useRef<HTMLDivElement>(null);
+    const sectionRef = useRef<HTMLElement>(null);
+    const videoRef = useRef<HTMLVideoElement>(null);
     const [isMobile, setIsMobile] = useState(false);
 
     useEffect(() => {
@@ -34,6 +36,28 @@ export const HomeHeroSection: React.FC<HomeHeroSectionProps> = ({
         window.addEventListener('resize', check);
         return () => window.removeEventListener('resize', check);
     }, []);
+
+    // Pause/resume video based on viewport visibility (saves CPU/GPU)
+    useEffect(() => {
+        const video = videoRef.current;
+        if (!video || isMobile) return;
+
+        const observer = new IntersectionObserver(
+            (entries) => {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting) {
+                        video.play().catch(() => { });
+                    } else {
+                        video.pause();
+                    }
+                });
+            },
+            { threshold: 0.1 }
+        );
+
+        observer.observe(video);
+        return () => observer.disconnect();
+    }, [isMobile]);
 
     useEffect(() => {
         const container = particlesRef.current;
@@ -56,17 +80,19 @@ export const HomeHeroSection: React.FC<HomeHeroSectionProps> = ({
     }, []);
 
     return (
-        <section className={styles.hero} style={{ '--fade-bottom': fadeBottomColor } as React.CSSProperties}>
+        <section ref={sectionRef} className={styles.hero} style={{ '--fade-bottom': fadeBottomColor } as React.CSSProperties}>
             {/* ── Layer 1 (back): Full-screen video ── */}
             <div className={styles.videoLayer}>
                 {heroVideo && !isMobile ? (
                     <video
+                        ref={videoRef}
                         className={styles.bgVideo}
                         src={heroVideo}
                         autoPlay
                         muted
                         loop
                         playsInline
+                        preload="auto"
                     />
                 ) : (
                     <img

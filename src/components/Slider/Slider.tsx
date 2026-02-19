@@ -44,7 +44,7 @@ export const Slider: React.FC<SliderProps> = ({
                     setIsInView(entry.isIntersecting);
                 });
             },
-            { threshold: 0.3 }
+            { threshold: 0.1, rootMargin: '200px' }
         );
 
         observer.observe(slider);
@@ -91,10 +91,10 @@ export const Slider: React.FC<SliderProps> = ({
                     <video
                         ref={bgVideoRef}
                         className={styles.backgroundVideo}
-                        src={currentSlide.backgroundVideo}
-                        autoPlay
+                        src={isInView ? currentSlide.backgroundVideo : undefined}
                         muted
                         playsInline
+                        preload="none"
                     />
                 ) : currentSlide.backgroundImage ? (
                     <img
@@ -161,10 +161,10 @@ export const Slider: React.FC<SliderProps> = ({
                             <video
                                 ref={sideVideoRef}
                                 className={styles.sideVideo}
-                                src={currentSlide.sideVideo}
+                                src={isInView ? currentSlide.sideVideo : undefined}
                                 muted
-                                autoPlay
                                 playsInline
+                                preload="none"
                             />
                         ) : currentSlide.sideImage ? (
                             <img
