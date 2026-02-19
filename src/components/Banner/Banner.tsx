@@ -2,7 +2,7 @@
 
 import React, { useRef, useEffect, useState } from 'react';
 import { CustomButton } from '../CustomButton';
-import { subscribeToLoops } from '@/app/actions/subscribe';
+
 import styles from './Banner.module.css';
 
 export type ContentPosition =
@@ -175,21 +175,39 @@ export const Banner: React.FC<BannerProps> = ({
         setIsSubmitting(true);
         setMessage('');
 
-        const formData = new FormData();
-        formData.append('email', email);
+        const endpoint = process.env.NEXT_PUBLIC_NEWSLETTER_ENDPOINT;
+
+        if (!endpoint) {
+            setMessage('Newsletter service is not configured.');
+            setIsSubmitting(false);
+            return;
+        }
+
+        const body = new URLSearchParams();
+        body.append('email', email);
+        body.append('userGroup', 'Newsletter');
 
         try {
-            const result = await subscribeToLoops(formData);
+            const response = await fetch(endpoint, {
+                method: 'POST',
+                body: body,
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                }
+            });
 
-            if (result.success) {
+            if (response.ok) {
                 setSubmitted(true);
                 setEmail('');
-                setMessage(result.message);
+                setMessage('Successfully subscribed!');
                 setTimeout(() => setSubmitted(false), 3000);
             } else {
-                setMessage(result.message || 'Failed to subscribe.');
+                const errorText = await response.text();
+                console.error('Newsletter subscription failed:', response.status, errorText || response.statusText);
+                setMessage('Failed to subscribe. Please try again.');
             }
         } catch (error) {
+            console.error('Newsletter subscription error:', error);
             setMessage('An error occurred. Please try again.');
         } finally {
             setIsSubmitting(false);
