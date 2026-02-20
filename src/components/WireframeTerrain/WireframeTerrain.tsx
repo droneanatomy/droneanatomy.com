@@ -346,35 +346,35 @@ export const WireframeTerrain: React.FC<WireframeTerrainProps> = ({
         ro.observe(container);
 
         // ── Cleanup ───────────────────────────────────────────────
-        return () => {
-            cancelAnimationFrame(animId);
-            clearInterval(hudInterval);
-            ro.disconnect();
-            viewObserver.disconnect();
-            renderer.dispose();
-            scene.traverse(obj => {
-                if (obj instanceof THREE.Mesh) {
-                    obj.geometry.dispose();
-                    if (Array.isArray(obj.material)) obj.material.forEach(m => m.dispose());
-                    else obj.material.dispose();
-                }
-            });
-        };
-    }, [isMobile]);
+        // return () => {
+        //     cancelAnimationFrame(animId);
+        //     clearInterval(hudInterval);
+        //     ro.disconnect();
+        //     viewObserver.disconnect();
+        //     renderer.dispose();
+        //     scene.traverse(obj => {
+        //         if (obj instanceof THREE.Mesh) {
+        //             obj.geometry.dispose();
+        //             if (Array.isArray(obj.material)) obj.material.forEach(m => m.dispose());
+        //             else obj.material.dispose();
+        //         }
+        //     });
+        // };
+    }, []);
 
-    if (isMobile) {
-        return (
-            <Banner
-                title={title}
-                subtitle={subtitle}
-                ctaText={ctaText}
-                ctaLink={ctaLink}
-                backgroundImageMobile={backgroundImageMobile}
-                contentPosition={contentPosition}
-                overlayStyle="dark"
-            />
-        );
-    }
+    // if (isMobile) {
+    //     return (
+    //         <Banner
+    //             title={title}
+    //             subtitle={subtitle}
+    //             ctaText={ctaText}
+    //             ctaLink={ctaLink}
+    //             backgroundImageMobile={backgroundImageMobile}
+    //             contentPosition={contentPosition}
+    //             overlayStyle="dark"
+    //         />
+    //     );
+    // }
 
     return (
         <div ref={containerRef} className={`${styles.container} ${className}`}>

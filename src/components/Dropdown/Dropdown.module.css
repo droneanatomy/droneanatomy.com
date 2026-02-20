@@ -22,8 +22,7 @@
 }
 
 .triggerIcon {
-    display: inline-flex;
-    transition: transform var(--transition-fast);
+    display: none;
 }
 
 .triggerIcon.open {
@@ -89,6 +88,11 @@
         visibility: visible;
         transform: none;
         transition: max-height var(--transition-base);
+    }
+
+    .triggerIcon {
+        display: inline-flex;
+        transition: transform var(--transition-fast);
     }
 
     .menu.open {

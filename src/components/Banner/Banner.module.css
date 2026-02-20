@@ -539,15 +539,27 @@
     .topCenter,
     .topRight,
     .centerLeft,
-    .center,
     .centerRight,
     .bottomLeft,
-    .bottomCenter,
     .bottomRight {
         grid-column: 1;
         grid-row: 1;
         justify-self: start;
         align-self: end;
+    }
+
+    .center,
+    .bottomCenter {
+        grid-column: 1;
+        grid-row: 1;
+        justify-self: center;
+        align-self: center;
+    }
+
+    /* When textAlign="center", force content block to center on mobile */
+    .mobileCenter {
+        justify-self: center;
+        align-items: center;
     }
 
     .title {

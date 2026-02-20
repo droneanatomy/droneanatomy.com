@@ -53,13 +53,13 @@ export default function AboutPage() {
                         preTitle: '2018',
                         title: 'Started delivering Made in India drones to Indian Army & met Dipanshu.',
                         description: "Our first product delivery is just the beginning - we're paving the way for a future full of innovation and success!",
-                        image: '/images/j12.jpg',
+                        image: '/images/j-2018.jpg',
                     },
                     {
                         preTitle: '2019',
                         title: 'Started making high pay load drones which market required.',
                         description: "Smart entrepreneurs pivot with the market - by adapting to changing demands, we're not just surviving, we're thriving!",
-                        image: '/images/j.jpg',
+                        image: '/images/j-2019.jpg',
                     },
                     {
                         preTitle: '2020',
@@ -71,19 +71,19 @@ export default function AboutPage() {
                         preTitle: '2021',
                         title: 'Advancement of business growth',
                         description: "Advancing in business is not just about reaching new heights - it's about pushing past boundaries, breaking through barriers, and achieving the impossible!",
-                        image: '/images/j11.jpg',
+                        image: '/images/j-2021.jpg',
                     },
                     {
                         preTitle: '2022',
                         title: 'THROTTLE UP :)',
                         description: "'Building a team is not just about growing headcount - it's about cultivating a community of leaders, empowering individuals to reach their full potential, and achieving collective greatness!'  so founded DAstrionics technologies Pvt Ltd with a vison to make in India for the world.",
-                        image: '/images/j3.jpg',
+                        image: '/images/j5.jpg',
                     },
                     {
                         preTitle: '2023',
                         title: 'Next-Gen Platform',
                         description: 'Unveiled our next-generation drone platform with revolutionary modular design.',
-                        image: '/images/j5.jpg',
+                        image: '/images/j3.jpg',
                     },
                     {
                         preTitle: '2024',
@@ -95,13 +95,13 @@ export default function AboutPage() {
                         preTitle: '2025',
                         title: 'Autonomous Fleet',
                         description: 'Introduced fully autonomous fleet management solutions for logistics companies.',
-                        image: '/images/meet.jpg',
+                        image: '/images/j-2025.jpg',
                     },
                     {
                         preTitle: '2026',
                         title: 'Global Expansion',
                         description: 'Operating in over 30 countries, providing cutting-edge drone solutions worldwide.',
-                        image: '/images/meet.jpg',
+                        image: '/images/j-2026.jpg',
                     },
                 ]}
             />
@@ -109,9 +109,9 @@ export default function AboutPage() {
 
             <OurTeam
                 members={[
-                    { name: 'Saurabh Jha', role: 'Co-Founder & CEO', image: '/images/j3.jpg' },
-                    { name: 'Mayank', role: 'Co-Founder & COO', image: '/images/j6.jpg' },
-                    { name: 'Dipanshu', role: 'Co-Founder & CTO', image: '/images/j9.jpg' },
+                    { name: 'Saurabh Jha', role: 'Co-Founder & CEO', image: '/images/team/saurabh.jpg' },
+                    { name: 'Mayank Sharma', role: 'Co-Founder & COO', image: '/images/team/mayank.jpg' },
+                    { name: 'Dipanshu Purohit', role: 'Co-Founder & CMO', image: '/images/team/deepanshu.jpg' },
                     { name: 'Rahul Sharma', role: 'Lead Engineer', image: '/images/j12.jpg' },
                     { name: 'Priya Patel', role: 'Avionics Designer', image: '/images/j.jpg' },
                     { name: 'Vikram Singh', role: 'Drone Pilot Lead', image: '/images/j10.jpg' },

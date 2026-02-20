@@ -281,7 +281,7 @@ export const Banner: React.FC<BannerProps> = ({
             {/* Content Grid */}
             <div className={styles.contentGrid}>
                 <div
-                    className={`${styles.content} ${positionClass}`}
+                    className={`${styles.content} ${positionClass} ${textAlign === 'center' ? styles.mobileCenter : ''}`}
                     style={textAlign ? {
                         textAlign,
                         alignItems: textAlign === 'center' ? 'center' : textAlign === 'right' ? 'flex-end' : 'flex-start'

@@ -82,20 +82,20 @@ export const Dropdown: React.FC<DropdownProps> = ({
                 aria-haspopup="true"
             >
                 {label}
-                {/* <span className={`${styles.triggerIcon} ${isOpen ? styles.open : ''}`}>
+                <span className={`${styles.triggerIcon} ${isOpen ? styles.open : ''}`}>
                     <svg
-                        width="10"
-                        height="10"
+                        width="12"
+                        height="12"
                         viewBox="0 0 24 24"
                         fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
+                        stroke="var(--color-text-primary)"
+                        strokeWidth="3"
                         strokeLinecap="round"
                         strokeLinejoin="round"
                     >
                         <polyline points="6 9 12 15 18 9" />
                     </svg>
-                </span> */}
+                </span>
             </button>
 
             <div
