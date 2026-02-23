@@ -100,8 +100,8 @@ export default function AboutPage() {
                     },
                     {
                         preTitle: '2026',
-                        title: 'Global Expansion',
-                        description: 'Operating in over 30 countries, providing cutting-edge drone solutions worldwide.',
+                        title: 'Deployment. Defence. Dominance.',
+                        description: 'Indigenous platforms launched.',
                         image: '/images/j-2026.jpg',
                     },
                 ]}
@@ -110,16 +110,16 @@ export default function AboutPage() {
 
             <OurTeam
                 members={[
-                    { name: 'Saurabh Jha', role: 'Co-Founder & CEO', image: '/images/team/saurabh.jpg' },
-                    { name: 'Mayank Sharma', role: 'Co-Founder & COO', image: '/images/team/mayank.jpg' },
-                    { name: 'Dipanshu Purohit', role: 'Co-Founder & CMO', image: '/images/team/deepanshu.jpg' },
-                    { name: 'Deepak Maheshwari', role: 'Advisor', image: '/images/team/deepak_maheshwari.jpg' },
-                    { name: 'G. S. Bedi', role: 'Advisor', image: '/images/team/gs-bedi.jpg' },
-                    { name: 'Jogesh Grover', role: 'Advisor', image: '/images/team/jogesh-grover.webp' },
-                    { name: 'Aniket Gupta', role: 'Head of Software', image: '/images/team/aniket-new.jpg' },
-                    { name: 'Suman Pal', role: 'Head of Design', image: '/images/team/suman-new.jpg' },
-                    { name: 'Harsh Kumar', role: 'Project Manager', image: '/images/team/harsh.jpg' },
-                    { name: 'Vikram Chaudhary', role: 'Operations Manager', image: '/images/team/vikram-chaudhary.jpg' },
+                    { name: 'Saurabh Jha', role: 'Co-Founder & CEO', image: '/images/saurabh.jpg' },
+                    { name: 'Mayank Sharma', role: 'Co-Founder & COO', image: '/images/mayank.jpg' },
+                    { name: 'Dipanshu Purohit', role: 'Co-Founder & CMO', image: '/images/deepanshu.jpg' },
+                    { name: 'Deepak Maheshwari', role: 'Advisor', image: '/images/deepak_maheshwari.jpg' },
+                    { name: 'G. S. Bedi', role: 'Advisor', image: '/images/gs-bedi.jpg' },
+                    { name: 'Jogesh Grover', role: 'Advisor', image: '/images/jogesh-grover.webp' },
+                    { name: 'Aniket Gupta', role: 'Head of Software', image: '/images/aniket.jpg' },
+                    { name: 'Suman Pal', role: 'Head of Design', image: '/images/suman-new.jpg' },
+                    { name: 'Harsh Kumar', role: 'UAV Pilot', image: '/images/harsh.jpg' },
+                    { name: 'Vikram Chaudhary', role: 'R&D', image: '/images/vikram-chaudhary.jpg' },
                     { name: 'Neha Verma', role: 'Operations Manager' },
                     { name: 'Neha Verma', role: 'Operations Manager' },
                     { name: 'Neha Verma', role: 'Operations Manager' },
