@@ -1,4 +1,5 @@
 import { ComingSoonBanner, Newsletter } from '@/components';
+import { label } from 'three/tsl';
 
 export const metadata = {
     title: 'NOXR-1 | DroneAnatomy',
@@ -12,6 +13,14 @@ export default function Noxr1Page() {
                 title="Coming Soon"
                 // subtitle="AGRICULTURE DRONE, MADE FOR INDIAN CONDITIONS."
                 backgroundImage='/images/NOXR-COMING-SOON.jpg'
+                features={
+                    [
+                        { title: "Range", description: "10 km", icon: "" },
+                        { title: "Flight Time", description: "80 minutes", icon: "" },
+                        { title: "Camera", description: "30x Zoom", icon: "" },
+                        { title: "Peripherals", description: "LRF & Thermal integrated", icon: "" },
+                    ]
+                }
             />
             <Newsletter />
         </>

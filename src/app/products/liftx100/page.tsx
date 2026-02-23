@@ -11,6 +11,14 @@ export default function LiftX100Page() {
             <ComingSoonBanner
                 title="Coming Soon"
                 backgroundImage='/images/liftx100.jpg'
+                features={
+                    [
+                        { title: "Range", description: "50 km", icon: "" },
+                        { title: "Flight Time", description: "30 minutes", icon: "" },
+                        { title: "Operational Altitude", description: "4000m", icon: "" },
+                        { title: "Redundancy", description: "Integrated Parachute", icon: "" },
+                    ]
+                }
             />
             <Newsletter />
         </>

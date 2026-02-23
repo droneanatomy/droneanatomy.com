@@ -27,7 +27,7 @@ export default function P10ProPage() {
                 slides={[
                     {
                         title: 'P10 Pro Overview',
-                        description: "The Drone Anatomy P10 Pro is a high-performance agricultural drone designed for precision spraying, crop monitoring, and autonomous field operations. Engineered for reliability and efficiency, P10 Pro integrates advanced flight control, intelligent payload systems, and rugged airframe construction to operate consistently across large and demanding agricultural environments.",
+                        description: "The Drone Anatomy P10 Pro is an ultra-compact agricultural drone and one of India’s first purpose-engineered systems built specifically for Indian farming conditions. Designed to perform in steep terrains, uneven landscapes, and challenging rural environments, the P10 Pro is developed to withstand extreme operational conditions. Its rugged construction, optimized flight dynamics, and resilient system architecture ensure dependable performance even in the harshest agricultural scenarios.",
                         // backgroundImage: '/images/p10pro-overview.png',
                         backgroundVideo: '/videos/dronep10.mp4',
                         // sideVideo: '/videos/opening-drone.mp4',
@@ -86,7 +86,7 @@ export default function P10ProPage() {
             <div className="comp-banner">
                 <div className="comp-banner-content">
                     <h3>NOTE:</h3>
-                    <p>The Drone Anatomy P10 Pro is a high-performance agricultural drone designed for precision spraying, crop monitoring, and autonomous field operations.</p>
+                    <p>The Drone Anatomy P10 Pro is 40% smaller and 30% more efficient than standard 10kg agricultural drones.</p>
                 </div>
             </div>
             <Newsletter />

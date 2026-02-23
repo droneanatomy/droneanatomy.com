@@ -11,6 +11,14 @@ export default function Cyclops3Page() {
             <ComingSoonBanner
                 title="Coming Soon"
                 backgroundImage='/images/CYCLOPS3.jpg'
+                features={
+                    [
+                        { title: "Range", description: "150 km", icon: "" },
+                        { title: "Flight Time", description: "180 minutes", icon: "" },
+                        { title: "Camera", description: "150x Zoom", icon: "" },
+                        { title: "Operational Altitude", description: "6500m", icon: "" },
+                    ]
+                }
             />
             <Newsletter />
         </>

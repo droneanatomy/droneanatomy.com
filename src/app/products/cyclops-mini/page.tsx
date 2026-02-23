@@ -11,6 +11,14 @@ export default function CyclopsMiniPage() {
             <ComingSoonBanner
                 title="Coming Soon"
                 backgroundImage='/images/CYCLOPS.jpg'
+                features={
+                    [
+                        { title: "Range", description: "10 km", icon: "" },
+                        { title: "Flight Time", description: "80 minutes", icon: "" },
+                        { title: "Camera", description: "10x Zoom", icon: "" },
+                        { title: "Peripherals", description: "Thermal Integrated", icon: "" },
+                    ]
+                }
             />
             <Newsletter />
         </>
