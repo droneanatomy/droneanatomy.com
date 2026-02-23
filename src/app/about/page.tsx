@@ -110,24 +110,23 @@ export default function AboutPage() {
 
             <OurTeam
                 members={[
-                    { name: 'Saurabh Jha', role: 'Co-Founder & CEO', image: '/images/saurabh.jpg' },
-                    { name: 'Mayank Sharma', role: 'Co-Founder & COO', image: '/images/mayank.jpg' },
-                    { name: 'Dipanshu Purohit', role: 'Co-Founder & CMO', image: '/images/deepanshu.jpg' },
-                    { name: 'Deepak Maheshwari', role: 'Advisor', image: '/images/deepak_maheshwari.jpg' },
-                    { name: 'G. S. Bedi', role: 'Advisor', image: '/images/gs-bedi.jpg' },
-                    { name: 'Jogesh Grover', role: 'Advisor', image: '/images/jogesh-grover.webp' },
-                    { name: 'Aniket Gupta', role: 'Head of Software', image: '/images/aniket.jpg' },
-                    { name: 'Suman Pal', role: 'Head of Design', image: '/images/suman-new.jpg' },
-                    { name: 'Harsh Kumar', role: 'UAV Pilot', image: '/images/harsh.jpg' },
-                    { name: 'Vikram Chaudhary', role: 'R&D', image: '/images/vikram-chaudhary.jpg' },
-                    { name: 'Neha Verma', role: 'Operations Manager' },
-                    { name: 'Neha Verma', role: 'Operations Manager' },
-                    { name: 'Neha Verma', role: 'Operations Manager' },
-                    { name: 'Neha Verma', role: 'Operations Manager' },
-                    { name: 'Neha Verma', role: 'Operations Manager' },
-                    { name: 'Neha Verma', role: 'Operations Manager' },
-                    { name: 'Neha Verma', role: 'Operations Manager' },
-                    { name: 'Neha Verma', role: 'Operations Manager' },
+                    { name: 'Saurabh Jha', role: 'Co-Founder & CEO', image: '/images/saurabh.jpg', },
+                    { name: 'Mayank Sharma', role: 'Co-Founder & COO', image: '/images/mayank.jpg', },
+                    { name: 'Dipanshu Purohit', role: 'Co-Founder & CMO', image: '/images/deepanshu.jpg', },
+                    { name: 'Deepak Maheshwari', role: 'Advisor', image: '/images/deepak_maheshwari.jpg', },
+                    { name: 'G. S. Bedi', role: 'Advisor', image: '/images/gs-bedi.jpg', },
+                    { name: 'Jogesh Grover', role: 'Advisor', image: '/images/jogesh-grover.webp', },
+                    { name: 'Aniket Gupta', role: 'Head of Software', image: '/images/aniket.jpg', },
+                    { name: 'Suman Pal', role: 'Head of Design', image: '/images/suman-new.jpg', },
+                    { name: 'Harsh Kumar', role: 'UAV Pilot', image: '/images/harsh.jpg', },
+                    { name: 'Vikram Chaudhary', role: 'R&D', image: '/images/vikram-chaudhary.jpg', },
+                    { name: 'Ramesh Patil', role: 'Project Manager', image: '/images/ramesh.jpg', },
+                    { name: 'Neha Verma', role: 'Operations Manager', image: '/images/neh.jpg', },
+                    { name: 'Neha Verma', role: 'Operations Manager', image: '/images/neh.jpg', },
+                    { name: 'Neha Verma', role: 'Operations Manager', image: '/images/neh.jpg', },
+                    { name: 'Neha Verma', role: 'Operations Manager', image: '/images/neh.jpg', },
+                    { name: 'Neha Verma', role: 'Operations Manager', image: '/images/neh.jpg', },
+
                 ]}
             />
 

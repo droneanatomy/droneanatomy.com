@@ -45,20 +45,23 @@ export const OurTeam: React.FC<OurTeamProps> = ({
                 <div className={styles.grid}>
                     {members.map((member, index) => (
                         <div key={index} className={styles.memberCard}>
-                            <div className={styles.avatarWrapper}>
-                                {member.image ? (
-                                    <Image
-                                        src={member.image}
-                                        alt={member.name}
-                                        width={128}
-                                        height={128}
-                                        className={styles.avatar}
-                                    />
-                                ) : (
-                                    <div className={styles.avatarPlaceholder}>
-                                        {getInitials(member.name)}
-                                    </div>
-                                )}
+                            <div className={styles.avatarOuter}>
+                                <div className={styles.avatarWrapper}>
+                                    {member.image ? (
+                                        <Image
+                                            src={member.image}
+                                            alt={member.name}
+                                            width={128}
+                                            height={128}
+                                            className={styles.avatar}
+                                        />
+                                    ) : (
+                                        <div className={styles.avatarPlaceholder}>
+                                            {getInitials(member.name)}
+                                        </div>
+                                    )}
+                                </div>
+                                <div className={styles.avatarWrapperRing} />
                             </div>
                             <span className={styles.memberName}>
                                 {member.name}

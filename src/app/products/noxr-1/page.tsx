@@ -1,5 +1,4 @@
 import { ComingSoonBanner, Newsletter } from '@/components';
-import { label } from 'three/tsl';
 
 export const metadata = {
     title: 'NOXR-1 | DroneAnatomy',
