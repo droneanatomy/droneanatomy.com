@@ -53,7 +53,7 @@ const upcomingUpdates = [
     {
         id: '4',
         title: 'LiftX100',
-        image: '/images/LIFTX100.jpg',
+        image: '/images/liftx100.jpg',
         date: 'Coming Soon',
         href: '/products/liftx100',
     },
