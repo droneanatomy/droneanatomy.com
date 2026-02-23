@@ -94,8 +94,8 @@ export default function AboutPage() {
                     },
                     {
                         preTitle: '2025',
-                        title: 'Autonomous Fleet',
-                        description: 'Introduced fully autonomous fleet management solutions for logistics companies.',
+                        title: 'DGCA Type Certification Achieved',
+                        description: 'We inaugurated our advanced manufacturing facility dedicated to defense-grade drone systems.',
                         image: '/images/j-2025.jpg',
                     },
                     {
