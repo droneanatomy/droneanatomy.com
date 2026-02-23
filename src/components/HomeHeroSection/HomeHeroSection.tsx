@@ -21,14 +21,14 @@ export const HomeHeroSection: React.FC<HomeHeroSectionProps> = ({
     ctaText = 'Explore',
     ctaLink = '/about',
     heroImage = '/images/dronehero_mob.png',
-    heroImageAlt = 'Drone Anatomy hero',
+    heroImageAlt = 'Drone Anatomy',
     heroVideo,
     fadeBottomColor = 'transparent',
 }) => {
     const particlesRef = useRef<HTMLDivElement>(null);
     const sectionRef = useRef<HTMLElement>(null);
     const videoRef = useRef<HTMLVideoElement>(null);
-    const [isMobile, setIsMobile] = useState(true);
+    const [isMobile, setIsMobile] = useState<boolean | null>(null);
 
     useEffect(() => {
         const check = () => setIsMobile(window.innerWidth <= 1024);
@@ -83,23 +83,25 @@ export const HomeHeroSection: React.FC<HomeHeroSectionProps> = ({
         <section ref={sectionRef} className={styles.hero} style={{ '--fade-bottom': fadeBottomColor } as React.CSSProperties}>
             {/* ── Layer 1 (back): Full-screen video ── */}
             <div className={styles.videoLayer}>
-                {heroVideo && !isMobile ? (
-                    <video
-                        ref={videoRef}
-                        className={styles.bgVideo}
-                        src={heroVideo}
-                        autoPlay
-                        muted
-                        loop
-                        playsInline
-                        preload="auto"
-                    />
-                ) : (
-                    <img
-                        className={styles.bgVideo}
-                        src={heroImage}
-                        alt={heroImageAlt}
-                    />
+                {isMobile !== null && (
+                    heroVideo && !isMobile ? (
+                        <video
+                            ref={videoRef}
+                            className={styles.bgVideo}
+                            src={heroVideo}
+                            autoPlay
+                            muted
+                            loop
+                            playsInline
+                            preload="auto"
+                        />
+                    ) : isMobile ? (
+                        <img
+                            className={styles.bgVideo}
+                            src={heroImage}
+                            alt={heroImageAlt}
+                        />
+                    ) : null
                 )}
                 <div className={styles.videoOverlay} />
             </div>

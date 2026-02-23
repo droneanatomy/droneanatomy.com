@@ -12,7 +12,7 @@ export default function Home() {
                 subtitle="(OUTCOMES > SPECIFICATIONS)"
                 ctaText="Explore"
                 ctaLink="/about"
-                // backgroundImage='/images/layout2.jpg'
+                backgroundImage='/images/dronehero_mob.jpg'
                 // backgroundImageMobile='/images/layout2_mob.jpg'
                 backgroundVideo='/videos/drone_in_the_sky.mp4'
                 contentPosition="bottom-right"
