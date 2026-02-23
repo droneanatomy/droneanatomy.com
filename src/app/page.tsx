@@ -4,7 +4,12 @@ export default function Home() {
     return (
         <>
             {/* Hero Section */}
-            <HomeHeroSection heroVideo="/videos/hero_vid.mp4" />
+            <HomeHeroSection
+                heroVideo="/videos/hero_vid.mp4"
+                // heroVideoMobile="/videos/drone-hero-mob.mp4"
+                heroVideoMobile="/videos/home-hero-mob.mp4"
+
+            />
 
             {/* Drone X1 Banner */}
             <Banner
@@ -12,8 +17,8 @@ export default function Home() {
                 subtitle="(OUTCOMES > SPECIFICATIONS)"
                 ctaText="Explore"
                 ctaLink="/about"
-                backgroundImage='/images/dronehero_mob.jpg'
-                // backgroundImageMobile='/images/layout2_mob.jpg'
+                // backgroundImage='/images/layout2.jpg'
+                backgroundImageMobile='/images/drone-in-the-sky-mob.png'
                 backgroundVideo='/videos/drone_in_the_sky.mp4'
                 contentPosition="bottom-right"
                 overlayStyle="light"
@@ -46,6 +51,7 @@ export default function Home() {
                 ctaText="Know More"
                 ctaLink="/products/p10-pro"
                 backgroundVideo='/videos/indegenous_design.mp4'
+                backgroundImageMobile='/images/indigenous-mob.png'
                 contentPosition="top-right"
                 overlayStyle="dark"
             />
@@ -57,6 +63,7 @@ export default function Home() {
                 ctaText="Learn More"
                 ctaLink="/about"
                 // backgroundImage='/images/layout5.jpg'
+                backgroundImageMobile='/images/drone-top-view-mob.jpg'
                 backgroundVideo='/videos/birds-eye-view.mp4'
                 contentPosition="center-left"
                 overlayStyle="dark"

@@ -121,6 +121,7 @@ export default async function UpdatesPage() {
                 subtitle="Enter your email to sign up for DroneAnatomy updates"
                 contentPosition="center"
                 // backgroundImage='/images/updates.png'
+                backgroundImageMobile='/images/updates-hero-mob.jpg'
                 backgroundVideo='/videos/updates_hero.mp4'
                 textAlign='center'
                 overlayStyle="dark"

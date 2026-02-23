@@ -13,6 +13,8 @@ export interface SlideItem {
     description: string;
     backgroundImage?: string;
     backgroundVideo?: string;
+    /** Separate video shown on mobile (≤ 768px) instead of backgroundVideo */
+    backgroundVideoMobile?: string;
     sideImage?: string;
     sideVideo?: string;
     specs?: SpecItem[];
@@ -29,9 +31,18 @@ export const Slider: React.FC<SliderProps> = ({
 }) => {
     const [currentIndex, setCurrentIndex] = useState(0);
     const [isInView, setIsInView] = useState(false);
+    const [isMobile, setIsMobile] = useState(false);
     const sliderRef = useRef<HTMLElement>(null);
     const bgVideoRef = useRef<HTMLVideoElement>(null);
+    const bgMobileVideoRef = useRef<HTMLVideoElement>(null);
     const sideVideoRef = useRef<HTMLVideoElement>(null);
+
+    useEffect(() => {
+        const check = () => setIsMobile(window.innerWidth <= 768);
+        check();
+        window.addEventListener('resize', check);
+        return () => window.removeEventListener('resize', check);
+    }, []);
 
     // IntersectionObserver to detect when slider is in view
     useEffect(() => {
@@ -54,13 +65,16 @@ export const Slider: React.FC<SliderProps> = ({
     // Play/pause videos based on visibility
     useEffect(() => {
         const bgVideo = bgVideoRef.current;
+        const bgMobileVideo = bgMobileVideoRef.current;
         const sideVideo = sideVideoRef.current;
 
         if (isInView) {
             bgVideo?.play().catch(() => { });
+            bgMobileVideo?.play().catch(() => { });
             sideVideo?.play().catch(() => { });
         } else {
             bgVideo?.pause();
+            bgMobileVideo?.pause();
             sideVideo?.pause();
         }
     }, [isInView, currentIndex]);
@@ -87,7 +101,17 @@ export const Slider: React.FC<SliderProps> = ({
         <section ref={sliderRef} className={`${styles.slider} ${hasSideMedia ? styles.sliderWithSide : ''} ${className}`}>
             {/* Background */}
             <div className={styles.backgroundContainer}>
-                {currentSlide.backgroundVideo ? (
+                {(isMobile && currentSlide.backgroundVideoMobile) ? (
+                    <video
+                        ref={bgMobileVideoRef}
+                        className={styles.backgroundVideo}
+                        src={isInView ? currentSlide.backgroundVideoMobile : undefined}
+                        muted
+                        loop
+                        playsInline
+                        preload="none"
+                    />
+                ) : currentSlide.backgroundVideo ? (
                     <video
                         ref={bgVideoRef}
                         className={styles.backgroundVideo}

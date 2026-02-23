@@ -451,7 +451,7 @@ samp {
   background-color: #0b0b0b;
   /* margin: 2rem 0; */
   height: 90vh;
-  background-image: url('/images/p10pro-comparison.png');
+  background-image: url('/images/p10pro-comparison.jpg');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -484,11 +484,11 @@ samp {
 @media (max-width: 961px) {
   .comp-banner {
     height: 100vh;
-    background-image: url('/images/drone-comp-m.png');
+    background-image: url('/images/drone-comparison-mob.jpg');
   }
 
   .comp-banner-content {
-    bottom: 1.5rem;
+    bottom: 0;
     left: 1rem;
     color: #0b0b0b;
     /* transform: translate(-50%, -50%); */

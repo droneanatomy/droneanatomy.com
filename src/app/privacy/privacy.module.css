@@ -1,0 +1,260 @@
+/* =============================================
+   Privacy Policy Page Styles
+   ============================================= */
+
+.page {
+    min-height: 100vh;
+    background-color: var(--color-bg);
+    color: var(--color-text-primary);
+}
+
+/* ── Hero ── */
+.hero {
+    padding: 10rem var(--spacing-4xl) 5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    background: linear-gradient(160deg,
+            rgba(0, 200, 220, 0.04) 0%,
+            transparent 60%);
+}
+
+.heroInner {
+    max-width: 860px;
+}
+
+.eyebrow {
+    font-family: var(--font-family);
+    font-size: var(--font-size-xs);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: rgba(0, 200, 220, 0.75);
+    margin-bottom: var(--spacing-md);
+}
+
+.heroTitle {
+    font-family: var(--font-family-heading);
+    font-size: clamp(2.5rem, 5vw, 4rem);
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    color: var(--color-text-primary);
+    margin-bottom: var(--spacing-md);
+}
+
+.heroSub {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+}
+
+/* ── Body layout ── */
+.body {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: var(--spacing-4xl);
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: var(--spacing-4xl);
+    align-items: start;
+}
+
+/* ── Table of Contents ── */
+.toc {
+    position: sticky;
+    top: 100px;
+    padding: var(--spacing-xl);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.tocLabel {
+    font-size: var(--font-size-xs);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-text-secondary);
+    margin-bottom: var(--spacing-md);
+}
+
+.tocList {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    counter-reset: none;
+}
+
+.tocList li a {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-secondary);
+    text-decoration: none;
+    transition: color 200ms ease;
+    line-height: 1.5;
+}
+
+.tocList li a:hover {
+    color: rgba(0, 200, 220, 0.9);
+}
+
+/* ── Content article ── */
+.content {
+    max-width: 720px;
+}
+
+.intro {
+    font-size: var(--font-size-base);
+    color: var(--color-text-secondary);
+    line-height: 1.8;
+    margin-bottom: var(--spacing-3xl);
+    padding-bottom: var(--spacing-3xl);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.content section {
+    margin-bottom: var(--spacing-3xl);
+    padding-bottom: var(--spacing-3xl);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    scroll-margin-top: 100px;
+}
+
+.content section:last-child {
+    border-bottom: none;
+}
+
+.content h2 {
+    font-family: var(--font-family-heading);
+    font-size: var(--font-size-xl);
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--color-text-primary);
+    margin-bottom: var(--spacing-lg);
+}
+
+.content h3 {
+    font-family: var(--font-family);
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: rgba(0, 200, 220, 0.8);
+    margin-top: var(--spacing-xl);
+    margin-bottom: var(--spacing-md);
+}
+
+.content p {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+    line-height: 1.85;
+    margin-bottom: var(--spacing-md);
+}
+
+.content ul,
+.content ol {
+    padding-left: var(--spacing-xl);
+    margin-bottom: var(--spacing-md);
+}
+
+.content li {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+    line-height: 1.85;
+    margin-bottom: var(--spacing-sm);
+}
+
+.content strong {
+    color: var(--color-text-primary);
+    font-weight: 500;
+}
+
+.content a {
+    color: rgba(0, 200, 220, 0.85);
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: border-color 200ms ease, color 200ms ease;
+}
+
+.content a:hover {
+    color: rgba(0, 200, 220, 1);
+    border-bottom-color: rgba(0, 200, 220, 0.4);
+}
+
+/* ── Table ── */
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: var(--spacing-lg) 0;
+    font-size: var(--font-size-sm);
+}
+
+.table thead tr {
+    border-bottom: 1px solid rgba(0, 200, 220, 0.2);
+}
+
+.table th {
+    text-align: left;
+    padding: var(--spacing-sm) var(--spacing-md);
+    font-size: var(--font-size-xs);
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgba(0, 200, 220, 0.7);
+}
+
+.table td {
+    padding: var(--spacing-sm) var(--spacing-md);
+    color: var(--color-text-secondary);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    vertical-align: top;
+}
+
+.table tr:last-child td {
+    border-bottom: none;
+}
+
+/* ── Address ── */
+.address {
+    font-style: normal;
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+    line-height: 2;
+    padding: var(--spacing-xl);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.02);
+    display: inline-block;
+}
+
+/* ── Responsive ── */
+@media (max-width: 1024px) {
+    .hero {
+        padding: 8rem var(--spacing-xl) 4rem;
+    }
+
+    .body {
+        grid-template-columns: 1fr;
+        padding: var(--spacing-2xl) var(--spacing-xl);
+        gap: var(--spacing-2xl);
+    }
+
+    .toc {
+        position: static;
+        display: none;
+        /* hide on tablet/mobile to save space */
+    }
+}
+
+@media (max-width: 640px) {
+    .hero {
+        padding: 6rem var(--spacing-md) 3rem;
+    }
+
+    .body {
+        padding: var(--spacing-xl) var(--spacing-md);
+    }
+
+    .table {
+        display: block;
+        overflow-x: auto;
+    }
+}

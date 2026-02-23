@@ -29,7 +29,8 @@ export default function P10ProPage() {
                         title: 'P10 Pro Overview',
                         description: "The Drone Anatomy P10 Pro is an ultra-compact agricultural drone and one of India’s first purpose-engineered systems built specifically for Indian farming conditions. Designed to perform in steep terrains, uneven landscapes, and challenging rural environments, the P10 Pro is developed to withstand extreme operational conditions. Its rugged construction, optimized flight dynamics, and resilient system architecture ensure dependable performance even in the harshest agricultural scenarios.",
                         // backgroundImage: '/images/p10pro-overview.png',
-                        backgroundVideo: '/videos/dronep10.mp4',
+                        backgroundVideo: '/videos/drone-open.mp4',
+                        backgroundVideoMobile: '/videos/drone-open-mob.mp4',
                         // sideVideo: '/videos/opening-drone.mp4',
                         specs: [
                             { label: 'Max Flight Time', value: '30 minutes' },
@@ -74,12 +75,12 @@ export default function P10ProPage() {
                 ]}
                 ctaText="Questions? Contact Today!"
                 // ctaLink="/contact"
-                mainImage="/images/p10pro-bannershot.png"
+                mainImage="/images/p10pro-bannershot.jpg"
                 galleryImages={[
-                    '/images/portable1.png',
-                    '/images/portable2.png',
-                    '/images/portable3.png',
-                    '/images/portable4.png',
+                    '/images/portable1.jpg',
+                    '/images/portable2.jpg',
+                    '/images/portable3.jpg',
+                    '/images/portable4.jpg',
                 ]}
             />
 

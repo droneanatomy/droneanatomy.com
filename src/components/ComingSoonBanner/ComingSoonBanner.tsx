@@ -13,6 +13,7 @@ export interface ComingSoonBannerProps {
     title?: string;
     subtitle?: string;
     backgroundImage?: string;
+    backgroundImageMobile?: string;
     backgroundVideo?: string;
     features?: FeatureHighlight[];
     className?: string;
@@ -68,6 +69,7 @@ export const ComingSoonBanner: React.FC<ComingSoonBannerProps> = ({
     title = 'Coming Soon',
     subtitle,
     backgroundImage,
+    backgroundImageMobile,
     backgroundVideo,
     features = defaultFeatures,
     className = '',
@@ -75,6 +77,14 @@ export const ComingSoonBanner: React.FC<ComingSoonBannerProps> = ({
     const sectionRef = useRef<HTMLElement>(null);
     const videoRef = useRef<HTMLVideoElement>(null);
     const [isInView, setIsInView] = useState(false);
+    const [isMobile, setIsMobile] = useState(false);
+
+    useEffect(() => {
+        const check = () => setIsMobile(window.innerWidth <= 768);
+        check();
+        window.addEventListener('resize', check);
+        return () => window.removeEventListener('resize', check);
+    }, []);
 
     // Lazy load and play/pause video based on viewport visibility
     useEffect(() => {
@@ -119,6 +129,13 @@ export const ComingSoonBanner: React.FC<ComingSoonBannerProps> = ({
                         loop
                         playsInline
                         preload="none"
+                    />
+                ) : (isMobile && backgroundImageMobile) ? (
+                    <img
+                        className={styles.backgroundImage}
+                        src={backgroundImageMobile}
+                        alt=""
+                        loading="lazy"
                     />
                 ) : backgroundImage ? (
                     <img

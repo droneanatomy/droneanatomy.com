@@ -112,7 +112,7 @@
 
 .featureTitle {
     font-family: var(--font-family-heading);
-    font-size: var(--font-size-sm);
+    font-size: var(--font-size-2xl);
     font-weight: 400;
     text-transform: uppercase;
     letter-spacing: 0.04em;
@@ -122,7 +122,7 @@
 
 .featureDescription {
     font-family: var(--font-family);
-    font-size: var(--font-size-xs);
+    font-size: var(--font-size-md);
     color: var(--color-text-muted);
     line-height: 1.5;
     max-width: 260px;
@@ -149,7 +149,18 @@
 
 @media (max-width: 640px) {
     .banner {
-        min-height: 500px;
+        height: auto;
+        min-height: 100svh;
+    }
+
+    .backgroundImage,
+    .backgroundVideo {
+        object-fit: contain;
+        object-position: center center;
+    }
+
+    .centerContent {
+        padding: var(--spacing-xl) var(--spacing-md) 0;
     }
 
     .title {
@@ -166,15 +177,18 @@
     }
 
     .featureIcon {
-        width: 32px;
-        height: 32px;
+        width: 28px;
+        height: 28px;
+        margin-bottom: var(--spacing-sm);
     }
 
     .featureTitle {
-        font-size: var(--font-size-xs);
+        font-size: var(--font-size-xl);
+        line-height: 100%;
     }
 
     .featureDescription {
-        display: none;
+        /* display: none; */
+        font-size: var(--font-size-sm);
     }
 }

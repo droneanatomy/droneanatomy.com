@@ -28,10 +28,13 @@
 
 @media (max-width: 640px) {
     .statsSection {
-        padding: var(--spacing-2xl) var(--spacing-md);
+        padding: var(--spacing-xl) var(--spacing-sm);
+        overflow: hidden;
     }
 
     .container {
-        gap: var(--spacing-2xl);
+        display: flex;
+        gap: var(--spacing-sm);
+        justify-content: space-between;
     }
 }

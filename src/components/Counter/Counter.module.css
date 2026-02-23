@@ -40,11 +40,11 @@
 
 @media (max-width: 640px) {
     .value {
-        font-size: 3rem;
+        font-size: 2rem;
     }
 
     .label {
-        font-size: 0.5rem;
-        letter-spacing: 0.1em;
+        font-size: 0.45rem;
+        letter-spacing: 0.08em;
     }
 }

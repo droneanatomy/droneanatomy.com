@@ -12,6 +12,8 @@ export interface HomeHeroSectionProps {
     heroImage?: string;
     heroImageAlt?: string;
     heroVideo?: string;
+    /** Separate video to play on mobile (≤ 1024px). Falls back to heroImage if not provided. */
+    heroVideoMobile?: string;
     fadeBottomColor?: string;
 }
 
@@ -20,14 +22,16 @@ export const HomeHeroSection: React.FC<HomeHeroSectionProps> = ({
     subtitle = 'Drone Anatomy exists to build the fundamental systems that will define the next era of autonomous aviation',
     ctaText = 'Explore',
     ctaLink = '/about',
-    heroImage = '/images/dronehero_mob.png',
+    heroImage = '/images/dronehero_mob.jpg',
     heroImageAlt = 'Drone Anatomy',
     heroVideo,
+    heroVideoMobile,
     fadeBottomColor = 'transparent',
 }) => {
     const particlesRef = useRef<HTMLDivElement>(null);
     const sectionRef = useRef<HTMLElement>(null);
     const videoRef = useRef<HTMLVideoElement>(null);
+    const mobileVideoRef = useRef<HTMLVideoElement>(null);
     const [isMobile, setIsMobile] = useState<boolean | null>(null);
 
     useEffect(() => {
@@ -37,7 +41,7 @@ export const HomeHeroSection: React.FC<HomeHeroSectionProps> = ({
         return () => window.removeEventListener('resize', check);
     }, []);
 
-    // Pause/resume video based on viewport visibility (saves CPU/GPU)
+    // Pause/resume desktop video based on viewport visibility
     useEffect(() => {
         const video = videoRef.current;
         if (!video || isMobile) return;
@@ -58,6 +62,28 @@ export const HomeHeroSection: React.FC<HomeHeroSectionProps> = ({
         observer.observe(video);
         return () => observer.disconnect();
     }, [isMobile]);
+
+    // Pause/resume mobile video based on viewport visibility
+    useEffect(() => {
+        const video = mobileVideoRef.current;
+        if (!video || !isMobile || !heroVideoMobile) return;
+
+        const observer = new IntersectionObserver(
+            (entries) => {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting) {
+                        video.play().catch(() => { });
+                    } else {
+                        video.pause();
+                    }
+                });
+            },
+            { threshold: 0.1 }
+        );
+
+        observer.observe(video);
+        return () => observer.disconnect();
+    }, [isMobile, heroVideoMobile]);
 
     useEffect(() => {
         const container = particlesRef.current;
@@ -85,6 +111,7 @@ export const HomeHeroSection: React.FC<HomeHeroSectionProps> = ({
             <div className={styles.videoLayer}>
                 {isMobile !== null && (
                     heroVideo && !isMobile ? (
+                        // Desktop video
                         <video
                             ref={videoRef}
                             className={styles.bgVideo}
@@ -95,7 +122,20 @@ export const HomeHeroSection: React.FC<HomeHeroSectionProps> = ({
                             playsInline
                             preload="auto"
                         />
+                    ) : (isMobile && heroVideoMobile) ? (
+                        // Mobile video
+                        <video
+                            ref={mobileVideoRef}
+                            className={styles.bgVideo}
+                            src={heroVideoMobile}
+                            autoPlay
+                            muted
+                            loop
+                            playsInline
+                            preload="auto"
+                        />
                     ) : isMobile ? (
+                        // Mobile image fallback
                         <img
                             className={styles.bgVideo}
                             src={heroImage}

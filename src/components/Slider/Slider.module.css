@@ -3,6 +3,8 @@
 .slider {
     position: relative;
     width: 100%;
+    max-width: 1600px;
+    margin: 0 auto;
     height: 100vh;
     min-height: 600px;
     overflow: hidden;
@@ -241,8 +243,10 @@
 
     .backgroundContainer {
         position: relative;
-        height: 60vh;
-        min-height: 300px;
+        width: 100%;
+        aspect-ratio: 16 / 9;
+        height: auto;
+        min-height: unset;
     }
 
     .overlay {
