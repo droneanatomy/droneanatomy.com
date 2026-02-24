@@ -93,6 +93,8 @@ export const Banner: React.FC<BannerProps> = ({
     const particlesRef = useRef<HTMLDivElement>(null);
     const [isMobile, setIsMobile] = useState(false);
     const [isInView, setIsInView] = useState(false);
+    // Once true, never goes back to false — prevents src toggling which causes flicker
+    const hasBeenInView = useRef(false);
     const [email, setEmail] = useState('');
     const [submitted, setSubmitted] = useState(false);
 
@@ -115,6 +117,9 @@ export const Banner: React.FC<BannerProps> = ({
         const observer = new IntersectionObserver(
             (entries) => {
                 entries.forEach((entry) => {
+                    if (entry.isIntersecting) {
+                        hasBeenInView.current = true;
+                    }
                     setIsInView(entry.isIntersecting);
                 });
             },
@@ -244,7 +249,7 @@ export const Banner: React.FC<BannerProps> = ({
                             <video
                                 ref={videoRef}
                                 className={styles.backgroundVideo}
-                                src={isInView ? backgroundVideo : undefined}
+                                src={hasBeenInView.current ? backgroundVideo : undefined}
                                 muted
                                 loop
                                 playsInline

@@ -110,7 +110,7 @@
     width: 24px;
     height: 2px;
     background-color: var(--color-text-primary);
-    transition: all var(--transition-fast);
+    transition: background-color var(--transition-fast);
 }
 
 .hamburger::before,
@@ -121,7 +121,7 @@
     width: 24px;
     height: 2px;
     background-color: var(--color-text-primary);
-    transition: all var(--transition-fast);
+    transition: transform var(--transition-fast), top var(--transition-fast), bottom var(--transition-fast);
 }
 
 .hamburger::before {
@@ -162,7 +162,7 @@
     visibility: hidden;
     overflow-y: auto;
     overflow-x: hidden;
-    transition: all var(--transition-base);
+    transition: opacity var(--transition-base), visibility var(--transition-base);
 }
 
 .mobileMenu.open {

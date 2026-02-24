@@ -8,8 +8,20 @@
 
 .imageWrapper {
     width: 100%;
-    aspect-ratio: 5 / 3;
+    /* Fallback for iOS Safari < 15 */
+    position: relative;
+    padding-bottom: 60%;
+    /* 5:3 ~ 60% */
+    height: 0;
     overflow: hidden;
+    aspect-ratio: 5 / 3;
+}
+
+@supports (aspect-ratio: 1) {
+    .imageWrapper {
+        padding-bottom: 0;
+        height: auto;
+    }
 }
 
 .image {
@@ -72,6 +84,14 @@
 @media (max-width: 640px) {
     .imageWrapper {
         aspect-ratio: 16 / 9;
+        padding-bottom: 56.25%;
+        /* 16:9 fallback */
+    }
+
+    @supports (aspect-ratio: 1) {
+        .imageWrapper {
+            padding-bottom: 0;
+        }
     }
 
     .content {

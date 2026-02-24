@@ -41,7 +41,7 @@
     border-radius: 4px;
     padding-top: var(--spacing-2xl);
     transform: translateY(-20px);
-    transition: all var(--transition-base);
+    transition: opacity var(--transition-base), visibility var(--transition-base), transform var(--transition-base);
     z-index: var(--z-dropdown);
 }
 
@@ -64,7 +64,7 @@
     background: none;
     border: none;
     cursor: pointer;
-    transition: all var(--transition-fast);
+    transition: color var(--transition-fast), background-color var(--transition-fast);
     text-decoration: none;
 }
 

@@ -16,7 +16,7 @@
     border: 1px solid var(--color-border);
     border-radius: 4px;
     cursor: pointer;
-    transition: all var(--transition-base);
+    transition: background-color var(--transition-base), color var(--transition-base), border-color var(--transition-base), transform var(--transition-base);
     white-space: nowrap;
 }
 

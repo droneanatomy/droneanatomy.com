@@ -244,9 +244,19 @@
     .backgroundContainer {
         position: relative;
         width: 100%;
-        aspect-ratio: 16 / 9;
-        height: auto;
+        /* Fallback for iOS Safari < 15 */
+        padding-bottom: 56.25%;
+        /* 16:9 */
+        height: 0;
         min-height: unset;
+        aspect-ratio: 16 / 9;
+    }
+
+    @supports (aspect-ratio: 1) {
+        .backgroundContainer {
+            padding-bottom: 0;
+            height: auto;
+        }
     }
 
     .overlay {

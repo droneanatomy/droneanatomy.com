@@ -3,6 +3,9 @@
 .showcase {
     width: 100%;
     /* height: 100%; */
+    /* Fallback for iOS Safari < 15 which doesn't support aspect-ratio */
+    min-height: 56.25vw;
+    /* 16:9 */
     aspect-ratio: 16 / 9;
     padding: var(--spacing-4xl) var(--spacing-2xl);
     background-color: var(--color-bg);
@@ -101,9 +104,24 @@
 }
 
 .galleryItem {
-    aspect-ratio: 1 / 1;
+    /* Fallback for iOS Safari < 15 */
+    position: relative;
     overflow: hidden;
     border-radius: 4px;
+    aspect-ratio: 1 / 1;
+}
+
+/* Padding-bottom fallback for browsers without aspect-ratio support */
+@supports not (aspect-ratio: 1) {
+    .galleryItem {
+        padding-bottom: 100%;
+        height: 0;
+    }
+
+    .galleryImage {
+        position: absolute;
+        inset: 0;
+    }
 }
 
 .galleryImage {
@@ -138,9 +156,12 @@
     }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 968px) {
     .showcase {
         padding: var(--spacing-2xl) var(--spacing-lg);
+        aspect-ratio: auto;
+        min-height: 0;
+        /* Clear the desktop 16:9 fallback */
     }
 
     .title {

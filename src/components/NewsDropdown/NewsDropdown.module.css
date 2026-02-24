@@ -12,7 +12,7 @@
     opacity: 0;
     visibility: hidden;
     transform: translateX(10px);
-    transition: all 0.3s ease;
+    transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.3s ease;
     z-index: 1000;
 }
 
