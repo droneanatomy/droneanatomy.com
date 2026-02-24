@@ -222,7 +222,6 @@ export const Header: React.FC = () => {
                     </ul>
                     <div className={styles.mobileCta} style={{ position: 'relative', zIndex: 1 }}>
                         <CTAButton
-                            showArrow
                             size='small'
                             href='/updates'
                         >

@@ -54,24 +54,29 @@
     padding: 0.5rem;
     border-radius: 4px;
     align-items: center;
-    opacity: 0;
-    transform: translateX(20px);
+    /* Note: opacity/transform initial state is only applied for desktop below */
 }
 
 .newsItem:hover {
     background-color: rgba(255, 255, 255, 0.05);
 }
 
-/* Animation for items sliding in from right */
-.dropdownContainer.open .newsItem {
+/* Desktop only: items start hidden and animate in */
+.dropdownContainer:not(.mobile) .newsItem {
+    opacity: 0;
+    transform: translateX(20px);
+}
+
+/* Animation for items sliding in from right — desktop only */
+.dropdownContainer:not(.mobile).open .newsItem {
     animation: slideInRight 0.5s forwards;
 }
 
-.dropdownContainer.open .newsItem:nth-child(1) {
+.dropdownContainer:not(.mobile).open .newsItem:nth-child(1) {
     animation-delay: 0.1s;
 }
 
-.dropdownContainer.open .newsItem:nth-child(2) {
+.dropdownContainer:not(.mobile).open .newsItem:nth-child(2) {
     animation-delay: 0.2s;
 }
 
@@ -153,12 +158,11 @@
 
 .mobile.open {
     display: flex;
-    animation: none;
     pointer-events: auto;
 }
 
+/* Mobile items: always fully visible when container is open — no animation needed */
 .mobile.open .newsItem {
-    animation: none;
     opacity: 1;
     transform: none;
 }

@@ -36,6 +36,8 @@ export const Slider: React.FC<SliderProps> = ({
     const bgVideoRef = useRef<HTMLVideoElement>(null);
     const bgMobileVideoRef = useRef<HTMLVideoElement>(null);
     const sideVideoRef = useRef<HTMLVideoElement>(null);
+    // Once true, never goes back to false — prevents src toggling which causes iOS flicker
+    const hasBeenInView = useRef(false);
 
     useEffect(() => {
         const check = () => setIsMobile(window.innerWidth <= 768);
@@ -52,6 +54,9 @@ export const Slider: React.FC<SliderProps> = ({
         const observer = new IntersectionObserver(
             (entries) => {
                 entries.forEach((entry) => {
+                    if (entry.isIntersecting) {
+                        hasBeenInView.current = true;
+                    }
                     setIsInView(entry.isIntersecting);
                 });
             },
@@ -105,7 +110,7 @@ export const Slider: React.FC<SliderProps> = ({
                     <video
                         ref={bgMobileVideoRef}
                         className={styles.backgroundVideo}
-                        src={isInView ? currentSlide.backgroundVideoMobile : undefined}
+                        src={hasBeenInView.current ? currentSlide.backgroundVideoMobile : undefined}
                         muted
                         loop
                         playsInline
@@ -115,7 +120,7 @@ export const Slider: React.FC<SliderProps> = ({
                     <video
                         ref={bgVideoRef}
                         className={styles.backgroundVideo}
-                        src={isInView ? currentSlide.backgroundVideo : undefined}
+                        src={hasBeenInView.current ? currentSlide.backgroundVideo : undefined}
                         muted
                         playsInline
                         preload="none"
@@ -185,7 +190,7 @@ export const Slider: React.FC<SliderProps> = ({
                             <video
                                 ref={sideVideoRef}
                                 className={styles.sideVideo}
-                                src={isInView ? currentSlide.sideVideo : undefined}
+                                src={hasBeenInView.current ? currentSlide.sideVideo : undefined}
                                 muted
                                 playsInline
                                 preload="none"
