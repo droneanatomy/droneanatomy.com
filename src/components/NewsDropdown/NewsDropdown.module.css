@@ -140,6 +140,7 @@
 .mobile {
     position: static;
     width: 100%;
+    z-index: auto;
     transform: none;
     background: transparent;
     border: none;
@@ -147,18 +148,25 @@
     margin-top: 1rem;
     box-shadow: none;
     backdrop-filter: none;
-    display: none;
-    opacity: 1;
-    visibility: visible;
+    /* Do NOT override opacity/visibility here — let the base class control that */
 }
 
 .mobile.open {
     display: flex;
     animation: none;
+    pointer-events: auto;
 }
 
 .mobile.open .newsItem {
     animation: none;
     opacity: 1;
     transform: none;
+}
+
+/* Ensure links inside mobile dropdown are not interactive when not open */
+.mobile:not(.open) {
+    pointer-events: none;
+    opacity: 0;
+    visibility: hidden;
+    display: none;
 }

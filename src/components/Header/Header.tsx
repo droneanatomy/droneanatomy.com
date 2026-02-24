@@ -220,7 +220,7 @@ export const Header: React.FC = () => {
                             </li>
                         ))}
                     </ul>
-                    <div className={styles.mobileCta}>
+                    <div className={styles.mobileCta} style={{ position: 'relative', zIndex: 1 }}>
                         <CTAButton
                             showArrow
                             size='small'
@@ -229,7 +229,7 @@ export const Header: React.FC = () => {
                             Upcoming Updates
                         </CTAButton>
                         <NewsDropdown
-                            isOpen={true}
+                            isOpen={isMobileMenuOpen}
                             items={upcomingUpdates}
                             isMobile={true}
                         />

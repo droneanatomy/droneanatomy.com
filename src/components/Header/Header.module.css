@@ -157,9 +157,11 @@
     bottom: 0;
     background-color: rgba(0, 0, 0, 0.98);
     padding: var(--spacing-lg);
-    z-index: calc(var(--z-header) + 2);
+    z-index: calc(var(--z-header) + 10);
     opacity: 0;
     visibility: hidden;
+    overflow-y: auto;
+    overflow-x: hidden;
     transition: all var(--transition-base);
 }
 
@@ -251,6 +253,7 @@
 
     .ctaContainer {
         display: none;
+        pointer-events: none;
     }
 
     .mobileMenuBtn {
