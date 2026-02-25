@@ -122,10 +122,10 @@ export default function AboutPage() {
                     { name: 'Vikram Chaudhary', role: 'R&D', image: '/images/team/vikram-chaudhary.jpg', },
                     { name: 'Ramesh Patil', role: 'Project Manager', image: '/images/team/ramesh.jpg', },
                     { name: 'Yakshat', role: 'Media Manager', image: '/images/team/yakshat.jpg', },
-                    { name: 'Sanat Chaudhary', role: 'Business Development', image: '/images/sanat.jpg', },
-                    { name: 'Neha Verma', role: 'Operations Manager', image: '/images/neh.jpg', },
-                    { name: 'Neha Verma', role: 'Operations Manager', image: '/images/neh.jpg', },
-                    { name: 'Neha Verma', role: 'Operations Manager', image: '/images/neh.jpg', },
+                    { name: 'Sanat Chaudhary', role: 'Business Development', image: '/images/team/sanat.jpg', },
+                    { name: 'Prem Sharma', role: 'Head of Operations', image: '/images/team/prem.jpg', },
+                    { name: 'Neha Verma', role: 'Operations Manager', image: '/images/team/neh.jpg', },
+                    { name: 'Neha Verma', role: 'Operations Manager', image: '/images/team/neh.jpg', },
 
                 ]}
             />
