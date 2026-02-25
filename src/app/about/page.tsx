@@ -90,7 +90,7 @@ export default function AboutPage() {
                         preTitle: '2024',
                         title: 'Next-Gen Platform',
                         description: 'Unveiled our next-generation drone platform with revolutionary modular design.',
-                        image: '/images/portable1.png',
+                        image: '/images/portable1.jpg',
                     },
                     {
                         preTitle: '2025',
@@ -122,7 +122,7 @@ export default function AboutPage() {
                     { name: 'Vikram Chaudhary', role: 'R&D', image: '/images/team/vikram-chaudhary.jpg', },
                     { name: 'Ramesh Patil', role: 'Project Manager', image: '/images/team/ramesh.jpg', },
                     { name: 'Yakshat', role: 'Media Manager', image: '/images/team/yakshat.jpg', },
-                    { name: 'Neha Verma', role: 'Operations Manager', image: '/images/neh.jpg', },
+                    { name: 'Sanat Chaudhary', role: 'Business Development', image: '/images/sanat.jpg', },
                     { name: 'Neha Verma', role: 'Operations Manager', image: '/images/neh.jpg', },
                     { name: 'Neha Verma', role: 'Operations Manager', image: '/images/neh.jpg', },
                     { name: 'Neha Verma', role: 'Operations Manager', image: '/images/neh.jpg', },
