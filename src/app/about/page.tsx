@@ -124,8 +124,6 @@ export default function AboutPage() {
                     { name: 'Yakshat', role: 'Media Manager', image: '/images/team/yakshat.jpg', },
                     { name: 'Sanat Chaudhary', role: 'Business Development', image: '/images/team/sanat.jpg', },
                     { name: 'Prem Sharma', role: 'Head of Operations', image: '/images/team/prem.jpg', },
-                    { name: 'Neha Verma', role: 'Operations Manager', image: '/images/team/neh.jpg', },
-                    { name: 'Neha Verma', role: 'Operations Manager', image: '/images/team/neh.jpg', },
 
                 ]}
             />
