@@ -2,6 +2,7 @@
 
 import React, { useRef, useEffect, useState } from 'react';
 import styles from './ComingSoonBanner.module.css';
+import Image from 'next/image';
 
 export interface FeatureHighlight {
     icon: React.ReactNode;
@@ -78,7 +79,7 @@ export const ComingSoonBanner: React.FC<ComingSoonBannerProps> = ({
     const videoRef = useRef<HTMLVideoElement>(null);
     const [isInView, setIsInView] = useState(false);
     // Once true, never goes back to false — prevents src toggling which causes flicker
-    const hasBeenInView = useRef(false);
+    const [hasBeenInView, setHasBeenInView] = useState(false);
     const [isMobile, setIsMobile] = useState(false);
 
     useEffect(() => {
@@ -97,7 +98,7 @@ export const ComingSoonBanner: React.FC<ComingSoonBannerProps> = ({
             (entries) => {
                 entries.forEach((entry) => {
                     if (entry.isIntersecting) {
-                        hasBeenInView.current = true;
+                        setHasBeenInView(true);
                     }
                     setIsInView(entry.isIntersecting);
                 });
@@ -129,21 +130,21 @@ export const ComingSoonBanner: React.FC<ComingSoonBannerProps> = ({
                     <video
                         ref={videoRef}
                         className={styles.backgroundVideo}
-                        src={hasBeenInView.current ? backgroundVideo : undefined}
+                        src={hasBeenInView ? backgroundVideo : undefined}
                         muted
                         loop
                         playsInline
                         preload="none"
                     />
                 ) : (isMobile && backgroundImageMobile) ? (
-                    <img
+                    <Image
                         className={styles.backgroundImage}
                         src={backgroundImageMobile}
                         alt=""
                         loading="lazy"
                     />
                 ) : backgroundImage ? (
-                    <img
+                    <Image
                         className={styles.backgroundImage}
                         src={backgroundImage}
                         alt=""

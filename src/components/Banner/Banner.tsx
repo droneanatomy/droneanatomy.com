@@ -2,7 +2,7 @@
 
 import React, { useRef, useEffect, useState } from 'react';
 import { CustomButton } from '../CustomButton';
-
+import Image from 'next/image';
 import styles from './Banner.module.css';
 
 export type ContentPosition =
@@ -94,7 +94,7 @@ export const Banner: React.FC<BannerProps> = ({
     const [isMobile, setIsMobile] = useState(false);
     const [isInView, setIsInView] = useState(false);
     // Once true, never goes back to false — prevents src toggling which causes flicker
-    const hasBeenInView = useRef(false);
+    const [hasBeenInView, setHasBeenInView] = useState(false);
     const [email, setEmail] = useState('');
     const [submitted, setSubmitted] = useState(false);
 
@@ -118,7 +118,7 @@ export const Banner: React.FC<BannerProps> = ({
             (entries) => {
                 entries.forEach((entry) => {
                     if (entry.isIntersecting) {
-                        hasBeenInView.current = true;
+                        setHasBeenInView(true);
                     }
                     setIsInView(entry.isIntersecting);
                 });
@@ -249,7 +249,7 @@ export const Banner: React.FC<BannerProps> = ({
                             <video
                                 ref={videoRef}
                                 className={styles.backgroundVideo}
-                                src={hasBeenInView.current ? backgroundVideo : undefined}
+                                src={hasBeenInView ? backgroundVideo : undefined}
                                 muted
                                 loop
                                 playsInline
@@ -257,18 +257,20 @@ export const Banner: React.FC<BannerProps> = ({
                                 poster={backgroundImage}
                             />
                         ) : (isMobile && backgroundImageMobile) ? (
-                            <img
+                            <Image
                                 className={styles.backgroundImage}
                                 src={backgroundImageMobile}
                                 alt=""
-                                loading="lazy"
+                                fill
+                                priority
                             />
                         ) : backgroundImage ? (
-                            <img
+                            <Image
                                 className={styles.backgroundImage}
                                 src={backgroundImage}
                                 alt=""
-                                loading="lazy"
+                                fill
+                                priority
                             />
                         ) : null}
                     </>

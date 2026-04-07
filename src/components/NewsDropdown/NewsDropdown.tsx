@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Image from 'next/image';
 import styles from './NewsDropdown.module.css';
 
 interface NewsItem {
@@ -21,7 +22,6 @@ interface NewsDropdownProps {
 export const NewsDropdown: React.FC<NewsDropdownProps> = ({
     isOpen,
     items,
-    viewAllHref = '/updates',
     isMobile = false
 }) => {
     return (
@@ -29,7 +29,7 @@ export const NewsDropdown: React.FC<NewsDropdownProps> = ({
             <div className={styles.itemsContainer}>
                 {items.slice(0, 4).map((item) => (
                     <a key={item.id} href={item.href} className={styles.newsItem} target='_blank' rel='noopener noreferrer'>
-                        <img src={item.image} alt={item.title} className={styles.thumbnail} />
+                        <Image src={item.image} alt={item.title} className={styles.thumbnail} width={80} height={60} />
                         <div className={styles.content}>
                             <span className={styles.itemTitle}>{item.title}</span>
                             <span className={styles.itemDate}>{item.date}</span>

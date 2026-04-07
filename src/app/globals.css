@@ -33,47 +33,6 @@
   font-display: swap;
 }
 
-/* D-DIN Condensed */
-@font-face {
-  font-family: 'D-DIN Condensed';
-  src: url('/fonts/D-DINCondensed.otf') format('opentype');
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'D-DIN Condensed';
-  src: url('/fonts/D-DINCondensed-Bold.otf') format('opentype');
-  font-weight: 700;
-  font-style: normal;
-  font-display: swap;
-}
-
-/* D-DIN Exp */
-@font-face {
-  font-family: 'D-DIN Exp';
-  src: url('/fonts/D-DINExp.otf') format('opentype');
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'D-DIN Exp';
-  src: url('/fonts/D-DINExp-Italic.otf') format('opentype');
-  font-weight: 400;
-  font-style: italic;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'D-DIN Exp';
-  src: url('/fonts/D-DINExp-Bold.otf') format('opentype');
-  font-weight: 700;
-  font-style: normal;
-  font-display: swap;
-}
 
 /* ========================================
    CSS VARIABLES
@@ -97,8 +56,8 @@
   /* Typography - Font Families */
   --font-family: 'D-DIN', Arial, Verdana, sans-serif;
   --font-family-heading: 'D-DIN-Bold', Arial, Verdana, sans-serif;
-  --font-family-condensed: 'D-DIN Condensed', var(--font-family);
-  --font-family-expanded: 'D-DIN Exp', var(--font-family);
+  --font-family-condensed: var(--font-family);
+  --font-family-expanded: var(--font-family);
   --font-family-mono: var(--font-roboto-mono), monospace;
 
   /* Typography - Font Sizes */

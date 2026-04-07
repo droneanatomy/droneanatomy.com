@@ -1,8 +1,17 @@
-import { Banner, HomeHeroSection, WireframeTerrain } from '@/components';
+import { Banner, HomeHeroSection } from '@/components';
+import { LazyWireframeTerrain } from '@/components/WireframeTerrain/LazyWireframeTerrain';
+
+export const metadata = {
+    title: 'DroneAnatomy - Advanced Aerial Solutions',
+    description: 'DroneAnatomy provides cutting-edge drone technology for enterprise, commercial, and consumer applications.',
+};
 
 export default function Home() {
     return (
         <>
+            {/* Preload hero video only on the homepage */}
+            <link rel="preload" href="/videos/hero_vid.mp4" as="video" type="video/mp4" media="(min-width: 1024px)" />
+
             {/* Hero Section */}
             <HomeHeroSection
                 heroVideo="/videos/hero_vid.mp4"
@@ -35,16 +44,14 @@ export default function Home() {
                 overlayStyle="dark"
             /> */}
 
-            <WireframeTerrain
+            <LazyWireframeTerrain
                 title="The infrastructure behind autonomous flight"
                 subtitle="We design and build the system that make autonomous aviation reliable, scalable, and inevitable."
                 ctaText="Explore"
                 ctaLink="/updates"
                 contentPosition="center-left"
-                backgroundImageMobile="/images/infra-mob.jpg"
             />
 
-            {/* Drone X1 Banner */}
             <Banner
                 title="Indigenous by design"
                 subtitle="Our systems are developed and manufactured in India, reducing dependency while building sovereign capability for autonomous aviation."

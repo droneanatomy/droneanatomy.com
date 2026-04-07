@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
 import { Dropdown } from '../Dropdown';
 import { CTAButton } from '../CTAButton';
 import { NewsDropdown } from '../NewsDropdown';
@@ -122,9 +124,9 @@ export const Header: React.FC = () => {
                 className={`${styles.header} ${isScrolled ? styles.scrolled : ''} ${isHidden ? styles.hidden : ''}`}
             >
                 {/* Logo */}
-                <a href="/" className={styles.logo}>
-                    <img src="/images/logo.png" alt="DroneAnatomy" className={styles.logoImage} />
-                </a>
+                <Link href="/" className={styles.logo}>
+                    <Image src="/images/logo.png" alt="DroneAnatomy" className={styles.logoImage} width={150} height={40} />
+                </Link>
 
                 {/* Desktop Navigation */}
                 <nav className={styles.nav}>
@@ -175,9 +177,9 @@ export const Header: React.FC = () => {
             >
                 {/* Mobile Menu Header */}
                 <div className={styles.mobileMenuHeader}>
-                    <a href="/" className={styles.mobileMenuLogo} onClick={closeMobileMenu}>
-                        <img src="/images/logo.png" alt="DroneAnatomy" className={styles.logoImage} />
-                    </a>
+                    <Link href="/" className={styles.mobileMenuLogo} onClick={closeMobileMenu}>
+                        <Image src="/images/logo.png" alt="DroneAnatomy" className={styles.logoImage} width={150} height={40} />
+                    </Link>
                     <button
                         type="button"
                         className={styles.closeBtn}

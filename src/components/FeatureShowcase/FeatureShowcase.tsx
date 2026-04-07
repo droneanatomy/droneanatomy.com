@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { CTAButton } from '../CTAButton';
+import Image from 'next/image';
 import styles from './FeatureShowcase.module.css';
 import { CustomButton } from '../CustomButton';
 
@@ -24,13 +24,6 @@ export const FeatureShowcase: React.FC<FeatureShowcaseProps> = ({
     galleryImages,
     className = '',
 }) => {
-    const handleScrollToFooter = () => {
-        const footer = document.querySelector('footer');
-        if (footer) {
-            footer.scrollIntoView({ behavior: 'smooth' });
-        }
-    };
-
     return (
         <section className={`${styles.showcase} ${className}`}>
             {/* Hero Section */}
@@ -65,11 +58,13 @@ export const FeatureShowcase: React.FC<FeatureShowcaseProps> = ({
                     )}
                 </div>
                 <div className={styles.mainImageContainer}>
-                    <img
+                    <Image
                         src={mainImage}
                         alt=""
                         className={styles.mainImage}
                         loading="lazy"
+                        width={600}
+                        height={400}
                     />
                 </div>
             </div>
@@ -79,11 +74,13 @@ export const FeatureShowcase: React.FC<FeatureShowcaseProps> = ({
                 <div className={styles.gallery}>
                     {galleryImages.map((image, index) => (
                         <div key={index} className={styles.galleryItem}>
-                            <img
+                            <Image
                                 src={image}
                                 alt=""
                                 className={styles.galleryImage}
                                 loading="lazy"
+                                width={400}
+                                height={300}
                             />
                         </div>
                     ))}

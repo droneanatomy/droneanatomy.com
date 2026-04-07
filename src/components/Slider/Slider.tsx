@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useCallback, useRef, useEffect } from 'react';
+import Image from 'next/image';
 import styles from './Slider.module.css';
 
 export interface SpecItem {
@@ -37,7 +38,7 @@ export const Slider: React.FC<SliderProps> = ({
     const bgMobileVideoRef = useRef<HTMLVideoElement>(null);
     const sideVideoRef = useRef<HTMLVideoElement>(null);
     // Once true, never goes back to false — prevents src toggling which causes iOS flicker
-    const hasBeenInView = useRef(false);
+    const [hasBeenInView, setHasBeenInView] = useState(false);
 
     useEffect(() => {
         const check = () => setIsMobile(window.innerWidth <= 768);
@@ -55,7 +56,7 @@ export const Slider: React.FC<SliderProps> = ({
             (entries) => {
                 entries.forEach((entry) => {
                     if (entry.isIntersecting) {
-                        hasBeenInView.current = true;
+                        setHasBeenInView(true);
                     }
                     setIsInView(entry.isIntersecting);
                 });
@@ -92,10 +93,6 @@ export const Slider: React.FC<SliderProps> = ({
         setCurrentIndex((prev) => (prev === slides.length - 1 ? 0 : prev + 1));
     }, [slides.length]);
 
-    const goToSlide = useCallback((index: number) => {
-        setCurrentIndex(index);
-    }, []);
-
     if (!slides.length) return null;
 
     const currentSlide = slides[currentIndex];
@@ -110,7 +107,7 @@ export const Slider: React.FC<SliderProps> = ({
                     <video
                         ref={bgMobileVideoRef}
                         className={styles.backgroundVideo}
-                        src={hasBeenInView.current ? currentSlide.backgroundVideoMobile : undefined}
+                        src={hasBeenInView ? currentSlide.backgroundVideoMobile : undefined}
                         muted
                         loop
                         playsInline
@@ -120,16 +117,17 @@ export const Slider: React.FC<SliderProps> = ({
                     <video
                         ref={bgVideoRef}
                         className={styles.backgroundVideo}
-                        src={hasBeenInView.current ? currentSlide.backgroundVideo : undefined}
+                        src={hasBeenInView ? currentSlide.backgroundVideo : undefined}
                         muted
                         playsInline
                         preload="none"
                     />
                 ) : currentSlide.backgroundImage ? (
-                    <img
+                    <Image
                         src={currentSlide.backgroundImage}
                         alt=""
                         className={styles.backgroundImage}
+                        fill
                     />
                 ) : null}
                 {hasBackground && <div className={styles.overlay} />}
@@ -190,16 +188,17 @@ export const Slider: React.FC<SliderProps> = ({
                             <video
                                 ref={sideVideoRef}
                                 className={styles.sideVideo}
-                                src={hasBeenInView.current ? currentSlide.sideVideo : undefined}
+                                src={hasBeenInView ? currentSlide.sideVideo : undefined}
                                 muted
                                 playsInline
                                 preload="none"
                             />
                         ) : currentSlide.sideImage ? (
-                            <img
+                            <Image
                                 src={currentSlide.sideImage}
                                 alt=""
                                 className={styles.sideImage}
+                                fill
                             />
                         ) : null}
                     </div>

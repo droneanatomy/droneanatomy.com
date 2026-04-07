@@ -1,4 +1,4 @@
-import { Banner, StatsSection, CardGrid, Slider, Newsletter, OurTeam } from '@/components';
+import { Banner, StatsSection, CardGrid, Newsletter, OurTeam } from '@/components';
 
 export const metadata = {
     title: 'About | DroneAnatomy',

@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Image from 'next/image';
 import styles from './Card.module.css';
 
 export interface CardProps {
@@ -22,11 +23,13 @@ export const Card: React.FC<CardProps> = ({
         <article className={`${styles.card} ${className}`}>
             {image && (
                 <div className={styles.imageWrapper}>
-                    <img
+                    <Image
                         src={image}
                         alt={title}
                         className={styles.image}
                         loading="lazy"
+                        fill
+                        priority
                     />
                 </div>
             )}

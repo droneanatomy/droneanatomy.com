@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useRef, useEffect, useState } from 'react';
+import Image from 'next/image';
 import { CustomButton } from '../CustomButton';
 import styles from './HomeHeroSection.module.css';
 
@@ -136,10 +137,11 @@ export const HomeHeroSection: React.FC<HomeHeroSectionProps> = ({
                         />
                     ) : isMobile ? (
                         // Mobile image fallback
-                        <img
+                        <Image
                             className={styles.bgVideo}
                             src={heroImage}
                             alt={heroImageAlt}
+                            fill
                         />
                     ) : null
                 )}

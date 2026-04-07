@@ -1,7 +1,9 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import styles from './contact.module.css';
+
 
 export default function ContactPage() {
     const [status, setStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
@@ -46,10 +48,12 @@ export default function ContactPage() {
         <section className={styles.contactHero}>
             {/* Background Image */}
             <div className={styles.backgroundContainer}>
-                <img
+                <Image
                     src="/images/careers-hero.jpg"
                     alt=""
                     className={styles.backgroundImage}
+                    fill
+                    priority
                 />
                 <div className={styles.overlay} />
             </div>

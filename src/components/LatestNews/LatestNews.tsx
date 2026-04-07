@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import styles from './LatestNews.module.css';
 
 export interface ContentItem {
@@ -100,10 +101,11 @@ export const ContentGrid: React.FC<ContentGridProps> = ({
                     {featuredArticle && (
                         <ArticleLink item={featuredArticle} basePath={basePath} className={styles.featuredCard}>
                             <div className={styles.featuredImageWrapper}>
-                                <img
+                                <Image
                                     src={featuredArticle.image}
                                     alt={featuredArticle.title}
                                     className={styles.featuredImage}
+                                    fill
                                 />
                                 <div className={styles.featuredOverlay} />
                             </div>
@@ -129,10 +131,11 @@ export const ContentGrid: React.FC<ContentGridProps> = ({
                                 className={styles.gridCard}
                             >
                                 <div className={styles.gridImageWrapper}>
-                                    <img
+                                    <Image
                                         src={article.image}
                                         alt={article.title}
                                         className={styles.gridImage}
+                                        fill
                                     />
                                 </div>
                                 <div className={styles.gridContent}>
@@ -156,10 +159,11 @@ export const ContentGrid: React.FC<ContentGridProps> = ({
                                 className={styles.additionalCard}
                             >
                                 <div className={styles.additionalImageWrapper}>
-                                    <img
+                                    <Image
                                         src={article.image}
                                         alt={article.title}
                                         className={styles.additionalImage}
+                                        fill
                                     />
                                 </div>
                                 <div className={styles.additionalContent}>

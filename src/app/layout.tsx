@@ -23,9 +23,6 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={robotoMono.variable}>
-      <head>
-        <link rel="preload" href="/videos/hero_vid.mp4" as="video" type="video/mp4" media="(min-width: 1024px)" />
-      </head>
       <body>
         <Header />
         <main>{children}</main>

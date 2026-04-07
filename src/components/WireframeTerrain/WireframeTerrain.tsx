@@ -3,7 +3,6 @@
 import React, { useRef, useEffect, useState } from 'react';
 import * as THREE from 'three';
 import { CustomButton } from '../CustomButton';
-import { Banner } from '../Banner';
 import styles from './WireframeTerrain.module.css';
 
 export type ContentPosition =
@@ -18,7 +17,6 @@ export interface WireframeTerrainProps {
     ctaText?: string;
     ctaLink?: string;
     contentPosition?: ContentPosition;
-    backgroundImageMobile?: string;
 }
 
 const positionClassMap: Record<ContentPosition, string> = {
@@ -40,7 +38,6 @@ export const WireframeTerrain: React.FC<WireframeTerrainProps> = ({
     ctaText,
     ctaLink = '/',
     contentPosition = 'top-left',
-    backgroundImageMobile,
 }) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -246,10 +243,8 @@ export const WireframeTerrain: React.FC<WireframeTerrainProps> = ({
         // ── Animation loop ────────────────────────────────────────
         const clock = new THREE.Clock();
         let camZ = 30;
-        let animId = 0;
-
         function animate() {
-            animId = requestAnimationFrame(animate);
+            requestAnimationFrame(animate);
 
             // Skip all work when off-screen (saves GPU/CPU)
             if (!isInViewRef.current) return;
@@ -325,7 +320,7 @@ export const WireframeTerrain: React.FC<WireframeTerrainProps> = ({
         viewObserver.observe(container);
 
         // ── HUD counter ───────────────────────────────────────────
-        const hudInterval = setInterval(() => {
+        setInterval(() => {
             const alt = Math.max(100, 2400 - Math.round((30 - camZ) * 3));
             if (hudBrRef.current) {
                 hudBrRef.current.innerHTML = `ALT: ${alt.toLocaleString()}m<br>CAM: CINEMATIC<br>DRONE ANATOMY<br>UNITS: DA-01 · DA-02`;
@@ -360,7 +355,7 @@ export const WireframeTerrain: React.FC<WireframeTerrainProps> = ({
         //         }
         //     });
         // };
-    }, []);
+    }, [isMobile]);
 
     // if (isMobile) {
     //     return (

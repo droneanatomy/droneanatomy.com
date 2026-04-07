@@ -36,7 +36,7 @@ export default function PrivacyPage() {
                         <li><a href="#data-retention">6. Data Retention</a></li>
                         <li><a href="#your-rights">7. Your Rights</a></li>
                         <li><a href="#security">8. Security</a></li>
-                        <li><a href="#children">9. Children's Privacy</a></li>
+                        <li><a href="#children">9. Children&apos;s Privacy</a></li>
                         <li><a href="#changes">10. Changes to This Policy</a></li>
                         <li><a href="#contact-us">11. Contact Us</a></li>
                     </ol>

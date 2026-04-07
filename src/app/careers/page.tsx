@@ -1,14 +1,18 @@
 import styles from './careers.module.css';
+import Image from 'next/image';
+
 
 export default function CareersPage() {
     return (
         <section className={styles.careersHero}>
             {/* Background Image */}
             <div className={styles.backgroundContainer}>
-                <img
+                <Image
                     src="/images/dawn.jpg"
                     alt=""
                     className={styles.backgroundImage}
+                    fill
+                    priority
                 />
                 <div className={styles.overlay} />
             </div>

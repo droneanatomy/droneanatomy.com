@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import styles from './Counter.module.css';
 
 export interface CounterProps {
@@ -22,27 +22,7 @@ export const Counter: React.FC<CounterProps> = ({
     const [hasAnimated, setHasAnimated] = useState(false);
     const counterRef = useRef<HTMLDivElement>(null);
 
-    useEffect(() => {
-        const observer = new IntersectionObserver(
-            (entries) => {
-                entries.forEach((entry) => {
-                    if (entry.isIntersecting && !hasAnimated) {
-                        setHasAnimated(true);
-                        animateValue(0, value, duration);
-                    }
-                });
-            },
-            { threshold: 0.3 }
-        );
-
-        if (counterRef.current) {
-            observer.observe(counterRef.current);
-        }
-
-        return () => observer.disconnect();
-    }, [value, duration, hasAnimated]);
-
-    const animateValue = (start: number, end: number, animDuration: number) => {
+    const animateValue = useCallback((start: number, end: number, animDuration: number) => {
         const startTime = performance.now();
 
         const animate = (currentTime: number) => {
@@ -61,7 +41,27 @@ export const Counter: React.FC<CounterProps> = ({
         };
 
         requestAnimationFrame(animate);
-    };
+    }, []);
+
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            (entries) => {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting && !hasAnimated) {
+                        setHasAnimated(true);
+                        animateValue(0, value, duration);
+                    }
+                });
+            },
+            { threshold: 0.3 }
+        );
+
+        if (counterRef.current) {
+            observer.observe(counterRef.current);
+        }
+
+        return () => observer.disconnect();
+    }, [value, duration, hasAnimated, animateValue]);
 
     return (
         <div className={styles.counter} ref={counterRef}>
