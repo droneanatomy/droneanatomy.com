@@ -47,6 +47,7 @@ export const WireframeTerrain: React.FC<WireframeTerrainProps> = ({
     const hudBrRef = useRef<HTMLDivElement>(null);
     const isInViewRef = useRef(false);
     const [isMobile, setIsMobile] = useState(false);
+    const [webGLFailed, setWebGLFailed] = useState(false);
 
     // Detect mobile — skip Three.js entirely on small screens
     useEffect(() => {
@@ -57,7 +58,7 @@ export const WireframeTerrain: React.FC<WireframeTerrainProps> = ({
     }, []);
 
     useEffect(() => {
-        if (isMobile) return; // Skip Three.js on mobile
+        if (isMobile || webGLFailed) return; // Skip Three.js on mobile or unsupported GPU
 
         const container = containerRef.current;
         const canvas = canvasRef.current;
@@ -65,7 +66,13 @@ export const WireframeTerrain: React.FC<WireframeTerrainProps> = ({
         if (!container || !canvas || !bloomCanvas) return;
 
         // ── Renderer ──────────────────────────────────────────────
-        const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+        let renderer: THREE.WebGLRenderer;
+        try {
+            renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+        } catch {
+            setWebGLFailed(true);
+            return;
+        }
         renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
         renderer.setClearColor(0x020818);
 
@@ -355,7 +362,7 @@ export const WireframeTerrain: React.FC<WireframeTerrainProps> = ({
         //         }
         //     });
         // };
-    }, [isMobile]);
+    }, [isMobile, webGLFailed]);
 
     // if (isMobile) {
     //     return (
@@ -372,7 +379,7 @@ export const WireframeTerrain: React.FC<WireframeTerrainProps> = ({
     // }
 
     return (
-        <div ref={containerRef} className={`${styles.container} ${className}`}>
+        <div ref={containerRef} className={`${styles.container} ${isMobile || webGLFailed ? styles.mobileContainer : ''} ${className}`}>
             <canvas ref={canvasRef} className={styles.canvas} />
             <canvas ref={bloomRef} className={styles.bloom} />
             <div className={styles.overlay} />

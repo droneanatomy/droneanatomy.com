@@ -3,7 +3,11 @@
     "allow": [
       "Bash(npm run:*)",
       "Bash(ls:*)",
-      "Bash(npx next:*)"
+      "Bash(npx next:*)",
+      "Bash(npm install *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)"
     ]
   }
 }
