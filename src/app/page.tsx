@@ -1,81 +1,18 @@
-import { Banner, HomeHeroSection } from '@/components';
-import { LazyWireframeTerrain } from '@/components/WireframeTerrain/LazyWireframeTerrain';
+import { LazyHeroCluster } from '@/components/HeroCluster/LazyHeroCluster';
 
 export const metadata = {
-    title: 'DroneAnatomy - Advanced Aerial Solutions',
-    description: 'DroneAnatomy provides cutting-edge drone technology for enterprise, commercial, and consumer applications.',
+  title: 'DroneAnatomy - Advanced Aerial Solutions',
+  description:
+    'DroneAnatomy provides cutting-edge drone technology for enterprise, commercial, and consumer applications.',
 };
 
 export default function Home() {
-    return (
-        <>
-            {/* Preload hero video only on the homepage */}
-            <link rel="preload" href="/videos/hero_vid.mp4" as="video" type="video/mp4" media="(min-width: 1024px)" />
-
-            {/* Hero Section */}
-            <HomeHeroSection
-                heroVideo="/videos/hero_vid.mp4"
-                // heroVideoMobile="/videos/drone-hero-mob.mp4"
-                heroVideoMobile="/videos/home-hero-mob.mp4"
-
-            />
-
-            {/* Drone X1 Banner */}
-            <Banner
-                title="AUTONOMOUS DEFENCE AIRSPACE DOMINANCE SYSTEMS"
-                subtitle="(OUTCOMES > SPECIFICATIONS)"
-                ctaText="Explore"
-                ctaLink="/about"
-                // backgroundImage='/images/layout2.jpg'
-                backgroundImageMobile='/images/drone-in-the-sky-mob.png'
-                backgroundVideo='/videos/drone_in_the_sky.mp4'
-                contentPosition="bottom-right"
-                overlayStyle="light"
-            />
-
-            {/* Enterprise Solutions Banner */}
-            {/* <Banner
-                title="The infrastructure behind autonomous flight"
-                subtitle="We design and build the system that make autonomous aviation reliable, scalable, and inevitable."
-                ctaText="Explore"
-                ctaLink="/updates"
-                backgroundImage='/images/layout3.jpg'
-                contentPosition="top-left"
-                overlayStyle="dark"
-            /> */}
-
-            <LazyWireframeTerrain
-                title="The infrastructure behind autonomous flight"
-                subtitle="We design and build the system that make autonomous aviation reliable, scalable, and inevitable."
-                ctaText="Explore"
-                ctaLink="/updates"
-                contentPosition="center-left"
-            />
-
-            <Banner
-                title="Indigenous by design"
-                subtitle="Our systems are developed and manufactured in India, reducing dependency while building sovereign capability for autonomous aviation."
-                ctaText="Know More"
-                ctaLink="/products/p10-pro"
-                backgroundVideo='/videos/indegenous_design.mp4'
-                backgroundImageMobile='/images/indigenous-mob.png'
-                contentPosition="top-right"
-                overlayStyle="dark"
-            />
-
-            {/* Launches Banner */}
-            <Banner
-                title="From Systems to Missions"
-                subtitle="We design from failure -> prevention -> reliability."
-                ctaText="Learn More"
-                ctaLink="/about"
-                // backgroundImage='/images/layout5.jpg'
-                backgroundImageMobile='/images/drone-top-view-mob.jpg'
-                backgroundVideo='/videos/birds-eye-view.mp4'
-                contentPosition="center-left"
-                overlayStyle="dark"
-                fadeBottomColor='black'
-            />
-        </>
-    );
+  return (
+    <>
+      <LazyHeroCluster
+        wordmark="DroneAnatomy"
+        tagline="We build the autonomous systems that define the next era of flight."
+      />
+    </>
+  );
 }

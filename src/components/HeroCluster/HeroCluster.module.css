@@ -1,0 +1,201 @@
+/* HeroCluster — Lusion-style light hero with a dark 3D card. */
+
+.hero {
+  --lav: #eceaf4;
+  --ink: #14151a;
+  --card: #101116;
+  --line: rgba(20, 21, 26, 0.35);
+  --flare: #fffc00;
+
+  position: relative;
+  width: 100%;
+  min-height: 100svh;
+  background: var(--lav);
+  color: var(--ink);
+  padding: clamp(16px, 2.4vw, 34px);
+  display: flex;
+  flex-direction: column;
+  gap: clamp(12px, 1.6vw, 22px);
+  font-family: var(--font-family, 'D-DIN', Arial, sans-serif);
+  overflow: hidden;
+}
+
+/* ---------- Top chrome ---------- */
+
+.top {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: start;
+  gap: 20px;
+}
+
+.mark {
+  font-family: var(--font-family-heading, 'D-DIN-Bold', sans-serif);
+  font-weight: 700;
+  font-size: clamp(18px, 1.5vw, 26px);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.tagline {
+  margin: 0;
+  justify-self: center;
+  max-width: 42ch;
+  font-size: clamp(15px, 1.35vw, 24px);
+  line-height: 1.22;
+  letter-spacing: -0.005em;
+  color: var(--ink);
+}
+
+.nav {
+  justify-self: end;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pill,
+.pillDark,
+.pillIcon {
+  border: 0;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: clamp(12px, 0.85vw, 14px);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border-radius: 999px;
+  padding: 12px 20px;
+  transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.3, 1),
+    background 0.35s ease, color 0.35s ease;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pill {
+  background: #dcdae6;
+  color: var(--ink);
+}
+.pill:hover {
+  background: #d0cee0;
+}
+
+.pillDark {
+  background: var(--ink);
+  color: #fff;
+}
+.pillDark i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--flare);
+}
+.pillDark:hover {
+  transform: translateY(-1px);
+}
+
+.pillIcon {
+  padding: 0;
+  width: 44px;
+  height: 44px;
+  background: #dcdae6;
+  display: inline-grid;
+  place-items: center;
+}
+.pillIcon span {
+  width: 14px;
+  height: 2px;
+  background: var(--ink);
+}
+.pillIcon:hover {
+  background: #d0cee0;
+}
+
+@media (max-width: 720px) {
+  .top {
+    grid-template-columns: 1fr auto;
+  }
+  .tagline {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    justify-self: start;
+    text-align: left;
+  }
+}
+
+/* ---------- 3D card ---------- */
+
+.card {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  border-radius: clamp(14px, 1.4vw, 22px);
+  background: var(--card);
+  overflow: hidden;
+}
+
+.canvas,
+.fallback {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.fallback {
+  background: radial-gradient(120% 90% at 50% 40%, #23242c, #0d0e12);
+}
+
+/* Corner ticks inside the card */
+.tick {
+  position: absolute;
+  font-size: 16px;
+  line-height: 1;
+  color: rgba(240, 240, 250, 0.5);
+  user-select: none;
+  pointer-events: none;
+}
+.tl {
+  top: 12px;
+  left: 14px;
+}
+.tr {
+  top: 12px;
+  right: 14px;
+}
+.bl {
+  bottom: 12px;
+  left: 14px;
+}
+.br {
+  bottom: 12px;
+  right: 14px;
+}
+
+/* ---------- Bottom rail ---------- */
+
+.rail {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  padding: 2px clamp(4px, 1vw, 14px) 0;
+}
+.plus {
+  color: var(--line);
+  font-size: 15px;
+}
+.plus:last-child {
+  justify-self: end;
+}
+.scroll {
+  justify-self: center;
+  font-size: clamp(11px, 0.85vw, 13px);
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink);
+}

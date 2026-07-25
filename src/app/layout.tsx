@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import localFont from 'next/font/local';
 import { GoogleAnalytics } from '@next/third-parties/google';
-import { Header, Footer } from '@/components';
+import { HeaderGate, FooterGate } from '@/components/Chrome/ChromeGate';
 import './globals.css';
 
 const robotoMono = localFont({
@@ -25,9 +25,9 @@ export default function RootLayout({
   return (
     <html lang="en" className={robotoMono.variable}>
       <body>
-        <Header />
+        <HeaderGate />
         <main>{children}</main>
-        <Footer />
+        <FooterGate />
       </body>
       {process.env.NEXT_PUBLIC_GA_ID && (
         <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID} />

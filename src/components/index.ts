@@ -9,6 +9,7 @@ export * from './Dropdown';
 export * from './FeatureShowcase';
 export * from './Footer';
 export * from './Header';
+export * from './HeroCluster';
 export * from './HomeHeroSection';
 export * from './LatestNews';
 export * from './NewsDropdown';
