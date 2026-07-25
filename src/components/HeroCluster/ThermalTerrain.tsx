@@ -352,6 +352,7 @@ export const ThermalTerrain: React.FC<ThermalTerrainProps> = ({ imageSrc, therma
           uv += uMouse * uParallax;
 
           vec3 day = texture2D(uDay, uv).rgb;
+          day = pow(day * 1.18, vec3(0.94)); // brighten daytime a little
           vec3 therm = texture2D(uThermal, uv).rgb;
 
           // screen-space lens circle around the cursor
