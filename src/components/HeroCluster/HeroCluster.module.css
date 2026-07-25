@@ -3,7 +3,7 @@
 .hero {
   --lav: #eceaf4;
   --ink: #14151a;
-  --card: #101116;
+  --card: #0e0e12;
   --line: rgba(20, 21, 26, 0.35);
   --flare: #fffc00;
 
@@ -12,10 +12,10 @@
   min-height: 100svh;
   background: var(--lav);
   color: var(--ink);
-  padding: clamp(16px, 2.4vw, 34px);
+  padding: clamp(28px, 4.6vh, 50px) clamp(24px, 3.05vw, 44px);
   display: flex;
   flex-direction: column;
-  gap: clamp(12px, 1.6vw, 22px);
+  gap: clamp(16px, 2.2vh, 26px);
   font-family: var(--font-family, 'D-DIN', Arial, sans-serif);
   overflow: hidden;
 }
@@ -32,8 +32,8 @@
 .mark {
   font-family: var(--font-family-heading, 'D-DIN-Bold', sans-serif);
   font-weight: 700;
-  font-size: clamp(18px, 1.5vw, 26px);
-  letter-spacing: 0.02em;
+  font-size: clamp(19px, 1.8vw, 26px);
+  letter-spacing: 0.01em;
   text-transform: uppercase;
   color: var(--ink);
   text-decoration: none;
@@ -42,10 +42,10 @@
 .tagline {
   margin: 0;
   justify-self: center;
-  max-width: 42ch;
-  font-size: clamp(15px, 1.35vw, 24px);
-  line-height: 1.22;
-  letter-spacing: -0.005em;
+  max-width: 540px;
+  font-size: clamp(18px, 2.5vw, 36px);
+  line-height: 1.1;
+  letter-spacing: -0.01em;
   color: var(--ink);
 }
 
@@ -62,12 +62,13 @@
   border: 0;
   cursor: pointer;
   font-family: inherit;
-  font-size: clamp(12px, 0.85vw, 14px);
-  font-weight: 700;
-  letter-spacing: 0.08em;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
   text-transform: uppercase;
   border-radius: 999px;
-  padding: 12px 20px;
+  padding: 14px 22px;
+  white-space: nowrap;
   transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.3, 1),
     background 0.35s ease, color 0.35s ease;
   text-decoration: none;
@@ -85,7 +86,7 @@
 }
 
 .pillDark {
-  background: var(--ink);
+  background: #2b2e3a;
   color: #fff;
 }
 .pillDark i {
@@ -100,8 +101,8 @@
 
 .pillIcon {
   padding: 0;
-  width: 44px;
-  height: 44px;
+  width: 45px;
+  height: 45px;
   background: #dcdae6;
   display: inline-grid;
   place-items: center;
@@ -133,7 +134,7 @@
   position: relative;
   flex: 1;
   min-height: 0;
-  border-radius: clamp(14px, 1.4vw, 22px);
+  border-radius: clamp(14px, 1.4vw, 20px);
   background: var(--card);
   overflow: hidden;
 }
