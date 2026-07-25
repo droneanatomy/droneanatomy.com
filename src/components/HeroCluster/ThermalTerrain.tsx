@@ -9,14 +9,13 @@
    an ironbow thermal palette — roofs and roads read hot, vegetation
    and water read cold — the way an EO/IR payload sees the ground.
 
-   Three source textures share one seeded feature set so they line up:
-     • day     — daytime RGB, crisp
-     • thermal — ironbow heat map (roofs/roads hot, water cold)
-     • depth   — grayscale height, buildings raised for the parallax
+   Pass aligned day + thermal photos via imageSrc / thermalSrc (same
+   frame, same crop). Both are cover-fit and parallaxed identically so
+   features line up exactly across the lens edge. Without props, a
+   procedural site is generated so the effect is still visible.
 
-   Drop in real assets later via the imageSrc / thermalSrc / depthSrc
-   props; without them the scene is generated procedurally so the
-   effect is visible immediately.
+   The parallax is a subtle uniform drift (no depth map needed for a
+   flat photo); depthSrc is accepted but unused for real imagery.
    ============================================================ */
 
 import React, { useRef, useEffect } from 'react';
@@ -298,25 +297,34 @@ export const ThermalTerrain: React.FC<ThermalTerrainProps> = ({ imageSrc, therma
     const site = generateSite();
     const uDay = tex(site.day, true);
     const uThermal = tex(site.thermal, true);
-    const uDepth = tex(site.depth, false);
-
-    // Optional real-asset overrides.
-    const loader = new THREE.TextureLoader();
-    if (imageSrc) loader.load(imageSrc, (t) => { t.colorSpace = THREE.SRGBColorSpace; uniforms.uDay.value = t; });
-    if (thermalSrc) loader.load(thermalSrc, (t) => { t.colorSpace = THREE.SRGBColorSpace; uniforms.uThermal.value = t; });
-    if (depthSrc) loader.load(depthSrc, (t) => { t.colorSpace = THREE.NoColorSpace; uniforms.uDepth.value = t; });
 
     const uniforms = {
       uDay: { value: uDay as THREE.Texture },
       uThermal: { value: uThermal as THREE.Texture },
-      uDepth: { value: uDepth as THREE.Texture },
-      uMouse: { value: new THREE.Vector2(0, 0) },     // -1..1, eased
-      uMouseUV: { value: new THREE.Vector2(0.5, 0.5) }, // 0..1, eased
+      uMouse: { value: new THREE.Vector2(0, 0) },       // -1..1, eased
+      uMouseUV: { value: new THREE.Vector2(0.5, 0.5) }, // 0..1 screen, eased
       uHover: { value: 0 },
       uTime: { value: 0 },
       uRes: { value: new THREE.Vector2(1, 1) },
-      uRadius: { value: 0.16 },
+      uRadius: { value: 0.17 },
+      uImgAspect: { value: 1280 / 720 }, // procedural default; updated on real load
+      uParallax: { value: 0.016 },
     };
+
+    // Real-asset overrides. Cover-fit uses the loaded image's true aspect.
+    const loader = new THREE.TextureLoader();
+    if (imageSrc)
+      loader.load(imageSrc, (t) => {
+        t.colorSpace = THREE.SRGBColorSpace;
+        uniforms.uDay.value = t;
+        if (t.image) uniforms.uImgAspect.value = t.image.width / t.image.height;
+      });
+    if (thermalSrc)
+      loader.load(thermalSrc, (t) => {
+        t.colorSpace = THREE.SRGBColorSpace;
+        uniforms.uThermal.value = t;
+      });
+    void depthSrc; // depth map not needed for real photos (uniform parallax)
 
     const material = new THREE.ShaderMaterial({
       uniforms,
@@ -327,37 +335,36 @@ export const ThermalTerrain: React.FC<ThermalTerrainProps> = ({ imageSrc, therma
       fragmentShader: `
         precision highp float;
         varying vec2 vUv;
-        uniform sampler2D uDay, uThermal, uDepth;
+        uniform sampler2D uDay, uThermal;
         uniform vec2 uMouse, uMouseUV, uRes;
-        uniform float uHover, uTime, uRadius;
-
-        float hash(vec2 p){ return fract(sin(dot(p, vec2(12.9898,78.233))) * 43758.5453); }
+        uniform float uHover, uTime, uRadius, uImgAspect, uParallax;
 
         void main(){
-          // 2.5D parallax: sample depth, shift UVs by mouse * (depth-0.5).
-          float d = texture2D(uDepth, vUv).r;
-          vec2 uv = vUv + uMouse * (d - 0.5) * 0.035;
+          // cover-fit the image to the card without distortion
+          float viewAspect = uRes.x / uRes.y;
+          vec2 uv = vUv;
+          if (viewAspect > uImgAspect) {
+            uv.y = (uv.y - 0.5) * (uImgAspect / viewAspect) + 0.5;
+          } else {
+            uv.x = (uv.x - 0.5) * (viewAspect / uImgAspect) + 0.5;
+          }
+          // 2.5D parallax: whole image drifts a little with the cursor
+          uv += uMouse * uParallax;
 
           vec3 day = texture2D(uDay, uv).rgb;
           vec3 therm = texture2D(uThermal, uv).rgb;
 
-          // aspect-correct distance to cursor
-          vec2 diff = uv - uMouseUV;
-          diff.x *= uRes.x / uRes.y;
-          float dist = length(diff);
-
-          // soft lens mask
-          float mask = smoothstep(uRadius, uRadius * 0.68, dist) * uHover;
-
-          // sensor grain inside the lens
-          float grain = (hash(floor(uv * uRes * 0.6) + floor(uTime * 12.0)) - 0.5) * 0.10;
-          therm += grain * mask;
+          // screen-space lens circle around the cursor
+          vec2 sdiff = vUv - uMouseUV;
+          sdiff.x *= viewAspect;
+          float dist = length(sdiff);
+          float mask = smoothstep(uRadius, uRadius * 0.7, dist) * uHover;
 
           vec3 col = mix(day, therm, mask);
 
-          // bright ring at the lens edge
-          float ring = (1.0 - smoothstep(0.0, uRadius * 0.06, abs(dist - uRadius))) * uHover;
-          col += ring * vec3(1.0, 0.95, 0.7) * 0.5;
+          // bright scan ring at the lens edge
+          float ring = (1.0 - smoothstep(0.0, uRadius * 0.05, abs(dist - uRadius))) * uHover;
+          col += ring * vec3(1.0, 0.95, 0.7) * 0.55;
 
           gl_FragColor = vec4(col, 1.0);
         }
@@ -424,7 +431,6 @@ export const ThermalTerrain: React.FC<ThermalTerrainProps> = ({ imageSrc, therma
       material.dispose();
       uDay.dispose();
       uThermal.dispose();
-      uDepth.dispose();
       renderer.dispose();
     };
   }, [imageSrc, thermalSrc, depthSrc]);

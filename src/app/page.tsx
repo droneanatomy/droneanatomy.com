@@ -12,6 +12,8 @@ export default function Home() {
       <LazyHeroCluster
         wordmark="DroneAnatomy"
         tagline="We build the autonomous systems that define the next era of flight."
+        imageSrc="/images/site-day.webp"
+        thermalSrc="/images/site-thermal.webp"
       />
     </>
   );
