@@ -29,7 +29,6 @@ export const Card: React.FC<CardProps> = ({
                         className={styles.image}
                         loading="lazy"
                         fill
-                        priority
                     />
                 </div>
             )}
