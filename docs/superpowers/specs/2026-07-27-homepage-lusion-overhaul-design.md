@@ -195,8 +195,13 @@ the homepage with no route to products, about, careers or updates.
 
 The current plates (`site-day.webp`, `site-thermal.webp`) show aerial strike
 aftermath — burning wreckage, destroyed vehicles, blast craters. The
-thermal-reveal concept is retained; the subject changes to a neutral site
-(infrastructure, terrain, or a survey area).
+thermal-reveal concept is retained; the subject changes to a neutral site.
+
+The replacement is supplied and committed at `assets/hero/site-day-source.jpg`
+— a 3864×2304 top-down aerial of mountain terrain with a road, a structure,
+vehicles, scree and vegetation, and a sailplane in frame. Source assets live in
+`assets/`, which is tracked but never served; generated plates are written to
+`public/images/`.
 
 The thermal plate is **derived from the day plate**, not sourced separately.
 The two plates must share the same frame, crop and altitude or features will not
@@ -205,16 +210,39 @@ unobtainable as published assets. Deriving guarantees registration by
 construction and reduces the asset dependency to one image.
 
 Derivation follows the approach the procedural generator already uses — day and
-heat built from one shared source — applied to a photograph:
+heat built from one shared source — applied to a photograph.
 
-- Segment by luminance and hue: built surfaces (roofs, roads, bare ground) map
-  to the hot end of the ironbow ramp; vegetation maps cold; water maps coldest.
-- Apply a mild blur to the heat map, matching the lower spatial resolution of a
-  real thermal sensor.
+**Derivation is luminance-driven, not hue-driven.** The supplied plate measures
+a mean HSL saturation of 0.056, i.e. effectively monochrome, so hue segmentation
+(vegetation green, water blue) has no signal to work with. Luminance does: the
+plate spans p05 0.108 to p95 0.729, a wide and well-distributed range.
+
+This is not merely a fallback. In this scene the bright/dark split is largely a
+sun-exposure split — sunlit limestone and scree absorb and re-radiate heat,
+shadowed rock and vegetation stay cool — so luminance is a defensible thermal
+proxy rather than an arbitrary one.
+
+Steps:
+
+- Map luminance to the ironbow ramp, with a contrast curve so the mid-tones
+  spread rather than clumping around the p50 of 0.298.
+- Apply manual feature overrides where luminance misleads: the road, the
+  structure's roof and the vehicles push hot regardless of their brightness.
+- Blur the heat map mildly, matching the lower spatial resolution of a real
+  thermal sensor.
 - Emit at half resolution, as the procedural path already does.
 
 Derivation runs once as a build-time script writing `site-thermal.webp`, not per
-page load. The existing `IRONBOW` ramp and lens shader are unchanged.
+page load. The same script emits the optimised `site-day.webp` from the source
+JPEG, so both plates come from one pass and cannot drift. `sharp` is already
+present transitively via Next.js but must be added as an explicit
+`devDependency` rather than relied on by accident.
+
+The existing `IRONBOW` ramp and lens shader are unchanged.
+
+If the feature overrides prove fiddly, the fallback is a hand-painted heat mask
+authored once against the source plate and committed alongside it — same
+guaranteed registration, no per-image tuning code.
 
 This produces a plausible simulation, not real sensor data. It must not be
 captioned or described as genuine thermal capture.
@@ -235,9 +263,9 @@ Products reuse the existing routes (`/products/p10-pro`, `noxr-1`, `cyclops-3`,
 `cyclops-mini`, `liftx100`) and the imagery already in `/public/images`. No new
 product photography is assumed.
 
-One new asset is required: a single neutral aerial photograph for the hero, at
-sufficient resolution for a full-bleed card. Until it is supplied, the hero
-falls back to the existing procedural site so the page remains buildable.
+The hero aerial is supplied and committed at `assets/hero/site-day-source.jpg`.
+It is a Pexels stock image (Cédric Estienne); its licence should be confirmed as
+suitable for commercial use before launch.
 
 ## Verification
 
@@ -266,8 +294,10 @@ Verification for this change is:
 - **Bundle size.** Three.js plus GSAP, ScrollTrigger, ScrollSmoother and
   SplitText on one route. GSAP plugins are imported individually and the page
   is measured after the first section lands, not at the end.
-- **Hero asset is a dependency.** The neutral aerial must be supplied before
-  the hero is final. The procedural fallback keeps the page buildable, but
-  shipping it was not the intent.
 - **Derived thermal is a simulation.** It approximates how an EO/IR payload
   would see the scene. It must not be presented as real sensor capture.
+- **Derivation quality is unproven.** Luminance-driven mapping is sound in
+  principle for this plate, but whether it reads convincingly under the lens is
+  only knowable once rendered. The hand-painted heat mask is the fallback.
+- **Stock licence unconfirmed.** The hero aerial is a Pexels image; commercial
+  use should be verified before launch.
