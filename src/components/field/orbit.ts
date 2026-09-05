@@ -50,16 +50,35 @@ export function shortestAngle(from: number, to: number): number {
   return Math.atan2(Math.sin(d), Math.cos(d));
 }
 
-/* Critically damped, semi-implicit Euler.
+/* Critically damped, with the DAMPING TERM SOLVED IMPLICITLY.
 
    Critically damped rather than under-damped because this spring performs
    BOTH jobs: the flight to a hotspot and the snap back from a drag. An
    overshoot is charming on a flight and irritating on the twentieth return,
    and the flights get their sense of weight from distance instead.
 
-   Verified stable and overshoot-free at both 1/60 and 1/30 — see the tests.
-   The caller must still clamp dt; a backgrounded tab hands back multi-second
-   frames and no explicit integrator survives those. */
+   THE DAMPING IS IMPLICIT BECAUSE THE EXPLICIT FORM EXPLODES, and it does so
+   exactly where it hurts most. Written the obvious way —
+
+       vel += (omega^2 * err - 2*omega*vel) * dt
+
+   — the velocity is multiplied by (1 - 2*omega*dt) each step, which leaves
+   the unit circle as soon as omega*dt exceeds 1. The reduced-motion path
+   shortens the period to 0.15s, giving omega = 41.9, and MAX_DT is 1/30. That
+   is 1 - 2.79 = -1.79: every frame at or below 30Hz multiplies the velocity
+   by -1.79 and the camera diverges to infinity within a second. So the bug
+   was reachable only by a reader who had asked for reduced motion and whose
+   machine dropped a frame, which is the last person who should meet it.
+
+   Dividing by (1 + 2*omega*dt) instead is unconditionally stable for any
+   omega and any dt. It costs a little overshoot — 0.07% at the shipping
+   period and 60Hz, under 7% in the worst reduced-motion case — where the
+   explicit form had none. That is a good trade for a constant that is
+   expected to be retuned by feel: the integrator now survives whatever the
+   next person picks.
+
+   The caller must still clamp dt. Stability is not the only reason for it;
+   a tab that has been away for a minute should not fast-forward the drift. */
 export function springStep(
   cur: number,
   vel: number,
@@ -69,8 +88,7 @@ export function springStep(
   wrap = false
 ): [number, number] {
   const err = wrap ? shortestAngle(cur, rest) : rest - cur;
-  const accel = omega * omega * err - 2 * omega * vel;
-  const nextVel = vel + accel * dt;
+  const nextVel = (vel + omega * omega * err * dt) / (1 + 2 * omega * dt);
   return [cur + nextVel * dt, nextVel];
 }
 

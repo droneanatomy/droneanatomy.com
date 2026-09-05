@@ -229,6 +229,11 @@ export function MiniViewer({ name, viewer }: { name: string; viewer: ProductView
   /* The dots are positioned from the render loop, so the loop needs a way
      to reach them that does not go through a re-render. */
   const hotspotsRef = useRef<HotspotsHandle>(null);
+  /* The rig is built inside the viewer effect and read by the selection
+     effect below. A ref rather than state because publishing it with
+     setState would re-render the tree at the moment the model lands, for a
+     value nothing renders. */
+  const rigRef = useRef<ElasticRig | null>(null);
 
   /* The fade is computed by the first effect and consumed by the second.
      A ref rather than state because it changes every frame — see the note
@@ -427,6 +432,8 @@ export function MiniViewer({ name, viewer }: { name: string; viewer: ProductView
         setGrabbed(true);
       },
     });
+
+    rigRef.current = rig;
 
     /* THE PICKER, and it is how the numbers in product.ts were authored.
 
@@ -629,6 +636,7 @@ export function MiniViewer({ name, viewer }: { name: string; viewer: ProductView
       cancelAnimationFrame(raf);
       ro.disconnect();
       rig.dispose();
+      rigRef.current = null;
       detachPicker?.();
 
       if (craft) scene.remove(craft);
@@ -663,6 +671,33 @@ export function MiniViewer({ name, viewer }: { name: string; viewer: ProductView
        the parent. If that ever happens, the fix is to hoist the literal,
        not to drop the dependency. */
   }, [status, viewer]);
+
+  /* SELECTION -> CAMERA, AND THIS IS THE WHOLE OF THE "FLIGHT".
+
+     There is no tween here because there is no tween anywhere: changing the
+     rest pose and the pivot IS the flight, and the same spring that snaps a
+     drag back carries the camera over. A far-side hotspot therefore takes
+     longer to reach than a neighbouring one for free, and grabbing the
+     model halfway through simply works.
+
+     The pivot moving is the half that matters. Orbiting the model's centre
+     while reading about the nose camera would swing the part being
+     described across the frame; orbiting the part itself keeps it roughly
+     pinned and turns the aircraft behind it. */
+  useEffect(() => {
+    const rig = rigRef.current;
+    /* Not built yet — the viewer effect only constructs one once the reader
+       has asked for the model. The `status` dependency below is what
+       replays this against the rig that eventually exists. */
+    if (!rig) return;
+    if (selected === null) {
+      rig.select(null, null);
+      return;
+    }
+    const h = viewer.hotspots[selected];
+    if (!h) return;
+    rig.select(h.pose, h.anchor);
+  }, [selected, viewer.hotspots, status]);
 
   /* ARROWS STEP, ESCAPE RELEASES.
 

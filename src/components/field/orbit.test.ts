@@ -80,7 +80,7 @@ describe('springStep', () => {
     expect(cur).toBeCloseTo(1, 6);
   });
 
-  it('never overshoots, so a return never reads as a bounce', () => {
+  it('barely overshoots, so a return never reads as a bounce', () => {
     let cur = 0;
     let vel = 0;
     let max = -Infinity;
@@ -89,6 +89,37 @@ describe('springStep', () => {
       max = Math.max(max, cur);
     }
     expect(max).toBeLessThan(1.001);
+  });
+
+  /* REGRESSION. The explicit damping this replaced multiplied velocity by
+     (1 - 2*omega*dt) every step. At the reduced-motion period of 0.15s that
+     is -1.79 at MAX_DT, and the camera diverged to 1e305 within a second —
+     reachable only by a reader who had asked for reduced motion and then
+     dropped a frame. */
+  it('stays finite at the reduced-motion period and MAX_DT', () => {
+    const fastOmega = (2 * Math.PI) / 0.15;
+    let cur = 0;
+    let vel = 0;
+    for (let i = 0; i < 600; i++) [cur, vel] = springStep(cur, vel, 1, fastOmega, 1 / 30);
+    expect(Number.isFinite(cur)).toBe(true);
+    expect(cur).toBeCloseTo(1, 4);
+  });
+
+  /* The implicit form stabilises the DAMPING term unconditionally; the
+     stiffness term still has a limit. Measured, that limit at MAX_DT is
+     omega = 144.7, i.e. a period no shorter than 0.043s. The two periods
+     this ships with are 0.55s (omega 11.4, 12.7x margin) and the
+     reduced-motion 0.15s (omega 41.9, 3.5x margin), so retuning by feel has
+     a lot of room — but not infinite room, and this records where the edge
+     actually is rather than pretending there is none. */
+  it('stays stable for periods far shorter than either shipping value', () => {
+    const omega50ms = (2 * Math.PI) / 0.05;
+    expect(omega50ms).toBeLessThan(144.7);
+    let cur = 0;
+    let vel = 0;
+    for (let i = 0; i < 600; i++) [cur, vel] = springStep(cur, vel, 1, omega50ms, 1 / 30);
+    expect(Number.isFinite(cur)).toBe(true);
+    expect(cur).toBeCloseTo(1, 3);
   });
 
   it('stays stable at 30Hz, not just 60Hz', () => {
