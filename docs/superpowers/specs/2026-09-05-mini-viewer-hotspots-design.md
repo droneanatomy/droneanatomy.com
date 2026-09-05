@@ -235,8 +235,20 @@ the layout stops being an overlay. The panel keeps its 1.9 aspect.
 
 ## Data
 
+**Amended 2026-09-05, while planning.** `radius` is a **factor of the fitted
+framing distance**, not a world-unit distance. `frameFor(size)` solves the
+framing against the panel's live aspect ratio and `resize()` re-solves it, so a
+stored world distance would crop on a narrow phone and float on a wide desktop.
+A pose reading `radius: 0.42` means `0.42 × fit`. This also makes the elastic
+radius limit proportional for free, which the rig section already required.
+
 ```ts
-export type ViewerPose = { azimuth: number; polar: number; radius: number };
+export type ViewerPose = {
+  azimuth: number;
+  polar: number;
+  /** A FACTOR of the fitted framing distance — see the amendment above. */
+  radius: number;
+};
 
 export type ViewerHotspot = {
   /** Shown uppercase in the list and beside the dot. */
