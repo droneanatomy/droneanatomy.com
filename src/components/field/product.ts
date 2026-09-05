@@ -1,0 +1,447 @@
+/* ============================================================
+   ProductPage — everything about a product that the field page renders.
+
+   The choreography is the reusable part; the words and the pictures are
+   not. Until now both lived in the same files, so a second product page
+   meant copying FieldHero, FieldGallery and FieldBench and editing strings
+   inside them — three forks that would drift the first time a beat was
+   retuned, and every timing fix afterwards would have to be made N times.
+
+   So: components take a ProductPage and render it. The type is the contract
+   between the two, and it is deliberately strict — a missing panel or a
+   short gallery should fail at the type level rather than at 40% scroll on
+   someone else's phone.
+
+   WHAT IS NOT IN HERE, on purpose:
+
+   Timing. Every window, span and act length stays in beats.ts, shared by
+   all products. A page that retimes the choreography is not another product
+   page, it is another page — and it should say so by not using this.
+
+   Geometry. Gate size, panel split, wipe angle, subject fit. Same argument:
+   these are the composition, not the content.
+   ============================================================ */
+
+import { ACT_ONE_VH, DEFAULT_ACTS, type ActSpec } from './beats';
+
+export type SequenceTier = '1k' | '2k' | '4k';
+
+export type ProductSequence = {
+  /** Folder under /public/sequence, per build tier. */
+  hero: Record<SequenceTier, string>;
+  end: Record<SequenceTier, string>;
+  heroFrames: number;
+  endFrames: number;
+  /* The subject's width in the FIRST frame, as a fraction of the frame.
+     MEASURED off the export, not guessed — FieldSequence solves the mobile
+     baseline against it and the build tier is chosen from the same number.
+     Re-measure after every new export or phones drift off their target
+     size and the sequence starts being enlarged again. */
+  firstFrameSubjectWidth: number;
+};
+
+export type GalleryItem = { src: string; alt: string };
+
+export type BenchPlate = {
+  key: string;
+  /** Still. Also the video's poster, so it is never optional. */
+  src: string;
+  /** Optional — a plate without one falls back to its still. */
+  video?: string;
+  alt: string;
+};
+
+export type BenchPanel = {
+  key: string;
+  icon: string;
+  kicker: string;
+  /* Each line is masked and revealed separately, so this array IS the line
+     breaking. Re-wrapping it changes the choreography, not just the copy. */
+  desc: string[];
+  title: [string, string];
+};
+
+/* THE VIEWER'S CONTRACT.
+
+   Optional, and optional for the same reason `gallery` and `bench` are: a
+   page that does not declare a viewer should not be forced to invent
+   framings for one. The rule this file already follows holds — an act you
+   declare must bring its data.
+
+   Every number in here is authored by eye through the dev picker (see
+   pickAnchor.ts), not calculated. They are compositions. */
+export type ViewerPose = {
+  /** Radians, measured from +Z toward +X — three's Spherical convention. */
+  azimuth: number;
+  /** Radians from +Y. */
+  polar: number;
+  /** A FACTOR of the framing distance frameFor() solves against the panel's
+   *  live aspect. 1.0 is the default framing; 0.42 is a close-up. Never a
+   *  world-unit distance — that would crop on a narrow phone. */
+  radius: number;
+};
+
+export type ViewerHotspot = {
+  /** Shown uppercase in the list and beside the dot. */
+  label: string;
+  /** Optional. Absent => the row renders as a plain label with no '+', which
+   *  is what lets these ship on names alone and gain copy later without a
+   *  code change. */
+  body?: string;
+  /** World-space point in the viewer's FITTED, re-centred space — the model
+   *  is normalised to `span` and its bounding box centred on the origin
+   *  before this means anything. */
+  anchor: [number, number, number];
+  /** Outward surface normal at `anchor`. Drives the facing test that fades
+   *  the dot when the anchor turns away — see orbit.ts. */
+  normal: [number, number, number];
+  pose: ViewerPose;
+};
+
+export type ProductViewer = {
+  /** Was hardcoded in MiniViewer. Here so the component stops knowing which
+   *  aircraft it renders. */
+  model: string;
+  /** Fitted span across the longest axis, in world units. */
+  span: number;
+  home: ViewerPose;
+  hotspots: ViewerHotspot[];
+};
+
+export type ProductPage = {
+  /** Which acts this page has, and in what order. Omit one and its beats
+   *  never run and its DOM never mounts — see deriveActs in beats.ts.
+   *  Defaults to DEFAULT_ACTS when absent. */
+  acts?: readonly ActSpec[];
+
+  /** 'P10 Pro'. Used as the wordmark, so its LENGTH is load-bearing —
+   *  the display sizes are solved against the character count. */
+  name: string;
+  kicker: string;
+  /** The vertical tab, right edge. */
+  tabLabel: string;
+  /** The opening paragraph, opposite or under the wordmark. */
+  lede: string;
+
+  sequence: ProductSequence;
+
+  /** Act one's void statement. Two lines, then the paragraph beside it. */
+  statement: { head: [string, string]; body: string };
+  /** Act one's coda, and the line that becomes act two's lockup. */
+  coda: string;
+  slide: string;
+
+  /* OPTIONAL, and the three below with it, because `acts` already made
+     them optional in practice — a page that omits an act never mounts its
+     DOM, and was then still forced to invent content for it. A Mini page
+     carrying P10 Pro's bench copy so the type would compile is worse than
+     no bench: it is wrong copy that renders the moment someone adds the
+     act back.
+
+     The rule is: an act you declare must bring its data. Presence is
+     checked at both use sites (clock AND data) rather than asserted. */
+  /** Act two. Order is the order they pass through the gate. */
+  gallery?: GalleryItem[];
+
+  /** Act three. `plates` and `panels` are paired BY INDEX, not by key —
+   *  plate 0 is behind panel 0. The keys exist to make a mismatch visible
+   *  when reading, and they have been wrong before. */
+  bench?: {
+    plates: BenchPlate[];
+    panels: BenchPanel[];
+    footnote: { label: string; value: string };
+  };
+
+  /** Act four's closing card. */
+  closing?: {
+    kicker: string;
+    /** One line. Sized to SPAN, so the character count is load-bearing —
+     *  see the note on the h2 in FieldHero. */
+    headline: string;
+    body: string;
+    label: string;
+    cta: { label: string; href: string };
+  };
+
+  /** The interactive model. Absent => MiniViewer does not mount, exactly as
+   *  a missing act behaves. */
+  viewer?: ProductViewer;
+
+  nav: { label: string; href: string }[];
+};
+
+/* ---------------------------------------------------------------------- */
+
+export const P10_PRO: ProductPage = {
+  /* All four, in the order the page was built. Left explicit rather than
+     relying on the default so the arrangement is visible where the rest of
+     the product is. */
+  acts: DEFAULT_ACTS,
+  name: 'P10 Pro',
+  kicker: 'Built for fields. Built in India.',
+  tabLabel: '• P10-Pro Model',
+  lede:
+    'The P10 is not just a drone. It is the airframe every sensor, payload and ' +
+    'mission answers to — built to fly, fold, and be fixed where it lands.',
+
+  sequence: {
+    hero: { '1k': 'hero1k', '2k': 'hero2k', '4k': 'hero4k' },
+    end: { '1k': 'end1k', '2k': 'end2k', '4k': 'end' },
+    heroFrames: 110,
+    endFrames: 40,
+    firstFrameSubjectWidth: 0.19,
+  },
+
+  statement: {
+    head: ['Isn’t just', 'a drone.'],
+    body:
+      'Built to fly, fold, and be fixed where it lands. Fifty-two minutes on ' +
+      'station, four minutes to service, no tools on the bench.',
+  },
+  coda: 'Built to be opened',
+  slide: 'it’s compact',
+
+  gallery: [
+    { src: '/images/portable2.jpg', alt: 'Arms folded in for transport' },
+    { src: '/images/portable4.jpg', alt: 'Case open on a tailgate' },
+    { src: '/images/portable1.jpg', alt: 'Packed down beside the pilot' },
+    { src: '/images/drone-comparison-mob.jpg', alt: 'P10 Pro on station over a field' },
+    { src: '/images/p10pro-spray-m.png', alt: 'P10 Pro folded down, carried by one person' },
+    { src: '/images/p10pro-night.png', alt: 'Night flight, navigation lights on' },
+  ],
+
+  bench: {
+    plates: [
+      {
+        key: 'endurance',
+        src: '/images/p10pro-night.png',
+        video: '/videos/bench/night-flight-p10.mp4',
+        alt: 'Packs on the headland',
+      },
+      {
+        key: 'service',
+        src: '/images/p10pro-portable.jpg',
+        video: '/videos/bench/drone-open.mp4',
+        alt: 'Airframe opened on the bench',
+      },
+      {
+        key: 'payload',
+        src: '/images/p10pro-spray.png',
+        video: '/videos/bench/p10-spray.mp4',
+        alt: 'Tank and nozzles',
+      },
+    ],
+    panels: [
+      {
+        key: 'endurance',
+        icon: '◇',
+        kicker: 'Flies the day',
+        desc: [
+          'Eighteen minutes loaded, four packs deep.',
+          'Hot-swapped on the headland while the',
+          'next tank is mixing.',
+        ],
+        title: ['Eighteen minutes,', 'four packs'],
+      },
+      {
+        key: 'service',
+        icon: '↧',
+        kicker: 'Opens in the field',
+        desc: [
+          'Eleven parts come off with one driver.',
+          'No jig, no bench vice, no service centre.',
+          'The airframe was drawn around the repair,',
+          'not the other way round.',
+        ],
+        title: ['Eleven parts,', 'one driver'],
+      },
+      {
+        key: 'payload',
+        icon: '◈',
+        kicker: 'Carries the load',
+        desc: [
+          'Ten litres over six metres of swath.',
+          'The tank comes off the same way the arms do,',
+          'so a refill is a swap, not a queue.',
+        ],
+        title: ['Ten litres,', 'six metres'],
+      },
+    ],
+    footnote: { label: 'Swap time per module', value: 't ≈ 90s' },
+  },
+
+  closing: {
+    kicker: 'Ready for the season',
+    headline: 'Bring it to your field',
+    body:
+      'Eleven parts off with one driver. Ten litres over six metres. ' +
+      'Eighteen minutes a pack, hot-swapped on the headland.',
+    label: 'P10 Pro',
+    cta: { label: 'Book a demo', href: 'mailto:info@droneanatomy.com' },
+  },
+
+  nav: [
+    { label: 'Intro', href: '/preview/field' },
+    { label: 'Modules', href: '/products' },
+    { label: 'Payload', href: '/products/p10-pro' },
+    { label: 'Contact', href: '/contact' },
+  ],
+};
+
+/* ---------------------------------------------------------------------- */
+
+/* MINI — the compact airframe, and the first page to use only part of the
+   choreography.
+
+   ONE ACT. The page runs act one and stops: the grass, the void, the
+   rendered sequence, the statement and the coda. Where P10 Pro goes on to
+   the gallery, the bench and the closing card, this fades into an
+   interactive 3D viewer instead (see MiniViewer) and then the site footer.
+   That is the whole reason `acts` exists — declaring the arrangement here
+   rather than forking FieldHero — and it is why gallery, bench and closing
+   are absent below rather than filled in with borrowed copy.
+
+   To give it the gallery as well, add { kind: 'gallery', vh: ACT_TWO_VH }
+   to the list and a `gallery` array; nothing else has to change. Act two's
+   photographs are all of a P10 Pro today, which is the actual reason it is
+   not here.
+
+   TWO PLACEHOLDERS, both deliberate and both visible from the outside:
+
+   1. THE SEQUENCE IS P10 PRO'S. Mini has no rendered frames, so act one
+      flies a P10 Pro airframe under the name 'Mini'. Point `hero` at Mini's
+      own folders when they exist; heroFrames and firstFrameSubjectWidth
+      must be re-measured off that export, not carried over.
+
+   2. `end` / `endFrames` are unused. They belong to act four's return,
+      which this page does not have. They are filled in because
+      ProductSequence requires them, and they cost nothing while no closing
+      act reads them.
+
+   THE COPY STATES ONE FIGURE, AND THE RULE IT LOOKS LIKE AN EXCEPTION TO IS
+   INTACT. The viewer's third hotspot says "30 Min Flight Time". Every other
+   line on this page still talks about the form factor and stops there. The
+   rule was never "no numbers" — it was that a number has to come from the
+   product rather than from whoever was filling in a type, and this one did.
+   Anything added here needs the same provenance. */
+export const MINI: ProductPage = {
+  acts: [{ kind: 'hero', vh: ACT_ONE_VH }],
+
+  /* Four characters against P10 Pro's seven. The wordmark solves its own
+     size from this now — see .bigWord in Field.module.css — so a short
+     name is no longer a layout problem, but it is still the number that
+     drives it. */
+  name: 'Mini',
+  kicker: 'Small airframe. Same system.',
+  tabLabel: '• Mini Model',
+  lede:
+    'The Mini is the smallest thing we fly that is still a whole aircraft — ' +
+    'the same controller, the same ground station, the same way of being ' +
+    'opened and fixed, in a frame that travels on a back.',
+
+  /* THE MINI'S OWN RENDER, at last — this pointed at the P10 Pro's folders
+     while it was a placeholder, which meant the Mini's page showed a P10
+     Pro flying under the name Mini.
+
+     160 frames, up from that sequence's 110.
+
+     NO 4k TIER, and the key is not a mistake. The render is 1920x1080, so
+     2560 and 3840 would be an upscale of a file we already have: the '4k'
+     slot points at the same 1920 build as '2k'. Ship a larger render and
+     this becomes three real folders; until then a bigger number would only
+     buy bandwidth. The P10 Pro's sequence is genuinely 3840, which is why
+     its entry differs.
+
+     `end` still points at the P10 Pro's closing act. Nothing reads it —
+     MINI's `acts` is the hero alone — but it is left resolvable rather
+     than removed so the type stays honest about what a ProductPage is. */
+  sequence: {
+    hero: { '1k': 'mini1k', '2k': 'mini2k', '4k': 'mini2k' },
+    end: { '1k': 'end1k', '2k': 'end2k', '4k': 'end' },
+    heroFrames: 160,
+    endFrames: 40,
+    /* Measured off frame 0's alpha bounding box: the subject spans
+       628..1273 of 1920. The 0.19 here before was the P10 Pro's number,
+       and at nearly half the true value it would have had FieldSequence
+       enlarging the aircraft on phones to hit a size it already exceeded. */
+    firstFrameSubjectWidth: 0.336,
+  },
+
+  /* Ten characters a line, which is what act one's headline size is solved
+     against — see the note on the h2 in FieldHero. */
+  statement: {
+    head: ['Packs down.', 'Flies far.'],
+    body:
+      'Folds into a case that goes where the crew goes, and comes out flying ' +
+      'the same stack as every other airframe on the fleet.',
+  },
+  coda: 'Built to travel light',
+  slide: 'it packs down',
+
+  /* SEEDED FROM THE GEOMETRY, THEN COMPOSED BY EYE.
+
+     Every anchor below was measured off vtol.glb — node transforms composed,
+     accessor bounds mapped into fitted space — so they sit on real parts
+     rather than near them. The poses were not: they are arithmetic that
+     points a camera roughly at each anchor, and they are meant to be
+     replaced by framings picked in the browser. See pickAnchor.ts.
+
+     ORDER IS THE ORDER THEY ARE READ, and the arrows step through it. */
+  viewer: {
+    model: '/models/vtol.glb',
+    span: 3.2,
+
+    /* Today's VIEW vector (0.6, 0.17, 0.72) as spherical. Preserved exactly
+       so the crossfade out of the hero lands on the framing readers have
+       been looking at for the whole of act one. */
+    home: { azimuth: 0.695, polar: 1.391, radius: 1.0 },
+
+    hotspots: [
+      {
+        label: 'EW Capable',
+        /* Body1.128 — a 0.03 x 0.385 x 0.159 fin, one of a symmetric pair.
+           The +X one, because that is the side facing the home framing. */
+        anchor: [0.248, 0.14, 0.491],
+        normal: [1, 0, 0],
+        pose: { azimuth: 1.23, polar: 1.35, radius: 0.44 },
+      },
+      {
+        label: 'CF Single Body',
+        /* The flank of the CAMO pod. There is no feature under this one —
+           it is an argument about the whole airframe, which is why its
+           framing is a wide side elevation rather than a close-up, and why
+           the anchor is the pod's own side rather than a part. */
+        anchor: [0.326, -0.133, -0.171],
+        normal: [1, 0, 0],
+        pose: { azimuth: 1.571, polar: 1.571, radius: 0.95 },
+      },
+      {
+        label: '30 Min Flight Time',
+        /* The rear deck, centred. The battery cluster measures out at
+           x = -0.23; this sits between it and its mirror because the brief
+           was "back center", and the picker should move it onto the pack
+           itself if that reads better. */
+        anchor: [0, 0.3, 0.59],
+        normal: [0, 0.92, 0.39],
+        pose: { azimuth: 0.35, polar: 0.75, radius: 0.5 },
+      },
+      {
+        label: 'Day & Night Vision',
+        /* The front face of the LENS meshes. Faces -Z, so this dot is faded
+           at the home framing and the row is the only way to reach it —
+           which is correct, and is the clearest case for the list existing
+           at all. */
+        anchor: [-0.025, -0.139, -1.19],
+        normal: [0, 0, -1],
+        pose: { azimuth: 2.85, polar: 1.45, radius: 0.42 },
+      },
+    ],
+  },
+
+  nav: [
+    { label: 'Intro', href: '/products/mini' },
+    { label: 'Systems', href: '/products' },
+    { label: 'P10 Pro', href: '/products/p10-pro' },
+    { label: 'Contact', href: '/contact' },
+  ],
+};
