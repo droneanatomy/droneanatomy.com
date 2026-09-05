@@ -97,6 +97,29 @@ export function facing(normal: Vec3, cameraPos: Vec3, anchor: Vec3): boolean {
 
 export const clampPolar = (p: number) => Math.min(POLAR_MAX, Math.max(POLAR_MIN, p));
 
+/* Normalised device coordinates to pixels within the panel.
+
+   PIXELS, AND THAT IS THE POINT. The obvious way to place a projected dot
+   is a percentage translate, and it silently does the wrong thing: a CSS
+   percentage inside `transform` resolves against the ELEMENT'S OWN border
+   box, not its offset parent. Translating a 20px dot by "45%" moves it 9px.
+   All four hotspots ended up clustered in the top-left corner, moving by
+   fractions of a pixel as the aircraft turned.
+
+   `left`/`top` percentages would resolve correctly, but they are layout
+   properties and writing them every frame costs a reflow per dot. A pixel
+   transform composites instead. */
+export function ndcToPanel(
+  ndcX: number,
+  ndcY: number,
+  width: number,
+  height: number
+): [number, number] {
+  /* Y is flipped because NDC counts up from the bottom and the screen
+     counts down from the top. */
+  return [(ndcX * 0.5 + 0.5) * width, (-ndcY * 0.5 + 0.5) * height];
+}
+
 /* Spherical to cartesian, in three's convention: azimuth from +Z toward +X,
    polar from +Y. Matching three rather than inventing our own means the
    authored poses can be read straight off a THREE.Spherical during picking.

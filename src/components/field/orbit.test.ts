@@ -3,12 +3,38 @@ import {
   clampPolar,
   elastic,
   facing,
+  ndcToPanel,
   poseToPosition,
   shortestAngle,
   springStep,
   POLAR_MAX,
   POLAR_MIN,
 } from './orbit';
+
+describe('ndcToPanel', () => {
+  /* These come out as PIXELS, not percentages, and that is the whole point
+     of the function existing. A CSS percentage inside `transform` resolves
+     against the element's own border box, so translating a 20px dot by
+     "45%" moves it 9px rather than 45% of the panel — which clustered all
+     four hotspots in the top-left corner and left them barely moving as
+     the aircraft turned. */
+  it('puts NDC origin at the centre of the panel', () => {
+    expect(ndcToPanel(0, 0, 500, 300)).toEqual([250, 150]);
+  });
+
+  it('puts NDC top-left at the panel origin', () => {
+    expect(ndcToPanel(-1, 1, 500, 300)).toEqual([0, 0]);
+  });
+
+  it('puts NDC bottom-right at the far corner', () => {
+    expect(ndcToPanel(1, -1, 500, 300)).toEqual([500, 300]);
+  });
+
+  it('flips Y, because NDC counts up and the screen counts down', () => {
+    const [, y] = ndcToPanel(0, 0.5, 500, 300);
+    expect(y).toBeLessThan(150);
+  });
+});
 
 describe('elastic', () => {
   it('tracks the pointer 1:1 near zero', () => {

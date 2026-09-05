@@ -42,6 +42,7 @@ import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment
 import { useEffect, useRef, useState } from 'react';
 import { loadCraft } from '@/components/flight/loadCraft';
 import { ElasticRig } from './ElasticRig';
+import { ViewerHotspots, type HotspotsHandle } from './ViewerHotspots';
 import type { ProductViewer } from './product';
 
 /* The hero's ground, so the dissolve lands on the colour the last frame
@@ -218,6 +219,15 @@ export function MiniViewer({ name, viewer }: { name: string; viewer: ProductView
      second effect. */
   const [status, setStatus] = useState<'idle' | 'loading' | 'ready'>('idle');
   const [grabbed, setGrabbed] = useState(false);
+
+  /* Which feature is open, and it IS React state rather than a ref: unlike
+     the camera and the fade, a selection changes what the tree renders —
+     the lit dot, the label, the open row. It changes at the rate someone
+     clicks, not at 60Hz. */
+  const [selected, setSelected] = useState<number | null>(null);
+  /* The dots are positioned from the render loop, so the loop needs a way
+     to reach them that does not go through a re-render. */
+  const hotspotsRef = useRef<HotspotsHandle>(null);
 
   /* The fade is computed by the first effect and consumed by the second.
      A ref rather than state because it changes every frame — see the note
@@ -604,6 +614,11 @@ export function MiniViewer({ name, viewer }: { name: string; viewer: ProductView
       if (fadeRef.current <= 0.001 || r.bottom <= 0 || r.top >= vh) return;
 
       rig.update(dt);
+      /* AFTER the rig and BEFORE the draw. The dots are projected through
+         the camera, so syncing them before rig.update would place them
+         against last frame's camera and they would lag the model by one
+         frame — which on a drifting object reads as the dots sliding. */
+      hotspotsRef.current?.sync(camera);
       renderer.render(scene, camera);
     };
     raf = requestAnimationFrame(tick);
@@ -712,6 +727,18 @@ export function MiniViewer({ name, viewer }: { name: string; viewer: ProductView
             style={{ pointerEvents: 'none' }}
           >
             <div ref={mountRef} className="absolute inset-0" />
+
+            {/* Only once there is a model to stick them to. Mounted before
+                that they would project against a camera that has not been
+                framed yet and cluster at the centre of an empty panel. */}
+            {status === 'ready' && (
+              <ViewerHotspots
+                ref={hotspotsRef}
+                hotspots={viewer.hotspots}
+                selected={selected}
+                onSelect={setSelected}
+              />
+            )}
 
             {/* THE POSTER'S PICTURE — the sequence's own last frame, which
                 is the aircraft head on.
