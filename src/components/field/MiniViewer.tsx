@@ -417,6 +417,18 @@ export function MiniViewer({ name, viewer }: { name: string; viewer: ProductView
       },
     });
 
+    /* THE PICKER, and it is how the numbers in product.ts were authored.
+
+       Dynamically imported behind a NODE_ENV check so the condition folds
+       to a literal at build time and the module never enters the static
+       export — verified by grepping out/ for its log string. */
+    let detachPicker: (() => void) | undefined;
+    if (process.env.NODE_ENV === 'development') {
+      void import('./pickAnchor').then((m) => {
+        detachPicker = m.attachPicker({ dom: renderer.domElement, camera, scene, rig });
+      });
+    }
+
     let craft: THREE.Object3D | null = null;
     let alive = true;
     loadCraft(viewer.model, { span: viewer.span }).then((c) => {
@@ -601,6 +613,7 @@ export function MiniViewer({ name, viewer }: { name: string; viewer: ProductView
       cancelAnimationFrame(raf);
       ro.disconnect();
       rig.dispose();
+      detachPicker?.();
 
       if (craft) scene.remove(craft);
       shadow.geometry.dispose();
