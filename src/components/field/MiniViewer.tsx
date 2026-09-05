@@ -789,8 +789,14 @@ export function MiniViewer({ name, viewer }: { name: string; viewer: ProductView
             <p className="font-display text-[clamp(11px,0.95vw,18px)] font-bold uppercase tracking-[0.02em] opacity-70">
               {name}
             </p>
+            {/* Was "Turn it over", which the elastic rig made false — the
+                aircraft cannot be turned over any more, only leaned around
+                and released. This points at the list instead, which is now
+                the control that actually gets the reader somewhere, and
+                says how many there are so the row of dots reads as a set
+                rather than as decoration. */}
             <p className="font-display text-[clamp(9px,0.75vw,13px)] uppercase tracking-[0.18em] opacity-40">
-              Turn it over
+              Four points
             </p>
           </div>
 
@@ -961,7 +967,15 @@ export function MiniViewer({ name, viewer }: { name: string; viewer: ProductView
 
           {/* Only once there is something to drag. Before that the poster
               carries the instruction, and two competing ones would be one
-              too many. */}
+              too many.
+
+              ONE STRING FOR BOTH STATES, RATHER THAN TWO. The old hint,
+              "Drag to rotate · scroll to zoom", named two gestures that no
+              longer do what they said: both now spring back. This names
+              what actually happens, and it stays true whether or not a
+              feature is selected — which is what lets it keep its single
+              fade instead of needing to cross-fade between two messages
+              every time the reader picks a row. */}
           <p
             className={
               'mt-[clamp(8px,1.5vh,18px)] text-center font-display ' +
@@ -971,7 +985,7 @@ export function MiniViewer({ name, viewer }: { name: string; viewer: ProductView
             }
             aria-hidden={status !== 'ready'}
           >
-            Drag to rotate &middot; scroll to zoom
+            Drag to look &middot; release to settle
           </p>
         </div>
       </div>
