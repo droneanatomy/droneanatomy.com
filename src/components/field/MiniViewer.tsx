@@ -43,6 +43,7 @@ import { useEffect, useRef, useState } from 'react';
 import { loadCraft } from '@/components/flight/loadCraft';
 import { ElasticRig } from './ElasticRig';
 import { ViewerHotspots, type HotspotsHandle } from './ViewerHotspots';
+import { ViewerList } from './ViewerList';
 import type { ProductViewer } from './product';
 
 /* The hero's ground, so the dissolve lands on the colour the last frame
@@ -663,6 +664,45 @@ export function MiniViewer({ name, viewer }: { name: string; viewer: ProductView
        not to drop the dependency. */
   }, [status, viewer]);
 
+  /* ARROWS STEP, ESCAPE RELEASES.
+
+     Bound to the SECTION rather than the window, and that is a deliberate
+     limit rather than an oversight: this page is a scroll narrative and the
+     arrow keys scroll it. A viewer that swallowed them for the whole
+     document would break keyboard scrolling everywhere above and below
+     itself to serve a control most readers will never reach for.
+
+     Because the listener is on the section, it only fires once something
+     inside has focus — a dot or a row. That is the correct gate: the keys
+     mean "next feature" exactly when the features are what you are
+     operating, and mean "scroll" the rest of the time. */
+  useEffect(() => {
+    if (status !== 'ready') return;
+    const el = sectionRef.current;
+    if (!el) return;
+
+    const onKey = (e: KeyboardEvent) => {
+      const n = viewer.hotspots.length;
+      if (!n) return;
+      if (e.key === 'Escape') {
+        setSelected(null);
+        return;
+      }
+      const dir = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+      if (!dir) return;
+      /* Only once we know we are handling it — an unhandled key must still
+         reach the page. */
+      e.preventDefault();
+      setSelected((s) => {
+        const from = s ?? (dir === 1 ? -1 : 0);
+        return (from + dir + n) % n;
+      });
+    };
+
+    el.addEventListener('keydown', onKey);
+    return () => el.removeEventListener('keydown', onKey);
+  }, [status, viewer.hotspots.length]);
+
   return (
     <section
       ref={sectionRef}
@@ -719,13 +759,26 @@ export function MiniViewer({ name, viewer }: { name: string; viewer: ProductView
             </p>
           </div>
 
-          {/* THE VIEWER. Its aspect is fixed and its width comes from the
-              parent, so the two can never disagree — see the note above. */}
-          <div
-            ref={panelRef}
-            className="relative aspect-[1.9] w-full"
-            style={{ pointerEvents: 'none' }}
-          >
+          {/* THE LIST'S POSITIONING CONTEXT, and it exists so that one word
+              — `inset-y-0` — means the right thing.
+
+              The list is absolutely positioned to the render's right-hand
+              edge, so it needs an ancestor whose box IS the render's box.
+              The width wrapper outside is the wrong one: it also holds the
+              caption row and the hint, so the list would have stretched to
+              span all three and centred itself against the wrong height.
+
+              On wide screens this box is exactly the panel, because the
+              panel is its only in-flow child. Below `sm` the list returns
+              to normal flow and this grows to hold both. */}
+          <div className="relative">
+            {/* THE VIEWER. Its aspect is fixed and its width comes from the
+                parent, so the two can never disagree — see the note above. */}
+            <div
+              ref={panelRef}
+              className="relative aspect-[1.9] w-full"
+              style={{ pointerEvents: 'none' }}
+            >
             <div ref={mountRef} className="absolute inset-0" />
 
             {/* Only once there is a model to stick them to. Mounted before
@@ -855,6 +908,20 @@ export function MiniViewer({ name, viewer }: { name: string; viewer: ProductView
               className="pointer-events-none absolute inset-0"
               style={{ outline: '1px solid rgba(242,236,217,0.14)', outlineOffset: '-1px' }}
             />
+            </div>
+
+            {/* OUTSIDE the panel, inside its positioning context. Kept out
+                of the panel because the panel's pointer-events are armed
+                and disarmed by the fade loop, and the list must not inherit
+                that — it only exists once the model is loaded, which is
+                already long past the point where the fade has finished. */}
+            {status === 'ready' && (
+              <ViewerList
+                hotspots={viewer.hotspots}
+                selected={selected}
+                onSelect={setSelected}
+              />
+            )}
           </div>
 
           {/* Only once there is something to drag. Before that the poster
