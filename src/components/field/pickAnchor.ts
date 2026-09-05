@@ -52,10 +52,20 @@ export function attachPicker(opts: {
         .normalize();
     }
 
+    /* The material name, because the node names in a CAD export are
+       Body1.NNN and tell you nothing, while the material is the only
+       semantic handle the file has — and it is the thing MATERIAL_FIX is
+       keyed on, so this is how you find out which entry to reach for. */
+    const mat = (hit.object as THREE.Mesh).material;
+    const matName = Array.isArray(mat)
+      ? mat.map((m) => m.name).join('+')
+      : (mat as THREE.Material | undefined)?.name;
+
     const pose = opts.rig.pose();
     console.log(
-      '[pick] %s\n%s',
+      '[pick] %s  material=%s\n%s',
       hit.object.name || '(unnamed)',
+      matName || '(unnamed)',
       JSON.stringify(
         {
           anchor: [round(hit.point.x), round(hit.point.y), round(hit.point.z)],

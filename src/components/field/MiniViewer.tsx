@@ -149,7 +149,17 @@ function contactShadow() {
 
    The tell is in the data: every material anyone deliberately authored
    writes metalness explicitly. Only the two CAD-imported appearances inherit
-   it. This airframe is carbon fibre and plastic — none of it is bare metal. */
+   it. This airframe is carbon fibre and plastic — none of it is bare metal.
+
+   THAT WAS ONE OF TWO CAUSES, AND THIS FIX ONLY CLOSES THE FIRST. The note
+   above used to end by saying turning the lights down would merely have
+   given a dimmer mirror. True of the metalness bug, and it led to the
+   opposite error: the lights went UP instead, and the render stayed washed
+   out for a second and independent reason — see the exposure block below.
+   Both had to be fixed. If this ever looks blown again, measure before
+   reaching for either: the brightest pixels landing on several unrelated
+   materials at once means the stack, and them landing on one material means
+   the material. */
 const MATERIAL_FIX: Record<string, (m: THREE.MeshPhysicalMaterial) => void> = {
   /* 26.2% of the model. Base colour is already near-black (0.09), so as a
      dielectric it becomes a matte composite shell with a low specular sheen
@@ -350,14 +360,27 @@ export function MiniViewer({ name, viewer }: { name: string; viewer: ProductView
     renderer.transmissionResolutionScale = 0.5;
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    /* 1.05 was the default guess and it was too dark by a wide margin.
-       This airframe is matte black carbon over dark composite — its albedo
-       is genuinely near the bottom of the range, so a neutral exposure
-       renders a correct picture of a black object in a black room.
-       Measured at 1.05 the whole canvas averaged RGB 1/255. A product
-       viewer has to show the thing, so the exposure is set for the subject
-       rather than for the scene. */
-    renderer.toneMappingExposure = 1.32;
+    /* NEUTRAL, AND THE 1.32 IT REPLACED WAS THE ANSWER TO A BAD MEASUREMENT.
+
+       The note that used to sit here said the canvas "averaged RGB 1/255"
+       at an exposure of 1.05, and concluded the subject needed more light.
+       That average was taken over the WHOLE canvas — which is more than
+       half transparent background, and background is exactly zero. It was
+       measuring the empty space around the aircraft, so it could only ever
+       say "too dark", and the exposure, the environment and both lights
+       were all raised to answer it.
+
+       Measured properly — over opaque geometry only, excluding the
+       background and the contact shadow — the airframe was arriving at a
+       mean luminance of 129 with 10.3% of its pixels above 200. That is a
+       mid-grey object, and this one is meant to be matte black carbon over
+       dark composite. The brightest pixels landed on four different
+       materials at once, which is the tell that no single material was at
+       fault and the whole stack was simply too hot.
+
+       At these values the same measurement reads mean 67, p99 189, and
+       0.2% above 200. */
+    renderer.toneMappingExposure = 1.0;
     mount.appendChild(renderer.domElement);
     renderer.domElement.style.display = 'block';
     renderer.domElement.style.width = '100%';
@@ -383,22 +406,31 @@ export function MiniViewer({ name, viewer }: { name: string; viewer: ProductView
     const pmrem = new THREE.PMREMGenerator(renderer);
     const env = pmrem.fromScene(new RoomEnvironment(), 0.04);
     scene.environment = env.texture;
-    /* The environment is doing most of the work on the reflective parts, so
-       it gets pushed past unity — on a dark subject the studio is what
-       picks out the edges and the clearcoat. */
-    scene.environmentIntensity = 1.5;
+    /* WELL UNDER UNITY, and this is the knob that was doing most of the
+       damage. RoomEnvironment is a bright white studio box, and it lights
+       every surface from every direction at once. Pushed past unity it
+       floods a dark subject uniformly — which is what made the props and
+       motor housings read as chalky white plastic rather than as dark parts
+       catching a highlight, and what washed the colour out of the camo.
+
+       It cannot go to zero: the clearcoat and the lens are defined almost
+       entirely by what they reflect, and with punctual lights alone they
+       resolve to near-black. This is enough to keep those alive while
+       leaving the modelling to the key and the rim. */
+    scene.environmentIntensity = 0.55;
     /* Not scene.background — the ground colour belongs to the stage
        underneath so the whole thing can fade as one. */
 
     /* A key on top of the environment, because IBL alone is flat: it lights
        every face about equally and the airframe loses its edges. */
-    const key = new THREE.DirectionalLight(0xfff4e4, 2.8);
+    const key = new THREE.DirectionalLight(0xfff4e4, 2.0);
     key.position.set(-3.2, 4.4, 2.6);
     scene.add(key);
-    /* Cool, opposite the key, and comparatively strong: against a near
-       black ground the silhouette is only legible where something is
-       catching an edge. */
-    const rim = new THREE.DirectionalLight(0xbcc6d4, 1.7);
+    /* Cool, opposite the key. Against a near-black ground the silhouette is
+       only legible where something is catching an edge, so this stays
+       comparatively strong RELATIVE TO THE KEY — the 0.6 ratio between them
+       is what was worth preserving when the absolute levels came down. */
+    const rim = new THREE.DirectionalLight(0xbcc6d4, 1.2);
     rim.position.set(2.8, 1.2, -3.4);
     scene.add(rim);
 
