@@ -2031,17 +2031,40 @@ export const FieldHero: React.FC<{
           <p
             ref={paraRef}
             className={
-              'absolute text-[clamp(16px,1.56vw,30px)] leading-[1.42] ' +
+              /* THE TYPE SIZE TRAVELS WITH THE LAYOUT, rather than sitting in
+                 the shared prefix with a per-layout override after it. Two
+                 arbitrary `text-[…]` utilities both apply and resolve by
+                 stylesheet order, not by the order they appear in this
+                 string — so an override here would work or not depending on
+                 which rule Tailwind happened to emit last. Declaring one size
+                 per branch means there is only ever one. */
+              'absolute leading-[1.42] ' +
               (HERO_CENTRED
-                ? ''
-                : 'right-[var(--pad-x)] left-[var(--pad-x)] w-auto ' +
+                ? /* Flat 16px. The clamp the other layouts use grows the
+                     paragraph with the viewport, which is right when it is
+                     ragged-right against a page edge and wrong for a centred
+                     measure — there the line LENGTH is already doing that
+                     job, and letting both grow gives a block that gets wider
+                     and heavier at once. */
+                  'text-[16px] '
+                : 'text-[clamp(16px,1.56vw,30px)] ' +
+                  'right-[var(--pad-x)] left-[var(--pad-x)] w-auto ' +
                   'md:left-auto md:w-[min(86vw,clamp(240px,31.1vw,600px))] ') +
               /* Centred against the wordmark in the split so the two read as
                  one line across the frame. Left where it was otherwise —
                  44.2% is measured off the masthead composition and means
                  nothing once the wordmark moves. */
               (HERO_CENTRED
-                ? 'left-1/2 top-[70%] w-[min(88vw,clamp(260px,44vw,760px))] -translate-x-1/2 text-center md:top-[64%]'
+                ? /* 70% AT EVERY WIDTH. There was an md:top-[64%] here that
+                     lifted the paragraph on desktop only, so the block sat at
+                     two different heights either side of the breakpoint for
+                     no reason the composition asked for. One number now.
+
+                     The measure came down with the type: 44vw/760px was set
+                     against a paragraph that grew to 30px, and holding that
+                     width at a flat 16px would have run to about 80
+                     characters a line. 32vw/520px lands near 58. */
+                  'left-1/2 top-[70%] w-[min(88vw,clamp(260px,32vw,520px))] -translate-x-1/2 text-center'
                 : HERO_SPLIT
                   ? 'bottom-[18%] top-auto md:bottom-auto md:top-1/2 md:-translate-y-1/2'
                   : 'top-[44.2%]')
