@@ -216,7 +216,7 @@ export const ViewerHotspots = forwardRef<HotspotsHandle, Props>(function ViewerH
           className={
             'absolute left-0 top-0 transition-opacity duration-200 ' +
             'focus-visible:outline focus-visible:outline-1 focus-visible:outline-offset-4 ' +
-            'focus-visible:outline-[#f2ecd9]'
+            'focus-visible:outline-[var(--color-flare)]'
           }
         >
           {/* THE DOT, on the anchor itself. Centred in the hit square rather
@@ -226,7 +226,7 @@ export const ViewerHotspots = forwardRef<HotspotsHandle, Props>(function ViewerH
             aria-hidden
             className={
               'absolute left-1/2 top-1/2 block size-[7px] -translate-x-1/2 -translate-y-1/2 ' +
-              'rounded-full bg-[#f2ecd9]'
+              'rounded-full bg-[var(--color-flare)]'
             }
           />
 
@@ -246,7 +246,11 @@ export const ViewerHotspots = forwardRef<HotspotsHandle, Props>(function ViewerH
               }}
               d={`M 0 0 L ${-DIAG} ${-DIAG} L ${-(DIAG + RUN)} ${-DIAG}`}
               fill="none"
-              stroke="#f2ecd9"
+              stroke="var(--color-flare)"
+              /* Dimmer than the dot and the label so the hierarchy is
+                 read in the right order: the point, then what it says,
+                 then the line that joins them. */
+              strokeOpacity={0.75}
               strokeWidth={1}
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -271,7 +275,7 @@ export const ViewerHotspots = forwardRef<HotspotsHandle, Props>(function ViewerH
               style={{ left: -(DIAG + RUN), bottom: DIAG + LABEL_GAP, opacity: 0 }}
               className={
                 'absolute whitespace-nowrap font-display text-[10px] ' +
-                'font-bold uppercase tracking-[0.14em] text-[#f2ecd9] ' +
+                'font-bold uppercase tracking-[0.14em] text-[var(--color-flare)] ' +
                 'transition-opacity duration-[260ms] delay-[420ms] ease-out ' +
                 'motion-reduce:transition-none motion-reduce:delay-0'
               }
