@@ -18,6 +18,7 @@ import {
   clampPolar,
   elastic,
   poseToPosition,
+  shortestAngle,
   springStep,
   type Pose,
   type Vec3,
@@ -88,6 +89,11 @@ export class ElasticRig {
   private pivotTarget: Vec3 = [0, 0, 0];
   private pivotVel: Vec3 = [0, 0, 0];
 
+  /* The rest pose update() last solved. settled() needs it, and recomputing
+     it there would mean duplicating the drift and sway maths in two places
+     that could then disagree. */
+  private lastRest: Pose | null = null;
+
   private fit = 1;
   private driftPhase = 0;
   private clock = 0;
@@ -142,6 +148,37 @@ export class ElasticRig {
     return { azimuth: this.cur.azimuth, polar: this.cur.polar, radius: this.cur.radius };
   }
 
+  /** Has the camera arrived? Drives the hotspot annotation, which draws its
+   *  leader line only once there is a still target to draw against.
+   *
+   *  MEASURED ON ERROR, NOT ON VELOCITY, and that is the whole subtlety. A
+   *  selected pose SWAYS — the rest position is a slow sinusoid — so the
+   *  camera's velocity never reaches zero and a velocity test would report
+   *  "still flying" forever. The error does converge: against a 6s sway the
+   *  spring's tracking lag works out near 0.0003 rad, three orders under the
+   *  threshold here, because the spring is ten times faster than the motion
+   *  it is following.
+   *
+   *  A flight is not a special state anywhere else in this class, and it is
+   *  not one here either — this only asks how far the camera is from where
+   *  it wants to be. */
+  settled(): boolean {
+    if (this.dragging) return false;
+    const rest = this.lastRest;
+    if (!rest) return false;
+    const pivotErr = Math.hypot(
+      this.pivot[0] - this.pivotTarget[0],
+      this.pivot[1] - this.pivotTarget[1],
+      this.pivot[2] - this.pivotTarget[2]
+    );
+    return (
+      Math.abs(shortestAngle(this.cur.azimuth, rest.azimuth)) < 0.02 &&
+      Math.abs(this.cur.polar - rest.polar) < 0.02 &&
+      Math.abs(this.cur.radius - rest.radius) < 0.01 &&
+      pivotErr < 0.02
+    );
+  }
+
   update(dt: number) {
     const step = Math.min(dt, MAX_DT);
     this.clock += step;
@@ -165,6 +202,8 @@ export class ElasticRig {
         radius: this.home.radius,
       };
     }
+
+    this.lastRest = rest;
 
     /* The radius is held while the wheel is still turning and released a
        moment after it stops — the wheel's substitute for pointerup. */

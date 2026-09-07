@@ -164,6 +164,53 @@ describe('ElasticRig selection', () => {
   });
 });
 
+describe('ElasticRig settled', () => {
+  const anchor: Vec3 = [-0.025, -0.139, -1.19];
+  const pose: Pose = { azimuth: 2.85, polar: 1.45, radius: 0.42 };
+
+  it('is false before a single frame has been run', () => {
+    const h = harness();
+    expect(h.rig.settled()).toBe(false);
+  });
+
+  it('is false while the camera is still flying', () => {
+    const h = harness();
+    h.run(1);
+    h.rig.select(pose, anchor);
+    h.run(0.05); // barely started
+    expect(h.rig.settled()).toBe(false);
+  });
+
+  it('becomes true once the flight converges', () => {
+    const h = harness();
+    h.rig.select(pose, anchor);
+    h.run(4);
+    expect(h.rig.settled()).toBe(true);
+  });
+
+  it('goes false again the moment a new hotspot is chosen', () => {
+    const h = harness();
+    h.rig.select(pose, anchor);
+    h.run(4);
+    expect(h.rig.settled()).toBe(true);
+    h.rig.select({ azimuth: 1.202, polar: 1.376, radius: 0.44 }, [0.3, 0.381, 0.612]);
+    h.run(0.05);
+    expect(h.rig.settled()).toBe(false);
+  });
+
+  /* The reason settled() measures error rather than velocity. With the sway
+     on, a selected pose never stops moving — the rest position is a slow
+     sinusoid — so a velocity test would report "still flying" forever. */
+  it('stays true under the sway, which never stops moving', () => {
+    const h = harness({ azimuth: 0, polar: Math.PI / 2, radius: 1 }, { reduced: false });
+    h.rig.select(pose, anchor);
+    h.run(5);
+    expect(h.rig.settled()).toBe(true);
+    h.run(4); // a good way into the 6s and 9s sway periods
+    expect(h.rig.settled()).toBe(true);
+  });
+});
+
 describe('ElasticRig frame pacing', () => {
   it('clamps a backgrounded tab to MAX_DT instead of exploding', () => {
     const h = harness();

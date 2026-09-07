@@ -658,7 +658,7 @@ export function MiniViewer({ name, viewer }: { name: string; viewer: ProductView
          the camera, so syncing them before rig.update would place them
          against last frame's camera and they would lag the model by one
          frame — which on a drifting object reads as the dots sliding. */
-      hotspotsRef.current?.sync(camera);
+      hotspotsRef.current?.sync(camera, rig.settled());
       renderer.render(scene, camera);
     };
     raf = requestAnimationFrame(tick);
