@@ -2063,8 +2063,16 @@ export const FieldHero: React.FC<{
                      The measure came down with the type: 44vw/760px was set
                      against a paragraph that grew to 30px, and holding that
                      width at a flat 16px would have run to about 80
-                     characters a line. 32vw/520px lands near 58. */
-                  'left-1/2 top-[70%] w-[min(88vw,clamp(260px,32vw,520px))] -translate-x-1/2 text-center'
+                     characters a line.
+
+                     28vw/440px is roughly 50 characters — deliberately
+                     tighter than the 60-odd a body column would take, because
+                     this one is CENTRED and short. A centred block is read as
+                     a shape before it is read as text, and at this length the
+                     shape wants to be narrower than comfort alone would ask
+                     for. The 260px floor is untouched: it is what keeps the
+                     paragraph off both page pads on a phone. */
+                  'left-1/2 top-[70%] w-[min(88vw,clamp(260px,28vw,440px))] -translate-x-1/2 text-center'
                 : HERO_SPLIT
                   ? 'bottom-[18%] top-auto md:bottom-auto md:top-1/2 md:-translate-y-1/2'
                   : 'top-[44.2%]')
