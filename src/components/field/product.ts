@@ -413,13 +413,19 @@ export const MINI: ProductPage = {
   coda: 'Built to travel light',
   slide: 'it packs down',
 
-  /* SEEDED FROM THE GEOMETRY, THEN COMPOSED BY EYE.
+  /* COMPOSED IN THE BROWSER, NOT CALCULATED.
 
-     Every anchor below was measured off vtol.glb — node transforms composed,
-     accessor bounds mapped into fitted space — so they sit on real parts
-     rather than near them. The poses were not: they are arithmetic that
-     points a camera roughly at each anchor, and they are meant to be
-     replaced by framings picked in the browser. See pickAnchor.ts.
+     Every value below came off pickAnchor.ts: the camera was flown to the
+     shot by hand, the part was shift-clicked, and the logged block was
+     pasted here. That matters most for the poses. They were arithmetic to
+     begin with — a camera pointed roughly at each anchor — and arithmetic
+     cannot tell you that a framing is half a rotor away from being right.
+
+     The normals came along for free, and they are the half that could not
+     have been authored any other way: each one is the true surface normal at
+     the point that was clicked, which is what lets a dot know it has turned
+     away. Two of them are off-axis (01 sits on a chamfer, 04 on the curve of
+     the lens housing), and neither is a value anyone would have typed.
 
      ORDER IS THE ORDER THEY ARE READ, and the arrows step through it. */
   viewer: {
@@ -434,11 +440,18 @@ export const MINI: ProductPage = {
     hotspots: [
       {
         label: 'EW Capable',
-        /* Body1.128 — a 0.03 x 0.385 x 0.159 fin, one of a symmetric pair.
-           The +X one, because that is the side facing the home framing. */
-        anchor: [0.248, 0.14, 0.491],
-        normal: [1, 0, 0],
-        pose: { azimuth: 1.23, polar: 1.35, radius: 0.44 },
+        /* ON THE SHELL BETWEEN THE ANTENNAS, not on one of them. The pair of
+           fins sits at x = +/-0.233; this lands at x = 0.073, on the CAMO
+           body between them and at their z. That is the better place for a
+           dot whose label is about the capability rather than the part —
+           anchored to one fin it would have read as pointing at that fin and
+           ignoring its mirror.
+
+           The normal is a chamfer, 45 degrees between +X and +Y, so the dot
+           fades as the deck rolls away rather than only when the side does. */
+        anchor: [0.073, 0.077, 0.54],
+        normal: [0.705, 0.709, 0],
+        pose: { azimuth: 1.198, polar: 1.358, radius: 0.44 },
       },
       {
         label: 'CF Single Body',
@@ -446,29 +459,47 @@ export const MINI: ProductPage = {
            it is an argument about the whole airframe, which is why its
            framing is a wide side elevation rather than a close-up, and why
            the anchor is the pod's own side rather than a part. */
-        anchor: [0.326, -0.133, -0.171],
+        /* x = 0.326 is exactly the CAMO pod's half-width, so this is the
+           flank itself rather than a point hovering near it. The pose came
+           back at azimuth 1.546 and polar 1.591 — within a degree and a half
+           of dead square-on, which is the shot this hotspot wants and close
+           enough to π/2 that rounding it would be tidier than it is true. */
+        anchor: [0.326, -0.201, -0.19],
         normal: [1, 0, 0],
-        pose: { azimuth: 1.571, polar: 1.571, radius: 0.95 },
+        pose: { azimuth: 1.546, polar: 1.591, radius: 0.95 },
       },
       {
         label: '30 Min Flight Time',
-        /* The rear deck, centred. The battery cluster measures out at
-           x = -0.23; this sits between it and its mirror because the brief
-           was "back center", and the picker should move it onto the pack
-           itself if that reads better. */
-        anchor: [0, 0.3, 0.59],
-        normal: [0, 0.92, 0.39],
-        pose: { azimuth: 0.35, polar: 0.75, radius: 0.5 },
+        /* THE REAR FACE, not the top deck the seed guessed at. z = 0.707 is
+           the back of the pod — the aircraft's rearmost body surface, where
+           a pack is actually reached — and the normal is a clean +Z, so the
+           dot is visible from behind and gone from the front.
+
+           The pose looks down from polar 0.735, which is well above the
+           equator. That is what makes a rear-facing anchor legible: square on
+           to +Z the pod is a flat panel, and the aircraft reads as an
+           outline. */
+        anchor: [0.042, -0.119, 0.707],
+        normal: [0, 0, 1],
+        pose: { azimuth: 0.363, polar: 0.735, radius: 0.5 },
       },
       {
         label: 'Day & Night Vision',
-        /* The front face of the LENS meshes. Faces -Z, so this dot is faded
-           at the home framing and the row is the only way to reach it —
-           which is correct, and is the clearest case for the list existing
-           at all. */
-        anchor: [-0.025, -0.139, -1.19],
-        normal: [0, 0, -1],
-        pose: { azimuth: 2.85, polar: 1.45, radius: 0.42 },
+        /* On the LENS mesh itself (Body1086), at z = -1.183 against a front
+           extreme of -1.192 — the glass, not the housing around it.
+
+           The normal is the one value here no amount of care would have got
+           by hand: mostly -Z but tilted down and outboard, because the lens
+           is a curved surface and this is where on that curve the point sits.
+           A typed [0, 0, -1] would have kept the dot lit slightly past the
+           angle at which the glass actually turns away.
+
+           Still faces away from the home framing, so this dot is faded until
+           the row is used — which remains the clearest argument for the list
+           existing at all. */
+        anchor: [-0.114, -0.184, -1.183],
+        normal: [0.211, -0.315, -0.925],
+        pose: { azimuth: 2.853, polar: 1.468, radius: 0.42 },
       },
     ],
   },
