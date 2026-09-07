@@ -345,12 +345,23 @@ export const MINI: ProductPage = {
 
      160 frames, up from that sequence's 110.
 
-     NO 4k TIER, and the key is not a mistake. The render is 1920x1080, so
-     2560 and 3840 would be an upscale of a file we already have: the '4k'
-     slot points at the same 1920 build as '2k'. Ship a larger render and
-     this becomes three real folders; until then a bigger number would only
-     buy bandwidth. The P10 Pro's sequence is genuinely 3840, which is why
-     its entry differs.
+     RE-RENDERED AT 2560x1440, AND THAT FIXED A REAL FAULT RATHER THAN
+     MERELY ADDING PIXELS. The note here used to say the render was
+     1920x1080 and that a bigger number would only buy bandwidth. The second
+     half was right; the first was the problem. FieldHero's TIERS declare
+     '2k' AS 2560x1440, so a 1920 build in the mini2k folder was undersized
+     for the tier that selects it — and pickTier's own comment explains what
+     that costs: on a narrow screen the BASELINE binds rather than cover fit,
+     so the painter was enlarging the frame to make the aircraft span 60% of
+     the canvas. The softness that produces is exactly what that comment
+     warns will be inexplicable later.
+
+     '2k' is now a real 2560 build at 11.8 MB, which is the trade pickTier
+     already made deliberately and documented at 14.2 MB for the P10 Pro.
+
+     STILL NO 4k FOLDER, and now for the original reason properly: 3840 would
+     be an upscale of a 2560 source, so the '4k' key points at the 2560 build.
+     The P10 Pro's sequence is genuinely 3840, which is why its entry differs.
 
      `end` still points at the P10 Pro's closing act. Nothing reads it —
      MINI's `acts` is the hero alone — but it is left resolvable rather
@@ -360,10 +371,15 @@ export const MINI: ProductPage = {
     end: { '1k': 'end1k', '2k': 'end2k', '4k': 'end' },
     heroFrames: 160,
     endFrames: 40,
-    /* Measured off frame 0's alpha bounding box: the subject spans
-       628..1273 of 1920. The 0.19 here before was the P10 Pro's number,
-       and at nearly half the true value it would have had FieldSequence
-       enlarging the aircraft on phones to hit a size it already exceeded. */
+    /* Measured off frame 0's alpha bounding box, and RE-MEASURED against the
+       2560 render rather than carried over: the subject spans 838..1698 of
+       2560, which is 0.3359. The old 1920 build gave 628..1273, or 0.336 —
+       the same framing at a different resolution, which is the evidence that
+       the re-render is the same animation and not a new camera path.
+
+       The 0.19 here before that was the P10 Pro's number, and at nearly half
+       the true value it would have had FieldSequence enlarging the aircraft
+       on phones to hit a size it already exceeded. */
     firstFrameSubjectWidth: 0.336,
   },
 
