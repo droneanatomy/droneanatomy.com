@@ -167,6 +167,21 @@ export type ProductPage = {
    *  a missing act behaves. */
   viewer?: ProductViewer;
 
+  /** The hero's bottom-right media card, and the lightbox behind it.
+   *
+   *  Optional for the usual reason, and it was found the usual way: the id
+   *  and the poster were hardcoded in FieldHero while the TITLE was built
+   *  from product.name, so the Mini's hero showed the P10 Pro's film
+   *  captioned "Mini — film". A page with no film of its own should not have
+   *  to borrow one, and now it does not render the card at all. */
+  film?: {
+    /** YouTube id, mounted only once the card is pressed — see FieldVideo. */
+    id: string;
+    /** A LOCAL poster frame. Remote thumbnails would need remotePatterns on
+     *  a static export and would put a third-party request back on load. */
+    poster: string;
+  };
+
   nav: { label: string; href: string }[];
 };
 
@@ -200,6 +215,10 @@ export const P10_PRO: ProductPage = {
   },
   coda: 'Built to be opened',
   slide: 'it’s compact',
+
+  /* The values that were hardcoded in FieldHero, moved to the one page they
+     were ever true for. */
+  film: { id: 'RTzzgJ4ZjzE', poster: '/images/p10-film-poster.webp' },
 
   gallery: [
     { src: '/images/portable2.jpg', alt: 'Arms folded in for transport' },
