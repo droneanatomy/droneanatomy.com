@@ -1,7 +1,19 @@
 'use client';
 
 /* ============================================================
-   ViewerHotspots — the dots, and they are DOM rather than sprites.
+   ViewerHotspots — the dot for the selected feature.
+
+   ONE AT A TIME. Every hotspot used to be drawn at once, which made the dots
+   a way to CHOOSE a feature; only the selected one is drawn now, so they are
+   a way to SEE the one you chose. The list is the control, and the mark on
+   the aircraft is what connects a row to a place on it.
+
+   The cost is that nothing on the model advertises that there are four
+   points — that job moves entirely to the list beside it, and to the "Four
+   points" caption above the frame. The gain is that the render carries one
+   mark instead of a constellation competing with the aircraft.
+
+   They are DOM rather than sprites.
 
    The reference draws its labels into the canvas with an MSDF font atlas,
    which is the right call when the label has to survive being composited
@@ -31,9 +43,10 @@ type Props = {
   onSelect: (i: number) => void;
 };
 
-/* Opacity for a dot whose anchor has turned away. Faded rather than hidden:
-   the reference hides its own, but with four dots on a small airframe a dot
-   that vanishes reads as a glitch where one that fades reads as depth. */
+/* Opacity for the SELECTED dot while its own anchor is turned away — which
+   now only happens mid-flight, since every authored pose ends up looking at
+   its own hotspot. Faded rather than hidden so the mark reads as travelling
+   round the aircraft with the camera rather than blinking out and back. */
 const AWAY = 0.15;
 
 export const ViewerHotspots = forwardRef<HotspotsHandle, Props>(function ViewerHotspots(
@@ -94,6 +107,29 @@ export const ViewerHotspots = forwardRef<HotspotsHandle, Props>(function ViewerH
            which is the same rule that made it wrong for the projection. */
         el.style.transform = `translate3d(${px}px, ${py}px, 0) translate(-50%, -50%)`;
 
+        /* ONLY THE SELECTED HOTSPOT IS DRAWN.
+
+           An unselected dot is hidden outright rather than dimmed, so the
+           render carries one mark at a time and the aircraft is not read
+           through a constellation of points competing with it.
+
+           It is still POSITIONED above, though, and that is the reason this
+           returns here rather than earlier: a dot that stopped tracking
+           while hidden would be holding a stale projection from whenever it
+           was last selected, and would visibly jump across the panel at the
+           moment it came back. It follows the model in the dark and simply
+           fades up already in the right place. */
+        if (selected !== i) {
+          el.style.opacity = '0';
+          el.style.pointerEvents = 'none';
+          el.tabIndex = -1;
+          return;
+        }
+
+        /* The facing test still applies to the one that IS shown. Selecting
+           a hotspot on the far side starts a flight from where the camera
+           happens to be, so for the first part of that move its own anchor
+           can still be turned away — it comes up as the aircraft turns. */
         const visible = facing(h.normal as Vec3, cam, h.anchor as Vec3);
         el.style.opacity = visible ? '1' : String(AWAY);
         /* A dot on the far side must not be clickable or tabbable THROUGH
