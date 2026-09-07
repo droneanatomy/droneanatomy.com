@@ -440,18 +440,20 @@ export const MINI: ProductPage = {
     hotspots: [
       {
         label: 'EW Capable',
-        /* ON THE SHELL BETWEEN THE ANTENNAS, not on one of them. The pair of
-           fins sits at x = +/-0.233; this lands at x = 0.073, on the CAMO
-           body between them and at their z. That is the better place for a
-           dot whose label is about the capability rather than the part —
-           anchored to one fin it would have read as pointing at that fin and
-           ignoring its mirror.
+        /* The outboard face of Body1129, the grey block on the top deck at
+           the rear. Its centre is x = 0.233 with a half-extent of 0.0675, so
+           x = 0.3 is the face itself rather than a point floating beside it,
+           and the normal is very nearly pure +X to match.
 
-           The normal is a chamfer, 45 degrees between +X and +Y, so the dot
-           fades as the deck rolls away rather than only when the side does. */
-        anchor: [0.073, 0.077, 0.54],
-        normal: [0.705, 0.709, 0],
-        pose: { azimuth: 1.198, polar: 1.358, radius: 0.44 },
+           Sits directly above Body1128 — the thin fin at the same x, one of
+           a symmetric pair — so the dot reads as marking that assembly
+           rather than the bare shell.
+
+           High on the aircraft, at y = 0.381 against a top of 0.485, which is
+           what keeps it clear of the body below it at this framing. */
+        anchor: [0.3, 0.381, 0.612],
+        normal: [0.98, 0.067, 0.187],
+        pose: { azimuth: 1.202, polar: 1.376, radius: 0.44 },
       },
       {
         label: 'CF Single Body',
