@@ -816,7 +816,19 @@ export function MiniViewer({ name, viewer }: { name: string; viewer: ProductView
 
             The caption row and the hint share the expression so their ends
             line up with the frame's rather than with some wider box. */}
-        <div className="w-[min(1080px,86vw,calc(58vh*1.9))] text-[#f2ecd9]">
+        {/* 70vh IS THE NUMBER THAT MATTERS, and the 1440px had to move with
+            it. The height term is what binds at ordinary window sizes, so it
+            alone sets how much of the screen the viewer covers — but raising
+            it to 70vh without touching the pixel ceiling would have handed
+            control to that ceiling on any window taller than about 810px,
+            where 1080px caps the width and the panel quietly falls back to
+            53vh. Two caps that disagree about the answer is how a rule stops
+            being a rule.
+
+            The remaining ceilings are still doing work: 86vw keeps the frame
+            off the page pads on a wide-short window, and 1440px stops the
+            aircraft becoming a billboard on a very large display. */}
+        <div className="w-[min(1440px,86vw,calc(70vh*1.9))] text-[#f2ecd9]">
           <div className="mb-[clamp(8px,1.5vh,18px)] flex items-baseline justify-between gap-4">
             <p className="font-display text-[clamp(11px,0.95vw,18px)] font-bold uppercase tracking-[0.02em] opacity-70">
               {name}
