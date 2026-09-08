@@ -78,9 +78,14 @@ const AWAY = 0.15;
    panel. "30 MIN FLIGHT TIME" is the longest here at roughly 150px, which
    still stops short of the anchor. */
 const HIT = 22; // clickable square, centred on the anchor
-const DIAG = 30;
-const RUN = 124;
-const LABEL_GAP = 6;
+const DIAG = 34;
+/* THE RUN GREW WITH THE TYPE, and it had to. The label starts at the run's
+   far end and reads back toward the dot, so the run is the only thing
+   keeping a long caption clear of the anchor it belongs to. At 10px, "30 MIN
+   FLIGHT TIME" measured about 150px and a 124px run left it just short of
+   the dot; at the larger size it would have crossed straight over it. */
+const RUN = 200;
+const LABEL_GAP = 9;
 
 /* The button is a FIXED square rather than sized by its contents, and that
    is a correction as much as a convenience. It used to be a flex row of
@@ -274,7 +279,14 @@ export const ViewerHotspots = forwardRef<HotspotsHandle, Props>(function ViewerH
               }}
               style={{ left: -(DIAG + RUN), bottom: DIAG + LABEL_GAP, opacity: 0 }}
               className={
-                'absolute whitespace-nowrap font-display text-[10px] ' +
+                /* CLAMPED RATHER THAN FIXED, because the panel is sized in
+                   vh now. A flat 10px was set against a frame capped at
+                   58vh; at 70vh the same label reads as a footnote on a
+                   picture half again as large. Scaling it with the viewport
+                   keeps the caption the same SIZE RELATIVE TO THE AIRCRAFT
+                   at every window, which is the thing that was actually
+                   being judged. */
+                'absolute whitespace-nowrap font-display text-[clamp(13px,1.15vw,18px)] ' +
                 'font-bold uppercase tracking-[0.14em] text-[var(--color-flare)] ' +
                 'transition-opacity duration-[260ms] delay-[420ms] ease-out ' +
                 'motion-reduce:transition-none motion-reduce:delay-0'
