@@ -1717,7 +1717,14 @@ export const FieldHero: React.FC<{
               buttons alone — the card covers the whole viewport to
               position itself, and a full-screen transparent layer that
               swallows clicks is how a page ends up feeling broken. */}
-          {clock.closing && (
+          {/* AND THE DATA, not just the clock. The whole card below was
+              typed in — kicker, headline, body, label and the mailto — so a
+              second product declaring a closing act would have invited the
+              reader to book a demo of the P10. It never leaked only because
+              the P10 is the one page that declares this act. The rule the
+              file already states is that an act you declare must bring its
+              data; this is that rule finally applied here. */}
+          {clock.closing && product.closing && (
           <div
             className="pointer-events-none fixed inset-0 z-[11] flex items-center justify-center"
             style={{
@@ -1732,7 +1739,7 @@ export const FieldHero: React.FC<{
                 viewport, the paragraph by readability. */}
             <div className="w-full px-[var(--pad-x,5vw)] text-center">
               <p className="font-display text-[clamp(10px,0.82vw,15px)] font-bold uppercase tracking-[0.14em] opacity-70">
-                Ready for the season
+                {product.closing.kicker}
               </p>
 
               {/* One line, and sized to the STRING rather than picked.
@@ -1759,7 +1766,7 @@ export const FieldHero: React.FC<{
                   against an 1824px container, and at the 22px floor it is
                   249px against 267px. Both hold. */}
               <h2 className="mt-[clamp(12px,1.4vw,26px)] font-display text-[clamp(26px,7.4vw,150px)] uppercase leading-[0.95] tracking-[-0.03em] sm:whitespace-nowrap">
-                Bring it to your field
+                {product.closing.headline}
               </h2>
 
               {/* The gap here is a HOLE, not spacing.
@@ -1794,8 +1801,7 @@ export const FieldHero: React.FC<{
                   block still fits with room at all four (worst top offset
                   44px), so nothing is pushed off screen to buy it. */}
               <p className="mx-auto mt-[clamp(56px,42vh,420px)] max-w-[46ch] text-[clamp(14px,1.15vw,20px)] leading-[1.5] opacity-75">
-                Eleven parts off with one driver. Ten litres over six metres.
-                Eighteen minutes a pack, hot-swapped on the headland.
+                {product.closing.body}
               </p>
 
               <div className="mt-[clamp(24px,2.8vw,48px)] flex flex-wrap items-center justify-center gap-[clamp(10px,1vw,18px)]">
@@ -1803,13 +1809,13 @@ export const FieldHero: React.FC<{
                     and the reticle, so the closing frame is recognisably the
                     same page as the opening one. */}
                 <span className="pointer-events-auto rounded-[3px] border border-dashed border-[#f2ecd9]/40 px-[clamp(18px,2vw,34px)] py-[clamp(9px,1vw,15px)] font-display text-[clamp(10px,0.82vw,15px)] font-bold uppercase tracking-[0.12em]">
-                  P10 Pro
+                  {product.closing.label}
                 </span>
                 <a
-                  href="mailto:info@droneanatomy.com"
+                  href={product.closing.cta.href}
                   className="pointer-events-auto rounded-[3px] bg-[#f2ecd9] px-[clamp(18px,2vw,34px)] py-[clamp(9px,1vw,15px)] font-display text-[clamp(10px,0.82vw,15px)] font-bold uppercase tracking-[0.12em] text-[#090b07] transition-opacity hover:opacity-85"
                 >
-                  Book a demo
+                  {product.closing.cta.label}
                 </a>
               </div>
             </div>
@@ -2160,6 +2166,15 @@ export const FieldHero: React.FC<{
             {product.statement.head[1]}
           </h2>
 
+          {/* DECLARED, NOT TYPED IN. This paragraph carried the P10's own
+              sentence as a literal, so every product's hero asserted it was
+              the P10 — visible on the Noxr page, which is where it was
+              caught. A page with nothing to say here now renders nothing,
+              the same rule the acts already follow.
+
+              stmtParaRef tolerates the absence: the split filters its
+              elements with Boolean before it builds anything. */}
+          {product.statement.aside && (
           <p
             ref={stmtParaRef}
             /* CENTRED at the bottom on mobile, not in a corner.
@@ -2182,9 +2197,9 @@ export const FieldHero: React.FC<{
                the headline above. */
             className="absolute bottom-[10%] left-1/2 w-[84vw] -translate-x-1/2 text-right text-[clamp(15px,1.77vw,34px)] leading-[1.42] md:bottom-auto md:left-auto md:right-[8%] md:top-[42%] md:w-[clamp(230px,18.8vw,360px)] md:translate-x-0 md:text-left"
           >
-            The P10 isn&rsquo;t just a drone. It&rsquo;s the airframe every sensor,
-            payload and mission answers to.
+            {product.statement.aside}
           </p>
+          )}
 
           {/* Slide label — stacked directly above the line rather than beside
               it, so the two read as one statement broken across two sizes.
@@ -2302,9 +2317,20 @@ export const FieldHero: React.FC<{
                mistake rather than as a margin. */
             className="absolute right-[8%] top-[calc(13%_+_9.025vw_+_14px)] font-display text-[clamp(12px,1.35vw,26px)] uppercase tracking-[0.02em] text-[var(--color-flare)] md:right-[25%] md:top-[30%]"
           >
-            P10-Pro
+            {/* The product's own name. It read "P10-Pro" as a literal, in
+                the accent colour, on every hero — the loudest of the four
+                leaks and the easiest to miss, because on the P10's page it
+                was right. The hyphen goes with it: `name` is what the
+                wordmark and the metadata already use, and one spelling per
+                product beats a second one that only this tag knows. */}
+            {product.name}
           </p>
 
+          {/* Same fix as the statement's aside: these three lines were typed
+              into the JSX and are a specification of the P10 and of nothing
+              else. codaNoteRef tolerates the absence — its split is written
+              as `codaNote ? … : …`. */}
+          {product.codaNote && (
           <p
             ref={codaNoteRef}
             /* 8% on a phone, the desktop 25% from md up.
@@ -2319,12 +2345,14 @@ export const FieldHero: React.FC<{
                same page. */
             className="absolute right-[8%] top-[78%] text-right font-display text-[clamp(11px,1vw,19px)] uppercase leading-[1.5] tracking-[0.01em] md:right-[25%]"
           >
-            Eleven parts come off.
-            <br />
-            Ninety seconds each.
-            <br />
-            One driver.
+            {product.codaNote?.map((line, i) => (
+              <React.Fragment key={line}>
+                {i > 0 && <br />}
+                {line}
+              </React.Fragment>
+            ))}
           </p>
+          )}
 
           {menu === 'inline' && (
           <nav

@@ -139,8 +139,26 @@ export type ProductPage = {
 
   sequence: ProductSequence;
 
-  /** Act one's void statement. Two lines, then the paragraph beside it. */
-  statement: { head: [string, string]; body: string };
+  /** Act one's void statement. Two lines, then the paragraph beside it.
+   *
+   *  `aside` is the SECOND paragraph — the one that hangs off the right of
+   *  the statement headline in the void. It is optional, and it was found
+   *  the way the film card and the poster were: it did not exist at all, and
+   *  FieldHero simply had the P10's sentence typed into the JSX. Every
+   *  product page therefore claimed to be the P10, in the middle of its own
+   *  hero. A page with nothing to say there now says nothing. */
+  statement: { head: [string, string]; body: string; aside?: string };
+
+  /** The three short lines that rise beside the coda, small and uppercase.
+   *
+   *  Optional for the same reason and discovered in the same place: the JSX
+   *  carried "Eleven parts come off. / Ninety seconds each. / One driver." as
+   *  literals, which is a specification of the P10 and of nothing else.
+   *
+   *  An array rather than a string because the line breaks are the
+   *  choreography: SplitText masks and raises each line separately, so
+   *  re-wrapping this changes the animation and not merely the copy. */
+  codaNote?: readonly string[];
   /** Act one's coda, and the line that becomes act two's lockup. */
   coda: string;
   slide: string;
@@ -226,7 +244,16 @@ export const P10_PRO: ProductPage = {
     body:
       'Built to fly, fold, and be fixed where it lands. Fifty-two minutes on ' +
       'station, four minutes to service, no tools on the bench.',
+    /* Moved out of FieldHero's JSX, where it was a literal and therefore
+       rendered on every product's hero regardless of the product. */
+    aside:
+      'The P10 isn’t just a drone. It’s the airframe every sensor, ' +
+      'payload and mission answers to.',
   },
+
+  /* Also moved out of the JSX. Three lines, and the breaks are the
+     choreography rather than the wrapping. */
+  codaNote: ['Eleven parts come off.', 'Ninety seconds each.', 'One driver.'],
   coda: 'Built to be opened',
   slide: 'it’s compact',
 
