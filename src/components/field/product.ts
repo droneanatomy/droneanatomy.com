@@ -646,6 +646,22 @@ export const NOXR: ProductPage = {
   viewer: {
     model: '/models/noxr.glb',
     span: 3.2,
+    /* THE SEQUENCE'S OWN LAST FRAME, which is the rule the Mini's poster
+       follows and for the same reason: the hero dissolves into this panel,
+       so the still behind the gate should be the frame the hero just left
+       on. Anything else makes the click read as swapping the aircraft for a
+       different one rather than getting closer to the same one.
+
+       It was frame 51 briefly, chosen when the FIRST render ended on the
+       aircraft receding to a 236px speck. The V2 render ends head-on, so
+       the rule applies again and the exception is gone.
+
+       CROPPED AT NATIVE RESOLUTION, NOT SCALED TO A SUBJECT WIDTH. The
+       aircraft is 260px in that frame, so the Mini's 62% convention would
+       have meant a 2.7x upscale. The panel enlarges a 260px subject either
+       way — that softness is in the render, not in the crop — so this takes
+       the sharp version and lets the aircraft sit small, at 22.8% of the
+       poster, exactly as it sits in the frame it came from. */
     poster: '/images/noxr-viewer-poster.webp',
     /* 3,864,476 bytes. Draco-compressed from an 11.3 MB export; the loader
        already decodes Draco for the Mini, so this cost nothing to adopt. */
