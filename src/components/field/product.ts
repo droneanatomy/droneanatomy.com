@@ -615,11 +615,20 @@ export const NOXR: ProductPage = {
     heroFrames: 160,
     endFrames: 40,
     /* Measured off frame 1's alpha bounding box: the subject spans
-       982..1542 of 2560. Markedly tighter than the Mini's 0.336, which is
-       the reason this is re-measured per product rather than shared — at
-       the Mini's number FieldSequence would have shrunk this aircraft to
-       two thirds of the size the render intends. */
-    firstFrameSubjectWidth: 0.2188,
+       1092..1462 of 2560.
+
+       RE-MEASURED FOR THE V2 RENDER, and it moved a long way — the first
+       render put the subject at 0.2188 (982..1542) and this one starts the
+       aircraft a third smaller. Carrying the old number across would have
+       told FieldSequence the aircraft was half again the size it is, and
+       the mobile baseline is solved against exactly this: it would have
+       stopped enlarging the frame at two thirds of the intended size and
+       the sequence would have looked soft with nothing to explain it.
+
+       It is also the tightest of the three products — the Mini is 0.336 —
+       so this page leans hardest on the larger build. That is the trade
+       pickTier already documents, not a new one. */
+    firstFrameSubjectWidth: 0.1445,
   },
 
   /* THE ANCHORS ARE REAL, THE FRAMINGS ARE NOT.
