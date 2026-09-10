@@ -104,6 +104,20 @@ export type ProductViewer = {
   model: string;
   /** Fitted span across the longest axis, in world units. */
   span: number;
+  /** The still shown in the frame before anyone has paid for the model.
+   *  Also hardcoded in MiniViewer once, which meant a second product would
+   *  have advertised the first one's aircraft. */
+  poster: string;
+  /** The model's size on disk, in bytes.
+   *
+   *  Stated to the reader before the click, because downloading a few
+   *  megabytes is a decision and someone on a metered connection is
+   *  entitled to know the price. It was written into the component as the
+   *  literal "2.5 MB" — true of the Mini and wrong for anything else, and
+   *  silently wrong, which is the worst kind. A number next to the path it
+   *  describes at least has a chance of being noticed when the path
+   *  changes. */
+  bytes: number;
   home: ViewerPose;
   hotspots: ViewerHotspot[];
 };
@@ -431,6 +445,9 @@ export const MINI: ProductPage = {
   viewer: {
     model: '/models/vtol.glb',
     span: 3.2,
+    poster: '/images/mini-viewer-poster.webp',
+    /* 2,587,764 bytes, which is the 2.5 MB the gate has always claimed. */
+    bytes: 2587764,
 
     /* Today's VIEW vector (0.6, 0.17, 0.72) as spherical. Preserved exactly
        so the crossfade out of the hero lands on the framing readers have
@@ -510,6 +527,136 @@ export const MINI: ProductPage = {
     { label: 'Intro', href: '/products/mini' },
     { label: 'Systems', href: '/products' },
     { label: 'P10 Pro', href: '/products/p10-pro' },
+    { label: 'Contact', href: '/contact' },
+  ],
+};
+
+/* ---------------------------------------------------------------------- */
+
+/* NOXR — the second page to run the Mini's arrangement, and the first to
+   prove that arrangement is reusable rather than a one-off.
+
+   ONE ACT, as the Mini has: the hero, then the interactive viewer, then the
+   site footer. `acts` says so, which is the whole reason that field exists.
+
+   COPY IS DELIBERATELY UNWRITTEN. Every string below marked PLACEHOLDER is
+   awaiting real text and says so where a reader will see it — on the page,
+   not only in this file. That is the honest version of a scaffold: the
+   alternative is inventing a kicker and a lede that read as approved copy
+   the moment they render, which is exactly the failure the note on MINI's
+   figures warns about. Replace each one and nothing else has to change.
+
+   THE ASSETS ARE REAL. The sequence, the model, the poster and the framing
+   constants below are all measured off this product's own files, so the page
+   is a true picture of the aircraft with placeholder words on it — never the
+   reverse. */
+export const NOXR: ProductPage = {
+  acts: [{ kind: 'hero', vh: ACT_ONE_VH }],
+
+  /* Four characters, the same count as 'Mini', so the wordmark solves to
+     the same size and the two pages sit at the same scale. */
+  name: 'Noxr',
+
+  kicker: 'PLACEHOLDER — one line, sets the product up',
+  tabLabel: '• Noxr Model',
+  lede:
+    'PLACEHOLDER — the opening paragraph, three or four lines. The Mini’s ' +
+    'runs to about forty words and is sized against that length, so this ' +
+    'wants to be in the same range.',
+
+  /* Ten characters a line is what act one's headline size is solved
+     against — see the note on the h2 in FieldHero. Two SHORT lines. */
+  statement: {
+    head: ['PLACEHOLDER', 'TWO LINES'],
+    body: 'PLACEHOLDER — the paragraph that sits beside the statement.',
+  },
+  coda: 'PLACEHOLDER — the closing line',
+  slide: 'placeholder',
+
+  /* MEASURED OFF THIS RENDER, none of it carried over from the Mini.
+
+     160 frames at 2560x1440, run through scripts/build-sequence.mjs at the
+     q96 the Mini uses. Both tiers are real: 1280x720 and the native 2560,
+     which is what FieldHero's TIERS declares '2k' to be.
+
+     `end` points at the P10 Pro's closing act. Nothing reads it — this
+     page's `acts` is the hero alone — but it is left resolvable so the type
+     stays honest about what a ProductPage is, exactly as MINI does. */
+  sequence: {
+    hero: { '1k': 'noxr1k', '2k': 'noxr2k', '4k': 'noxr2k' },
+    end: { '1k': 'end1k', '2k': 'end2k', '4k': 'end' },
+    heroFrames: 160,
+    endFrames: 40,
+    /* Measured off frame 1's alpha bounding box: the subject spans
+       982..1542 of 2560. Markedly tighter than the Mini's 0.336, which is
+       the reason this is re-measured per product rather than shared — at
+       the Mini's number FieldSequence would have shrunk this aircraft to
+       two thirds of the size the render intends. */
+    firstFrameSubjectWidth: 0.2188,
+  },
+
+  /* THE ANCHORS ARE REAL, THE FRAMINGS ARE NOT.
+
+     This export has semantic node names — Battery, back Holder — so the
+     anchors below sit on parts found by name rather than picked blind, and
+     the LENS material gives the camera its own centroid. The poses are
+     arithmetic that points a camera roughly at each one, and they are meant
+     to be replaced by framings composed in the browser. Shift-click with
+     the dev picker and paste; see pickAnchor.ts.
+
+     Front is +Z on this airframe — the LENS centroid sits at z = +0.574 —
+     which is the opposite of the Mini. Worth knowing before reading any of
+     these numbers against that page's. */
+  viewer: {
+    model: '/models/noxr.glb',
+    span: 3.2,
+    poster: '/images/noxr-viewer-poster.webp',
+    /* 3,864,476 bytes. Draco-compressed from an 11.3 MB export; the loader
+       already decodes Draco for the Mini, so this cost nothing to adopt. */
+    bytes: 3864476,
+
+    /* The Mini's opening framing, reused deliberately: it is a neutral
+       three-quarter view and there is no reason for two product pages to
+       introduce their aircraft from different angles. */
+    home: { azimuth: 0.695, polar: 1.391, radius: 1.0 },
+
+    hotspots: [
+      {
+        label: 'PLACEHOLDER 01',
+        /* The LENS meshes' centroid, pushed onto the front face. */
+        anchor: [0.043, 0.182, 0.6],
+        normal: [0, 0, 1],
+        pose: { azimuth: 0.2, polar: 1.45, radius: 0.45 },
+      },
+      {
+        label: 'PLACEHOLDER 02',
+        /* The top face of the node literally called Battery: centre
+           [-0.006, 0.089, -0.382] with a half-height of 0.204. */
+        anchor: [-0.006, 0.293, -0.382],
+        normal: [0, 1, 0],
+        pose: { azimuth: 3.0, polar: 0.8, radius: 0.5 },
+      },
+      {
+        label: 'PLACEHOLDER 03',
+        /* The top of the front-right motor housing (Body5.007). */
+        anchor: [0.885, 0.37, 0.907],
+        normal: [0, 1, 0],
+        pose: { azimuth: 0.8, polar: 0.85, radius: 0.55 },
+      },
+      {
+        label: 'PLACEHOLDER 04',
+        /* The outboard face of 'back Holder', one of a symmetric pair. */
+        anchor: [0.286, -0.023, -0.416],
+        normal: [1, 0, 0],
+        pose: { azimuth: 1.6, polar: 1.3, radius: 0.5 },
+      },
+    ],
+  },
+
+  nav: [
+    { label: 'Intro', href: '/products/noxr-1' },
+    { label: 'Systems', href: '/products' },
+    { label: 'Mini', href: '/products/mini' },
     { label: 'Contact', href: '/contact' },
   ],
 };

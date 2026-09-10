@@ -899,7 +899,7 @@ export function MiniViewer({ name, viewer }: { name: string; viewer: ProductView
                 the box it fills — the optimiser has nothing to add. */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src="/images/mini-viewer-poster.webp"
+              src={viewer.poster}
               alt=""
               aria-hidden="true"
               decoding="async"
@@ -979,9 +979,16 @@ export function MiniViewer({ name, viewer }: { name: string; viewer: ProductView
 
                 {/* The size is stated because the click is a decision to
                     spend it, and a reader on a metered connection is
-                    entitled to know the price before paying it. */}
+                    entitled to know the price before paying it.
+
+                    FROM THE DATA, not a literal. It read "2.5 MB" here,
+                    which was true of the Mini and would have quietly
+                    misquoted every product added after it. MiB rather than
+                    MB because that is the unit the original figure was in
+                    and the number should not shift under a reader who has
+                    seen it before. */}
                 <span className="font-display text-[clamp(9px,0.72vw,12px)] uppercase tracking-[0.16em] opacity-40">
-                  2.5 MB
+                  {(viewer.bytes / 1024 / 1024).toFixed(1)} MB
                 </span>
               </button>
             )}
