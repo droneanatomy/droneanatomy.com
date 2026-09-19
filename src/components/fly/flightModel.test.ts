@@ -439,12 +439,80 @@ describe('modes', () => {
      recovery envelope (empirically the cutoff sits between -14 and -16
      for this airframe from this height) with comfortable margin, so
      ground contact — and therefore a verdict — is guaranteed regardless
-     of small future tuning changes to the hover gains. */
-  it('picks up a verdict instead of getting stuck once it reaches the ground while flying', () => {
+     of small future tuning changes to the hover gains. -20 is well past
+     it, and NEUTRAL commands no descent at all, so the landing flare
+     below (which only softens a COMMANDED sink) never engages here —
+     this is a straightforward too-fast-to-arrest crash.
+
+     Stops at the first frame mode leaves 'flying', rather than running
+     the full loop: LOST_SEC is only 1.5s, so an 8s loop that kept going
+     would run the 'lost' beat all the way back around to 'grounded' and
+     the assertion below would see the wrong mode for the wrong reason
+     (timer expiry, not touchdown) — the exact ambiguity this whole test
+     exists to rule out. */
+  it('crashes on a fast, uncommanded arrival', () => {
     const s = newState(0, 6, 0);
     s.mode = 'flying';
     s.vy = -20;
-    for (let i = 0; i < 60 * 8; i++) step(s, a, NEUTRAL, 0, 1 / 60);
-    expect(['grounded', 'lost']).toContain(s.mode);
+    for (let i = 0; i < 60 * 8 && s.mode === 'flying'; i++) step(s, a, NEUTRAL, 0, 1 / 60);
+    expect(s.mode).toBe('lost');
+  });
+
+  /* THE END-TO-END LANDING PROOF. Nothing above drives step() all the way
+     to 'grounded' through ordinary flight — the crash test above proves
+     'lost', and touchdownVerdict's own unit tests prove 'landed' only in
+     isolation, by hand-setting vy and calling it directly. A test that
+     merely asserted `['grounded','lost']).toContain(mode)` would still
+     pass if touchdownVerdict were inverted, or hard-coded to always
+     return 'lost' — it says nothing about which verdict fires. This one
+     does: it flies a real descent through step() and insists on the
+     'grounded' outcome specifically.
+
+     Pulsed rather than held: a HELD descend key commands the airframe's
+     full climb rate, which is well past LAND_SINK and crashes every
+     time — that gap is exactly what the near-ground landing flare in
+     stepQuad/stepWing now closes for a HELD key. This 1-in-6 pulse
+     (16.7% duty, inside the 15-30% range that already worked before the
+     flare existed) is the proof the flare left that untouched: it is
+     gated on the CURRENT sink rate (see FLARE_SINK's comment), so a
+     descent this gentle never gets clamped at all and lands exactly as
+     it did before the flare was added — measured at 5.02s; 6s gives
+     margin without turning this into a slow test. */
+  it('lands through step() on a pulsed descent', () => {
+    const s = newState(0, 10, 0);
+    s.mode = 'flying';
+    for (let i = 0; i < 60 * 6 && s.mode === 'flying'; i++) step(s, a, { ...NEUTRAL, lift: i % 6 === 0 ? -1 : 0 }, 0, 1 / 60);
+    expect(s.mode).toBe('grounded');
+  });
+
+  /* THE FLARE ITSELF: a visitor who does the obvious thing on final
+     approach — hold Shift and wait — must land, not crash. Without the
+     flare this hits the ground at -9.2 u/s (measured); with it, -2.5 to
+     -2.6. Also proves the flare doesn't overcorrect into a permanent
+     hover the way an earlier, wider-radius attempt did (verified by
+     probe, not kept: at 4+ spans with no velocity gate this never
+     reached the ground in 15s). */
+  it('a held descend key lands instead of crashing near the ground', () => {
+    const s = newState(0, 10, 0);
+    s.mode = 'flying';
+    for (let i = 0; i < 60 * 15 && s.mode === 'flying'; i++) step(s, a, { ...NEUTRAL, lift: -1 }, 0, 1 / 60);
+    expect(s.mode).toBe('grounded');
+  });
+
+  /* GROUND EFFECT. Every test above this point starts at y >= 40, far
+     outside any airframe's span, so ge is exactly 1.0 throughout and both
+     ge lines in stepQuad/stepWing could be deleted without failing a
+     single one of them — this is the only test in the file that actually
+     exercises it. Below one span, ge adds up to 12% extra lift for the
+     same demand, so a hover started well inside that band climbs rather
+     than merely holding: with no climb commanded and no ground effect the
+     craft would sit within 0.5 of its start (as the y >= 40 hover-hold
+     test already proves), so any sustained climb here is ge and nothing
+     else. */
+  it('gets extra lift from being close to the ground', () => {
+    const s = newState(0, 1, 0);
+    s.mode = 'flying';
+    for (let i = 0; i < 60 * 2; i++) step(s, a, NEUTRAL, 0, 1 / 60);
+    expect(s.y).toBeGreaterThan(1.5);
   });
 });

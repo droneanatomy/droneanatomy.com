@@ -179,6 +179,39 @@ const LAND_TILT = (12 * Math.PI) / 180;
 export const touchdownVerdict = (s: FlightState, a: Airframe): 'landed' | 'lost' =>
   -s.vy < LAND_SINK && Math.abs(s.pitch) < LAND_TILT && Math.abs(s.roll) < LAND_TILT ? 'landed' : 'lost';
 
+/* THE LANDING FLARE, in stepQuad/stepWing: within FLARE_SPANS of the
+   ground, a commanded descent already sinking faster than FLARE_SINK
+   gets pulled back to FLARE_SINK.
+
+   Both numbers were swept against MINI's held-descent-from-hover, not
+   assumed:
+
+   FLARE_SPANS. At 1 span (a first attempt, matching only the altitude
+   half of this gate), MINI's climb controller cannot bleed a held,
+   fully-commanded -16 u/s dive down to under LAND_SINK before reaching
+   the ground — it still hits at -9.2 u/s, a hard crash, because 1 span
+   (2.2 units) is less ground than the controller's own response time
+   needs at that speed. 5 spans lands with a real margin (-2.5 u/s).
+
+   GATING ON CURRENT SINK, NOT JUST ON "A DESCENT IS COMMANDED": the
+   first version of this flare clamped the TARGET the instant any
+   descent was commanded near the ground, with no regard for how fast
+   the craft actually was falling. That is what a HELD key needs, but it
+   also caught the PULSED, low-duty-cycle descent used elsewhere to
+   reach the ground without this flare at all (a 15-30% duty cycle,
+   already gentle by construction) — the same clamp that rescues a full
+   dive also flattened a duty cycle that was never in danger, pinning it
+   in a permanent low hover next to the ground it was trying to reach.
+   Gating on "-vy already past FLARE_SINK" leaves a descent that is
+   already gentle alone, and only intervenes once it genuinely is not:
+   with this gate, a 1-in-6 pulse (16.7%, inside the working range)
+   lands at -0.5 u/s exactly as it did before the flare existed, a
+   1-in-7 pulse (14.3%, below it) still doesn't — matching the same
+   15-30% boundary — and a held key still lands at -2.5 u/s instead of
+   crashing at -9.2. */
+const FLARE_SPANS = 5;
+const FLARE_SINK = LAND_SINK * 0.6;
+
 export type Controls = {
   /** 1 = W, -1 = S. A SPEED demand, not a thrust lever: the autothrottle
       below turns it into thrust, which is the assist that lets the fleet
@@ -209,7 +242,11 @@ export type FlightState = {
   mode: Mode;
   /** Seconds spent in the current mode. */
   since: number;
-  /** Rotor spool, 0..1. Thrust follows its square, as thrust does. */
+  /** Rotor spool, 0..1, for feel and the HUD during 'spooling'. Thrust is
+      NOT gated on this: it is always 1 by the time any force is computed
+      (see the ground-effect comment in stepQuad), so scaling thrust by it
+      would be dead weight at best and would zero the thrust of any state
+      that skips spooling straight into 'flying' at worst. */
   rotor: number;
   /** Last computed lift share — read by the rotor groups and the HUD. */
   liftShare: number;
@@ -335,7 +372,23 @@ function stepQuad(s: FlightState, a: Airframe, c: Controls, h: number, airspeed:
      climbing at that rate, so the equilibrium lands ON wantClimb instead
      of below it. It uses this frame's incoming speed, one step stale,
      which is accurate enough at 60 Hz and costs nothing to compute. */
-  const wantClimb = c.lift * a.climb;
+  /* Distance above the ground. Reused below by the landing flare and by
+     ground effect. */
+  const agl = s.y - groundY;
+
+  /* LANDING FLARE — see the FLARE_SPANS/FLARE_SINK comment above the
+     Mode type for the full reasoning, including why this is gated on
+     the CURRENT sink rate and not just on a descent being commanded.
+     A held descend key commands the airframe's full climb rate, which
+     for every ship in the fleet sinks far faster than LAND_SINK — so a
+     visitor doing the obvious thing (hold Shift and wait) crashes every
+     time. Within FLARE_SPANS of the ground, once already sinking faster
+     than FLARE_SINK, pull the commanded sink back to it. Climbing is
+     untouched — this only softens a commanded DEScent that has already
+     become dangerous. */
+  const wantClimbRaw = c.lift * a.climb;
+  const wantClimb =
+    wantClimbRaw < 0 && agl < a.span * FLARE_SPANS && -s.vy > FLARE_SINK ? Math.max(wantClimbRaw, -FLARE_SINK) : wantClimbRaw;
   const climbDragFF = a.CD * airspeed * wantClimb;
   const climbAccel = climbDragFF + (wantClimb - s.vy) * 1.6;
   const lean = Math.max(0.3, Math.cos(s.pitch) * Math.cos(s.roll));
@@ -343,6 +396,9 @@ function stepQuad(s: FlightState, a: Airframe, c: Controls, h: number, airspeed:
   /* GROUND EFFECT. A rotor close to the ground works against its own
      reflected downwash and gets more thrust for nothing, which is why a
      real quad feels like it unsticks rather than climbs. Two lines.
+     ge is applied INSIDE the clamp, not after it, so thrust can never
+     exceed a.thrustMax — applying it outside let a near-ground quad
+     exceed its own stated thrust ceiling by up to 12%.
 
      NOT also scaled by rotor^2: rotor is pinned at exactly 1 for the
      entire time this function can run. The 'spooling' branch above
@@ -352,9 +408,8 @@ function stepQuad(s: FlightState, a: Airframe, c: Controls, h: number, airspeed:
      test that sets s.mode = 'flying' directly skips spooling and leaves
      s.rotor at newState's default of 0, so gating thrust on rotor^2 would
      zero their thrust and fail the whole existing suite. */
-  const agl = s.y - groundY;
   const ge = agl < a.span ? 1 + 0.12 * (1 - agl / a.span) : 1;
-  const thrust = Math.min(a.thrustMax, Math.max(0, (G + climbAccel) / lean)) * ge;
+  const thrust = Math.min(a.thrustMax, Math.max(0, (G + climbAccel) / lean) * ge);
 
   s.ax = (fx * Math.sin(s.pitch) + rx * Math.sin(s.roll)) * thrust;
   s.az = (fz * Math.sin(s.pitch) + rz * Math.sin(s.roll)) * thrust;
@@ -434,7 +489,13 @@ function stepWing(s: FlightState, a: Airframe, c: Controls, h: number, airspeed:
      30. Adding back the drag it will be fighting at that rate puts the
      equilibrium ON wantClimb: the (wantClimb - vy) factor then cancels
      out of both sides. Inert whenever no climb is commanded. */
-  const wantClimb = c.lift * a.climb;
+  /* LANDING FLARE — see the FLARE_SPANS/FLARE_SINK comment above the
+     Mode type for the full reasoning. Applied here too so both
+     airframes answer a held descend key the same way. */
+  const agl = s.y - groundY;
+  const wantClimbRaw = c.lift * a.climb;
+  const wantClimb =
+    wantClimbRaw < 0 && agl < a.span * FLARE_SPANS && -s.vy > FLARE_SINK ? Math.max(wantClimbRaw, -FLARE_SINK) : wantClimbRaw;
   const climbAccel = a.CD * airspeed * wantClimb + (wantClimb - s.vy) * 0.9;
   const demand = G + climbAccel;
   const cosRoll = Math.max(0.2, Math.cos(s.roll));
@@ -474,10 +535,10 @@ function stepWing(s: FlightState, a: Airframe, c: Controls, h: number, airspeed:
 
   /* The lift rotors, while the blend still gives them a share.
      GROUND EFFECT, same two lines as the quad's — see the comment there
-     for why this is not also scaled by rotor^2. */
-  const agl = s.y - groundY;
+     for why this is not also scaled by rotor^2, and why ge is applied
+     INSIDE the clamp so liftThrustMax stays a real ceiling. */
   const ge = agl < a.span ? 1 + 0.12 * (1 - agl / a.span) : 1;
-  const rotorLift = s.liftShare * Math.min(a.liftThrustMax, Math.max(0, demand)) * ge;
+  const rotorLift = s.liftShare * Math.min(a.liftThrustMax, Math.max(0, demand) * ge);
 
   s.ax = fx * thrust + rx * Math.sin(s.roll) * wingLift;
   s.az = fz * thrust + rz * Math.sin(s.roll) * wingLift;
