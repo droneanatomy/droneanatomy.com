@@ -1,0 +1,152 @@
+/* ============================================================
+   SiteBar — the global header.
+
+   Transparent, fixed, and the same on every route. Its one variable
+   is tone: the site's own pages are near-black (--color-bg is #000),
+   the homepage hero is a cream sheet, so the bar has to be able to
+   read as light-on-dark or ink-on-light without changing anything
+   else about itself.
+   ============================================================ */
+
+.bar {
+  --fg: #f0f0fa; /* light tone, for the site's black pages */
+  --pad-x: clamp(18px, 3vw, 58px);
+  --pad-y: clamp(16px, 2.2vw, 34px);
+
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000; /* --z-header; stated literally so the bar does not
+                    depend on a legacy token that may be retired */
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: var(--pad-y) var(--pad-x);
+
+  color: var(--fg);
+  background: transparent;
+
+  /* The homepage hero reveals on pointermove over its canvas, and the
+     canvas sits UNDER this bar. Without this, the top strip of the hero
+     would stop responding to the cursor — the bar would swallow every
+     move event before the canvas saw it. Links opt back in below. */
+  pointer-events: none;
+}
+
+/* Ink tone. Driven by what is behind the bar, not by the route — see
+   SiteBar.tsx. The bar is fixed and therefore outside every page's
+   subtree, so it can never inherit a colour from the content it floats
+   over; it has to be told. */
+.ink {
+  --fg: #10140b;
+}
+
+/* The logo ships WHITE on transparent, for the dark theme. brightness(0)
+   crushes it to black for light grounds — the same inversion FieldNav
+   does. It lands on #000 rather than exactly --ink, a difference of
+   about six levels that nothing can see at 22px. */
+.ink .brand img {
+  filter: brightness(0);
+}
+
+.bar a,
+.bar button {
+  pointer-events: auto;
+}
+
+/* Brand and descriptor share the left slot. */
+.left {
+  display: flex;
+  align-items: center;
+  gap: clamp(10px, 1.2vw, 18px);
+  min-width: 0;
+}
+
+.brand {
+  display: block;
+  flex: none;
+  line-height: 0;
+  transition: opacity 0.25s ease;
+}
+
+.brand:hover {
+  opacity: 0.75;
+}
+
+.brand img {
+  display: block;
+  height: clamp(18px, 1.5vw, 24px);
+  width: auto;
+}
+
+.label {
+  margin: 0;
+  font-family: var(--font-body, 'Satoshi', Arial, sans-serif);
+  font-size: clamp(12px, 0.95vw, 15px);
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  line-height: 1.4;
+  color: var(--fg);
+  text-transform: none;
+  opacity: 0.7;
+  white-space: nowrap;
+}
+
+.nav {
+  display: flex;
+  gap: clamp(14px, 2.2vw, 40px);
+}
+
+.nav a {
+  color: var(--fg);
+  text-decoration: none;
+  font-family: var(--font-body, 'Satoshi', Arial, sans-serif);
+  font-size: clamp(12px, 0.95vw, 15px);
+  font-weight: 500;
+  text-transform: none;
+  opacity: 1;
+  transition: opacity 0.25s ease;
+}
+
+.nav a:hover,
+.nav a:focus-visible {
+  opacity: 0.6;
+}
+
+.nav a[aria-current='page'] {
+  opacity: 1;
+  text-decoration: underline;
+  text-underline-offset: 0.35em;
+  text-decoration-thickness: 1px;
+}
+
+/* ---------- narrow ---------- */
+
+/* The label goes, the links stay. Dropping the links instead would
+   leave the entire site with no navigation on a phone, since this bar
+   is the only header on every route — and the four labels measure
+   about 215px at 11px, which clears a 360px screen with its padding.
+   No drawer needed, so there is no drawer to build or to get wrong. */
+@media (max-width: 700px) {
+  .bar {
+    --pad-y: 14px;
+    align-items: center;
+  }
+
+  .label {
+    display: none;
+  }
+
+  .nav {
+    justify-content: flex-end;
+    gap: clamp(10px, 3vw, 16px);
+  }
+
+  .nav a {
+    font-size: 11px;
+    opacity: 0.9;
+  }
+}

@@ -1,0 +1,204 @@
+/* ============================================================
+   TopoBlock — chrome over the survey scene.
+
+   Near-black ground, cream type, one accent. Nothing here paints a
+   background except the scene's own; these are all overlays.
+   ============================================================ */
+
+.root {
+  --pad-x: clamp(18px, 3vw, 58px);
+  --pad-y: clamp(16px, 2.2vw, 34px);
+  --paper: #f2ecd9;
+  --flare: #fffc00;
+  --ground: #0a0908;
+
+  position: relative;
+  width: 100%;
+  font-family: var(--font-body, 'Satoshi', Arial, sans-serif);
+  background: var(--ground);
+
+  /* The legacy sheet's `section { content-visibility: auto }` would
+     reserve a viewport per off-screen chunk on a spacer this tall and
+     leave the height unstable until scrolled into view — which would
+     corrupt the progress this whole scene is driven by. */
+  content-visibility: visible;
+  contain-intrinsic-size: auto;
+}
+
+/* Sticky, not fixed. Confines the scene to this section so it cannot
+   paint over the flight above or the footer below. */
+.stage {
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  width: 100%;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.canvas {
+  z-index: 0;
+}
+
+.chrome {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* ---------- survey chrome ---------- */
+
+.coords {
+  position: absolute;
+  top: var(--pad-y);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  font-family: var(--font-mono, monospace);
+  font-size: clamp(9px, 0.62vw, 11px);
+  letter-spacing: 0.14em;
+  line-height: 1.35;
+  color: var(--paper);
+  opacity: 0.5;
+  text-transform: none;
+}
+
+/* ---------- the opening statement ---------- */
+
+.intro {
+  position: absolute;
+  left: var(--pad-x);
+  bottom: calc(var(--pad-y) + clamp(40px, 6vh, 74px));
+  max-width: min(52ch, 60vw);
+  transition: opacity 300ms ease;
+}
+
+.title {
+  margin: 0 0 clamp(12px, 1.6vh, 22px);
+  font-family: var(--font-display, 'Satoshi Display', Arial, sans-serif);
+  font-size: clamp(34px, 5.6vw, 96px);
+  font-weight: 700;
+  line-height: 0.98;
+  letter-spacing: -0.03em;
+  color: var(--paper);
+  text-transform: none;
+  /* The massif behind runs from near-white at the summit to black in the
+     valleys, so the type cannot rely on any one ground being there. */
+  text-shadow: 0 2px 5px rgba(0, 0, 0, 0.65), 0 12px 40px rgba(0, 0, 0, 0.5);
+}
+
+.line {
+  display: block;
+}
+
+.body {
+  margin: 0;
+  max-width: 44ch;
+  font-size: clamp(14px, 1.05vw, 19px);
+  font-weight: 400;
+  line-height: 1.5;
+  color: var(--paper);
+  text-transform: none;
+  opacity: 0.85;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
+}
+
+/* ---------- the plate caption ---------- */
+
+.plate {
+  position: absolute;
+  left: var(--pad-x);
+  bottom: calc(var(--pad-y) + clamp(40px, 6vh, 74px));
+  margin: 0;
+  font-family: var(--font-mono, monospace);
+  font-size: clamp(10px, 0.72vw, 13px);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--paper);
+  opacity: 0;
+  transition: opacity 300ms ease;
+}
+
+/* ---------- summit markers ---------- */
+
+/* Positioned from points the scene projects each frame, so they track
+   the real summits as the camera swings overhead. */
+.marker {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  white-space: nowrap;
+  transition: opacity 220ms ease;
+}
+
+.dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--flare);
+  box-shadow: 0 0 0 3px rgba(255, 252, 0, 0.18);
+  margin-bottom: 4px;
+}
+
+.name {
+  font-family: var(--font-display, 'Satoshi Display', Arial, sans-serif);
+  font-size: clamp(11px, 0.85vw, 15px);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--paper);
+  text-transform: uppercase;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
+}
+
+.note {
+  font-family: var(--font-mono, monospace);
+  font-size: clamp(8px, 0.58vw, 10px);
+  letter-spacing: 0.14em;
+  color: var(--paper);
+  opacity: 0.55;
+  text-transform: uppercase;
+}
+
+/* ---------- rail ---------- */
+
+.rail {
+  position: absolute;
+  left: var(--pad-x);
+  right: var(--pad-x);
+  bottom: var(--pad-y);
+  z-index: 2;
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  font-size: clamp(11px, 0.85vw, 14px);
+  color: var(--paper);
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.pct {
+  font-family: var(--font-mono, monospace);
+  letter-spacing: 0.1em;
+}
+
+@media (max-width: 700px) {
+  .intro {
+    right: var(--pad-x);
+    max-width: none;
+  }
+
+  .body {
+    max-width: none;
+  }
+
+  .coords {
+    display: none;
+  }
+}

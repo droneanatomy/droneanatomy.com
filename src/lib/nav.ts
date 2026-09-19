@@ -14,6 +14,11 @@ export const PRODUCT_LINKS: NavLink[] = [
      the menu from the one on the page it opens. */
   { label: 'Mini', href: '/products/mini' },
   { label: 'NOXR-1', href: '/products/noxr-1' },
+  /* The VTOL airframe, and a third product carrying the Cyclops name —
+     not Cyclops 3 or Cyclops Mini below, which are separate pages at their
+     own routes. Plain 'Cyclops' because it is CYCLOPS.name, the wordmark on
+     the page this opens; the same rule the Mini entry above follows. */
+  { label: 'Cyclops', href: '/products/cyclops' },
   { label: 'Cyclops 3', href: '/products/cyclops-3' },
   { label: 'Cyclops Mini', href: '/products/cyclops-mini' },
   { label: 'LiftX100', href: '/products/liftx100' },

@@ -1,0 +1,50 @@
+/* The ring that draws itself under a held pointer.
+
+   POSITIONED WITH A z-index, unlike its two siblings. .canvas and .layer
+   both paint in the z-index:0 group on purpose — the wordmark's
+   mix-blend-mode has to reach the canvas as its backdrop — and this sits
+   above both. That is safe because a stacking context formed HERE does
+   not enter the wordmark's: what an element blends with is whatever was
+   painted below it in its own context, and this paints after.
+
+   Its transform is the pointer position, written from the rAF loop, so
+   the box itself is parked at the hero's origin. */
+.ring {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 60px;
+  height: 60px;
+  margin: -30px 0 0 -30px;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0;
+  /* WHITE ON A PALE SHEET needs its own edge. The ring is drawn over the
+     hero's paper as often as over the dissolved hole in the ink, and
+     #e8e2d0 is light enough that a bare white hairline disappears into
+     it. The shadow is the same trick the survey beat's lock lines use. */
+  filter: drop-shadow(0 1px 2px rgba(9, 11, 7, 0.55));
+  /* Only the fade is eased. The arc is scrubbed by the hold itself and
+     must not lag behind the finger that is driving it. */
+  transition: opacity 140ms ease-out;
+}
+
+.track {
+  fill: none;
+  stroke: #ffffff;
+  stroke-width: 1;
+  opacity: 0.35;
+}
+
+/* pathLength=1, so a dasharray of 1 is the whole circumference and the
+   offset is the fraction still to draw. Rotated so it closes from the
+   top rather than from three o'clock. */
+.arc {
+  fill: none;
+  stroke: #ffffff;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  transform: rotate(-90deg);
+}

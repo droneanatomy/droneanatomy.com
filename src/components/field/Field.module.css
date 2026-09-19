@@ -1,0 +1,420 @@
+/* ============================================================
+   Field hero — the two atmosphere layers.
+
+   Everything else on this page is Tailwind. These two are not,
+   because they are multi-stop radial gradients whose alpha and
+   position are the design: expressing them as arbitrary-value
+   utilities would be one unreadable string per layer, and the
+   comments explaining the stops would have nowhere to live.
+
+   Both sit between the canvas (z-0) and the content (z-10), so the
+   type is lit from behind and never washed over.
+   ============================================================ */
+
+/* No scrollbar on this route.
+
+   The 620vh spacer exists only to generate scroll distance for the timeline,
+   so the bar reports a document length that means nothing to the reader — and
+   its gutter narrows the viewport, which shifts every fixed layer's idea of
+   where centre is. The page carries its own affordance in the scroll cue.
+
+   Scoped to a class that FieldHero puts on <html> and removes on unmount,
+   rather than left in globals.css: a CSS module's :global rules stay in the
+   stylesheet once the chunk has loaded, so keying on the class is what keeps
+   this from following you to other routes. */
+:global(html.field-route) {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* legacy Edge */
+}
+:global(html.field-route)::-webkit-scrollbar {
+  display: none; /* Chrome, Safari */
+}
+
+/* Scroll snap, mobile only, and PROXIMITY rather than mandatory.
+
+   The snap points live on the flow sections below the hero. The hero's
+   spacer sits directly above them and has none of its own, so `mandatory`
+   would grab the reader the moment they crossed the boundary and drag them
+   into the first panel — mid-scrub, with the sequence still animating.
+   Proximity settles a panel that is already nearly in place and leaves the
+   timeline alone.
+
+   On the container, not the panels: scroll-snap-type belongs to the
+   scroller, and the scroller here is the document. Putting it on the
+   sections would do nothing at all.
+
+   Desktop is untouched. Above 768px there are no flow sections to snap to
+   and the whole page is one pinned timeline, where a snap would be actively
+   destructive. */
+/* Opt this route out of the global section rule.
+
+   globals.css sets `section { content-visibility: auto; contain-intrinsic-size:
+   auto 100vh }` so off-screen sections skip rendering. The cost is that until
+   a section is scrolled into view it reports the PLACEHOLDER height — one
+   viewport — instead of its real one. Measured here: a gallery section holding
+   six 484px figures returned 563px, and the figures inside it were laid out
+   correctly the whole time. Everything that reads a height off these is wrong
+   until the reader happens to arrive: scroll-snap picks its points from stale
+   geometry, and the document height jumps as each section resolves.
+
+   The same rule already bit the home page — `.home section` opts out a few
+   hundred lines further down in globals.css, with the same explanation. This
+   page only started tripping it now that acts two and three are real sections
+   in flow rather than fixed layers.
+
+   Not scoped to the media query: the sections only exist on mobile, but a
+   rule that silently stops applying at a breakpoint is a worse thing to own
+   than one that is simply always true here. */
+:global(html.field-route) section {
+  content-visibility: visible;
+  contain-intrinsic-size: auto;
+}
+
+@media (max-width: 767px) {
+  :global(html.field-route) {
+    scroll-snap-type: y proximity;
+  }
+}
+
+/* The ground the aircraft stands on, when there is no photograph.
+
+   Replaces the plate rather than sitting under it. A rendered subject and a
+   photographed location have a lighting contract — the render is lit in a
+   studio and the plate has its own sun — and no amount of choosing a better
+   photograph satisfies it. Removing the location removes the contract.
+
+   Two stops doing separate jobs. The wide low pool is somewhere to STAND:
+   without it the aircraft floats in even black and reads as cut out, which
+   is the same complaint a missing shadow makes. The upper wash is only
+   enough to stop the top of the frame going pure #000, because a true black
+   ceiling makes the whole thing look like a rendering error rather than a
+   night.
+
+   Anchored below the frame (>100% on y) so the pool's falloff is a
+   horizon rather than an ellipse sitting in the picture.
+
+   NEUTRAL, not green. The pool used to be olive — rgba(86,96,62) — on the
+   theory that the ground under a farm drone is grass. It reads as a green
+   cast over the whole lower frame rather than as ground, and it was
+   rejected on sight once before. What actually has to be true is only that
+   the aircraft has somewhere to stand; the colour of that somewhere should
+   agree with the warm corner and the cream type, which are the only other
+   things in the frame. So: a warm dark grey, falling off to #050705 — the
+   footer's black, so every dark surface on the page is the same black. */
+.ground {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    /* 1. Haze, thickening toward the ground the way air actually stacks.
+   
+          There was a HORIZON BAND here too — a light stop at 62% meant to
+          read as the line where ground meets air. It did not: a bright
+          narrow stop across a dark frame is a divider, not a horizon, and
+          it cut the composition in half. The grid now supplies the depth
+          cue the band was reaching for, and it does it with convergence
+          rather than with a line, so the band is gone.
+   
+          What is left is a slow, peakless gradient. Any local maximum in a
+          full-width horizontal gradient reads as an edge — the fix is not a
+          softer band but no band at all. */
+    linear-gradient(
+      180deg,
+      rgba(5, 7, 5, 0) 12%,
+      rgba(62, 59, 50, 0.07) 46%,
+      rgba(78, 74, 62, 0.11) 78%,
+      rgba(84, 79, 66, 0.12) 100%
+    ),
+    /* 2. The pool the aircraft stands in. Anchored below the frame so its
+          falloff is a horizon rather than an ellipse in the picture. */
+    radial-gradient(
+      120% 62% at 50% 108%,
+      rgba(78, 74, 64, 0.34) 0%,
+      rgba(40, 38, 32, 0.15) 45%,
+      rgba(5, 7, 5, 0) 78%
+    ),
+    /* 3. The floor tone, and a ceiling that is not pure #000 — a true black
+          top reads as a rendering error rather than as a night sky. */
+    linear-gradient(180deg, rgba(22, 21, 18, 0.55) 0%, rgba(5, 7, 5, 0) 55%);
+}
+
+/* Grain, as its own layer over the gradients.
+
+   Banding is the failure mode of a frame made entirely of gradients: eight
+   bits per channel across a slow falloff quantises into visible steps, and
+   on a dark background those steps are exactly where the eye goes. A little
+   noise dithers them away — it is the same trick a renderer uses, and it is
+   why a photographic plate never bands.
+
+   feTurbulence rather than a tiled PNG: it is a few hundred bytes inline,
+   resolution-independent, and there is no image to ship or cache. Blended
+   at very low opacity — enough to break the steps, not enough to read as
+   texture. */
+.grain {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.055;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+
+/* A whisper of warmth over the render, and a slight darkening at the
+   corners so cream type always has something to sit on. Tracks the
+   pointer via --mx / --my, written by FieldHero. */
+.warm {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse 96% 76% at calc(52% + var(--mx, 0) * 2%) calc(46% + var(--my, 0) * 2%),
+    rgba(255, 238, 190, 0.07) 0%,
+    rgba(10, 14, 8, 0) 46%,
+    rgba(10, 14, 8, 0.52) 100%
+  );
+}
+
+/* Lifts the wordmark off the plate.
+
+   The photograph behind it is bright and busy — roof, siding, gutter — and
+   white type on it loses its counters where the building's own highlights
+   run through them.
+
+   Two layers doing different jobs: a tight, nearly-opaque one for edge
+   definition, and a broad soft one for separation from the background. A
+   single mid-blur shadow reads as a drop shadow; these two read as the type
+   simply sitting in front of something.
+
+   Sized in em, not px, so it stays proportional as the wordmark scales down
+   to 18px in the corner — a px shadow would swamp the logo at that size.
+
+   Lives here rather than as an inline style because FieldHero writes
+   `style.transform` on this element every frame; keeping React out of its
+   style attribute avoids any chance of the two fighting. */
+/* The oversized name behind the aircraft, SIZED FROM ITS CHARACTER COUNT.
+
+   The size used to be two literals — 24vw on a phone, 17vw from md up —
+   and the comment beside them said, correctly, "Re-measure if the product
+   NAME changes length: this is solved against seven characters." Then a
+   second product arrived with four ('Mini') and there was nothing to
+   re-measure with, because the solve had never been written down as
+   arithmetic. This is that solve, kept.
+
+   The face runs about 0.514em per character, so a string spans
+   chars x 0.514 x font-size. Inverting it for a target span gives
+
+       font-size = span / (chars x 0.514)
+
+   and --word-span carries the span the original numbers were chosen for:
+   86vw on a phone and 61vw from md up (7 x 0.514 x 24 and x 17). A
+   seven-character name therefore resolves to exactly the 24vw / 17vw it
+   always had — P10 Pro's page does not move by a pixel.
+
+   --word-cap IS THE INTERESTING HALF. Solving purely for span makes a
+   short name enormous: 'Mini' at a constant 61vw span wants 29.7vw, whose
+   line box is 24.3vw tall against P10 Pro's 13.9vw. All of act one's
+   vertical anchoring — the 26% top, the baseline that is meant to just
+   meet the aircraft, the measured two-pixel overlap into the propeller
+   line — is HEIGHT anchoring, and it would all break. So the cap keeps the
+   line box near the height the composition was tuned around, and a short
+   name is allowed to be narrower rather than taller. At the cap 'Mini'
+   spans 41vw: unmistakably a display wordmark, still clear of the
+   aircraft.
+
+   A name long enough to fall under the span rule again (nine characters or
+   more) simply gets it, which is the correct behaviour — a long name
+   should not overflow a frame it cannot reflow in, since the element is
+   whitespace-nowrap. */
+.bigWord {
+  --word-span: 86vw;
+  --word-cap: 30vw;
+  font-size: clamp(
+    40px,
+    min(calc(var(--word-span) / (var(--chars) * 0.514)), var(--word-cap)),
+    340px
+  );
+}
+
+@media (min-width: 768px) {
+  .bigWord {
+    --word-span: 61vw;
+    --word-cap: 20vw;
+  }
+}
+
+.wordmark {
+  text-shadow:
+    0 0.006em 0.018em rgba(0, 0, 0, 0.45),
+    0 0.022em 0.095em rgba(0, 0, 0, 0.32);
+}
+
+/* The dashed frame around the gallery's gate.
+
+   An outline rather than a border, because a border would be inside the
+   box and would sit on top of the photograph; outline draws outside it and
+   outline-offset pushes it clear. Oryzo does this with a canvas sized 7px
+   larger than the gate on every side, which is the same 1px-at-6px this
+   describes in two properties instead of a render loop.
+
+   Sits in the module rather than as a utility because outline-offset is
+   the load-bearing half and the pair only makes sense read together. */
+.gate {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  outline: 1px dashed rgba(242, 236, 217, 0.32);
+  outline-offset: 6px;
+}
+
+/* The bench's dashed rule.
+
+   A repeating gradient rather than a border-style or an SVG. It is scaled
+   on X to draw itself in, and that is exactly what a dashed BORDER cannot
+   survive: scaleX stretches the dashes with the element, so the line
+   arrives with dashes several times longer than it started with. A
+   gradient is painted after the transform, so the dash pitch is fixed in
+   screen space and only the length changes.
+
+   transform-origin is the left edge so it grows rightward out of the
+   column's own axis rather than opening from its middle. */
+.benchRule {
+  position: absolute;
+  top: 73.6%;
+  left: 0;
+  display: block;
+  width: 100%;
+  height: 1px;
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+  background: repeating-linear-gradient(
+    90deg,
+    rgba(242, 236, 217, 0.55) 0 5px,
+    transparent 5px 10px
+  );
+}
+
+/* The panel under the bench's copy column.
+
+   SOLID, not frosted. It was backdrop-filter: blur(48px), which is the
+   honest way to imitate oryzo's out-of-focus left edge — theirs is real
+   depth of field in a 3D scene, and a blur is the only tool CSS gives us to
+   match it. It worked, and then the plates became video.
+
+   backdrop-filter over a still is blurred once and cached. Over a playing
+   video it cannot be: a 48px multi-pass filter re-runs on every frame, over
+   605x1080 at 1920 and 806x1440 at 2560 — 39 to 70 million pixels a second,
+   for as long as the section is on screen, scaling with the reader's
+   monitor rather than with anything we control. That is the most expensive
+   thing on the page and it buys an effect most readers would not name.
+
+   Solid costs one cached paint. It also pays twice, because an opaque
+   column means the video behind it is never seen — so the clips are cropped
+   to the visible 68.5% and stop carrying pixels nobody looks at. Together
+   that took the section from 16MB and 39M px/s to 4MB and zero.
+
+   What it gives up is real: oryzo's panel reads as glass laid ON the scene,
+   and this reads as a hard split. That is a different composition, not a
+   cheaper version of the same one.
+
+   Matched to the stage's own background so the seam between panel and
+   cropped video is invisible — the two meet at exactly 31.5% and must not
+   announce it. Change one and change the other. */
+.benchWash {
+  position: absolute;
+  pointer-events: none;
+  opacity: var(--wash, 0);
+  background: #0d1009;
+
+  /* NARROW — a bottom band, not a left one.
+  
+     A 31.5% column is 123px on a 390px phone, which is four or five
+     characters a line. The split is a landscape composition and there is no
+     amount of tuning that makes a third of a portrait screen hold a
+     paragraph; the axis has to change. Copy below, machine above, which is
+     the same reading order rotated. */
+  inset: 48% 0 0 0;
+}
+
+@media (min-width: 768px) {
+  .benchWash {
+    /* WIDE — the pane's edge at 31.5% of the stage, off oryzo's 605px at
+       1920, and the exact x the bench clips are cropped at. */
+    inset: 0 68.5% 0 0;
+  }
+}
+
+
+/* The bench's end card ground.
+
+   The same two radial stops as .bloom below, over a flat near-black. That
+   repetition is deliberate and should stay: this beat is the page RETURNING
+   to the light it opened in, so the two have to be the same light. Drifting
+   one of them later would quietly break the rhythm the section is built on.
+
+   Why not simply reuse .bloom — it is `position: fixed`, and this lives
+   inside the bench's stage, which carries a transform. A transformed
+   ancestor makes `fixed` resolve against itself rather than the viewport,
+   so .bloom would happen to land in roughly the right place for reasons
+   that have nothing to do with intent, and would move the day the stage
+   stopped being transformed. Stated as `absolute` it means what it says.
+
+   The flat colour is the FOOTER's, not pure black. The footer scrolls up
+   over this card, and matching them means the card does not end at a seam —
+   the ground simply continues into the page below it. */
+.benchEnd {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: var(--end, 0);
+  background:
+    radial-gradient(
+      70% 80% at -6% 104%,
+      rgba(240, 214, 118, 0.24) 0%,
+      rgba(214, 180, 86, 0.1) 40%,
+      rgba(16, 20, 11, 0) 74%
+    ),
+    radial-gradient(
+      124% 134% at -2% 110%,
+      rgba(198, 166, 82, 0.13) 0%,
+      rgba(16, 20, 11, 0) 80%
+    ),
+    #050705;
+}
+
+/* The end frame. Once the field has dissolved and the aircraft is
+   climbing in the void, a warm yellow haze comes up out of the
+   bottom-left — the beat that gives the void somewhere to have come
+   from.
+
+   Scrubbed off --bloom, which FieldHero drives from the same GSAP
+   progress as the camera, so the light tracks the aircraft's rise
+   rather than running on its own clock.
+
+   Hue sits between the brand's cream and --color-flare #fffc00, so it
+   reads as our own light at low sun rather than a borrowed copper.
+   Wide radii and low alpha keep it atmospheric — haze, not a hotspot.
+
+   Anchored past the corner (negative x, >100% y) so the falloff reads
+   as light entering the frame, not an ellipse parked inside it. */
+.bloom {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: var(--bloom, 0);
+  background:
+    radial-gradient(
+      70% 80% at -6% 104%,
+      rgba(240, 214, 118, 0.24) 0%,
+      rgba(214, 180, 86, 0.1) 40%,
+      rgba(16, 20, 11, 0) 74%
+    ),
+    radial-gradient(
+      124% 134% at -2% 110%,
+      rgba(198, 166, 82, 0.13) 0%,
+      rgba(16, 20, 11, 0) 80%
+    );
+}

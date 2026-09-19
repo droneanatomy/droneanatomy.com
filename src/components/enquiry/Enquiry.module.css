@@ -211,7 +211,6 @@
 .root .cta {
   display: inline-flex;
   align-items: center;
-  gap: 12px;
   /* Down from 17px 34px, with the 1:2 vertical-to-horizontal ratio kept so
      the pill keeps its shape rather than becoming a rounder, squatter one. */
   padding: 14px 28px;
@@ -233,15 +232,6 @@
 
 .root .cta:hover { transform: translateY(-2px); }
 .root .cta:focus-visible { outline: 2px solid var(--flare); outline-offset: 4px; }
-
-.root .dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--flare);
-  /* Sits inside a cream pill, so it needs its own edge to read. */
-  box-shadow: 0 0 0 1px rgba(10, 9, 8, 0.22);
-}
 
 .root .direct {
   margin: 0;

@@ -58,6 +58,21 @@ export const MAX_FRAME_SEC = 0.1;
    Time therefore advances only while the scene is being watched. That is the
    right meaning here: these are idle loops on a shot the reader is looking
    at, not a simulation that has to stay true to the wall. */
+/* ADVANCE A LOOP PHASE BY ONE FRAME — integrated, never recomputed.
+
+   The idle loops used phase = t / period, and `period` is lerped between the
+   two scenes during a transition. Recomputed that way, a period change jumps
+   the phase by t x (1/periodA - 1/periodB) cycles over one blend, and t is
+   the time the reader has spent on the section: harmless after ten seconds,
+   several full swings of bob, drift and orbit inside one transition after a
+   few minutes. That was the jitter.
+
+   Integrated, a period change alters only the RATE, so no single frame can
+   advance more than dt at the shorter period, whatever t is. The floor of 1s
+   matches the Math.max(1, period) the old expression carried. */
+export const advancePhase = (phase: number, dt: number, period: number) =>
+  dt > 0 ? phase + (dt / Math.max(1, period)) * Math.PI * 2 : phase;
+
 export const advanceClock = (prev: number, delta: number) => {
   /* Refuses NaN rather than accumulating it. phase is derived from this, so
      one bad value would not glitch a frame — it would make every later frame
@@ -123,6 +138,20 @@ export type Look = {
   fov: number;
   /* Is the fleet in formation in this scene? */
   fleet: boolean;
+  /* Fly the lead LEVEL, ignoring the heading's height.
+
+     Without this the aircraft pitches nose-down, and by a margin the
+     numbers here do not show: the craft's altitude has the terrain height
+     under it added every frame (craftPos.y += groundRef) while `heading`
+     stays absolute, so the drop the lead looks down is 6 units PLUS
+     whatever the ground below is doing. Over tall country that is a
+     steep, wandering dive rather than the degree or two the table
+     suggests.
+
+     The fleet has always ignored the heading's y for this reason. Setting
+     this makes the lead do the same. It blends across a transition, so a
+     scene that wants the pitch back gets it smoothly. */
+  level?: boolean;
   /* The scene's LOOPING animation, in amplitudes. Runs on the clock,
      forever, independent of scroll — this is the shot, not decoration.
      Scroll never touches these. */
@@ -261,12 +290,35 @@ export const SCENES: readonly SceneSpec[] = [
   {
     id: 'approach',
     vh: 170,
-    /* Tight, low, close. Short fog so the ridges behind fall away and the
-       airframe is the only thing in focus. */
+    /* HEAD-ON, high and to the side: the aircraft flies AT the reader.
+
+       FORWARD IS -Z — the heading sits at z -200 against a craft at z 0 —
+       so a camera at negative z stands in front of the aircraft and
+       watches it come on, and one at positive z falls in behind and
+       watches it leave. This sat at -24.2 originally, was moved to +25.5
+       on a misread of the reference frame (a front three-quarter taken
+       for a rear one; the pointed end near the lens is the nose, not the
+       tail), and is back in front where it belongs.
+
+       WHAT SURVIVED THAT ROUND TRIP is the height and the aim, which were
+       the actual improvement. Standoff is 34.5 units and the camera sits
+       31 degrees above the aircraft, against 36.4 and 35 before — near
+       enough that the fov, the fog and the loop's crawl all still read as
+       they were tuned to.
+
+       TERRAIN FILLS THE FRAME for a geometric reason rather than an
+       authored one: looking down 31 degrees from 18 units above a craft
+       at y 213, the sightline past the airframe meets ground about 384
+       units out, well inside the 1400-unit far fog. It is land behind the
+       aircraft, not sky, and that falls out of the angle alone.
+
+       aim drops to -1.5 so the lens points just under the airframe, which
+       lifts the aircraft a little above centre and gives the ground the
+       lower two thirds. */
     look: {
       craft: [0, 213, 0], heading: [25, 207, -200],
-      cam: [17.7, 20.7, -24.2], aim: [-0.9, -0.5, -1.2],
-      fog: [180, 1400], sky: '#cacfc4', fov: 22.9, fleet: false,
+      cam: [13.5, 17.5, -25.5], aim: [-0.9, -1.5, -1.2],
+      fog: [180, 1400], sky: '#cacfc4', fov: 22.9, fleet: false, level: true,
       // a slow crawl around the airframe — the product turntable beat
       loop: { orbit: 0.42, push: 2.2, bob: 0.5, drift: 0.4, period: 26, speed: 24 },
     },
@@ -308,20 +360,16 @@ export const SCENES: readonly SceneSpec[] = [
   },
   {
     id: 'survey',
-    /* 280, and it is not a held beat — it is the room the CLOSE needs.
+    /* 240 — A HELD BEAT, and deliberately so.
 
-       At 120 the whole ending fitted in 602px of scroll, about one
-       viewport: the 1.6s transition was still moving when the section ran
-       out of travel and the sticky stage unpinned, so the move appeared to
-       cut and the next section arrived whole. The reveal needs room for
-       the transition to land, the read-out to play, and a hold on it
-       before anything else comes up.
+       This is the room the close needs: for the transition to land, the
+       sensor lines and the frame to draw, and a hold on the thermal view
+       before the next section comes up. At 120 the whole ending fitted in
+       about one viewport and the move appeared to cut.
 
-       Trimmed from 280 to 240 once the read-out stopped being scrubbed.
-       It runs on a clock now, so the beat no longer has to be long enough
-       to SCROLL through the animation — only long enough to watch it and
-       then leave. The last stretch of that is spent dissolving into the
-       next section rather than holding. */
+       It was briefly cut to 30, so that reaching the thermal frame carried
+       straight on to the next section with about 15vh of pin; that was
+       reverted by request — the scroll is meant to dwell here. */
     vh: 240,
     /* THE LONGEST MOVE IN THE SECTION, and the one to trim if the cut
        feels whippy: the camera comes in from 129.5 units to 29.6 while

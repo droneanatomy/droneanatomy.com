@@ -50,10 +50,10 @@
 import React, { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import {
-  FLIGHT, SCENES, TRANSITION_SEC, advanceClock, sceneAt, clamp01, easeInOutCubic, lerp,
+  FLIGHT, SCENES, TRANSITION_SEC, advanceClock, advancePhase, sceneAt, clamp01, easeInOutCubic, lerp,
   type Look,
 } from './flightBeats';
-import { buildVtol, buildFleetCraft, spinRotors, type Craft } from './craft';
+import { buildVtol, buildFleetCraft, spinRotors, type Craft, type FleetVariant } from './craft';
 import {
   buildTerrain,
   buildWater,
@@ -63,6 +63,7 @@ import {
   setTerrainAnisotropy,
   LOOP,
   TERRAIN_SIZE,
+  attachTerrainGrain,
 } from './terrain';
 import { buildTrees, type Forest } from './trees';
 import {
@@ -92,12 +93,74 @@ import { buildMeshLinks } from './meshLinks';
 const V = (a: readonly number[], b: readonly number[], t: number, out: THREE.Vector3) =>
   out.set(lerp(a[0], b[0], t), lerp(a[1], b[1], t), lerp(a[2], b[2], t));
 
-/* Where each fleet craft sits relative to the VTOL once formed up. */
-const FORMATION: Record<string, [number, number, number]> = {
-  heavy: [-15, -6, 13],
-  observer: [16, 3, 11],
-  compact: [7, 9, 21],
-};
+/* Where each fleet craft sits relative to the lead once formed up.
+
+   A QUADRILATERAL, with the lead as a corner rather than the centre.
+   These three offsets plus the lead at the origin make a rhombus: the
+   VTOL at the front corner, a Mini at each of the other three.
+
+   FOUR IS NOT ARBITRARY. meshLinks draws a full mesh — six edges at four
+   nodes, ten at five — and its own header records that five stops being
+   legible. A fifth airframe here means moving that file to hub-and-spoke
+   first; it is not a matter of adding a row to this table.
+
+   FRONT IS -Z, so the formation trails in +z and only the lead sits at
+   the origin. The swarm beat aims at z -200 from a craft at z 0. LEFT IS
+   -X: facing -z with +y up, cross((0,0,-1),(0,1,0)) puts right at +x —
+   worth writing down, because guessing it is a coin flip that looks
+   plausible either way until the models are asymmetric.
+
+   SPACING WAS SET AGAINST A FLEET THAT NO LONGER EXISTS. The original
+   offsets — 25 / 36 / 25 — were ~2.3x a span of 11, back when all four
+   aircraft flew at that size. Once the escorts dropped to a fifth and a
+   third of the lead, those same gaps measured seven to sixteen times
+   THEIR width and the formation read as scattered rather than as a
+   formation. Every vector is now 60% of what it was; the shape is
+   untouched, because a rhombus scales to a rhombus.
+
+   IT STILL CLEARS ITSELF. The lead is 11 wide about the origin and the
+   nearest escort sits at x -15, so there are 8.4 units of air between
+   them at the tightest point, and the whole figure is 30 x 21.6 inside a
+   frame measuring 113 x 52 at the swarm camera's 129-unit standoff. The
+   small y stagger stops the four reading as a flat card from an almost
+   overhead camera. The per-frame lerp(2.4, 1, fleetLit) opens this out to
+   more than twice these distances before closing it up, which is the
+   beat: they arrive from outside the frame and form up. */
+/* The VTOL's fitted width, and the unit every other airframe is measured
+   against. loadCraft scales a model so its WIDEST extent equals this, so
+   for the VTOL it is the wingspan and for the two multirotors it is the
+   arm span — the right comparison in each case, since that is what the
+   eye reads as how big an aircraft is.
+
+   THESE AIRCRAFT ARE NOT THE SAME SIZE and until now the scene drew them
+   as though they were. The VTOL is about five times the Mini (and three
+   times the Noxr, which flew here once); flying them at one span made a fleet of identical
+   silhouettes and threw away the one thing a formation shot can say
+   without a caption, which is that these are different machines. */
+const LEAD_SPAN = 11;
+
+const FLEET: {
+  label: string;
+  model: string;
+  rotate: [number, number, number];
+  stand: FleetVariant;
+  at: [number, number, number];
+  /* Size as a fraction of the VTOL. */
+  scale: number;
+}[] = [
+  { label: 'mini-left', model: '/models/mini.glb', rotate: [0, Math.PI, 0], stand: 'heavy', at: [-15, -1.5, 10.8], scale: 1 / 5 },
+  { label: 'mini-back', model: '/models/mini.glb', rotate: [0, Math.PI, 0], stand: 'observer', at: [0, 0.9, 21.6], scale: 1 / 5 },
+  { label: 'mini-right', model: '/models/mini.glb', rotate: [0, Math.PI, 0], stand: 'compact', at: [15, 1.5, 10.8], scale: 1 / 5 },
+];
+
+/* DERIVED, not written out again. The frame loop places each craft by
+   FORMATION[c.userData.label], so a label here that has no row there is
+   not a wrong position — it is `undefined[0]` and a dead scene. Deriving
+   the table from the one above makes that unrepresentable rather than
+   merely unlikely. */
+const FORMATION: Record<string, [number, number, number]> = Object.fromEntries(
+  FLEET.map((f) => [f.label, f.at])
+);
 
 export interface FlightSceneProps {
   /* 0..1 across the whole scrolling document. */
@@ -212,6 +275,55 @@ export const FlightScene: React.FC<FlightSceneProps> = ({
 
     if (photoreal) enableShadows(renderer, sun);
 
+    /* A KEY AND A FILL THAT BELONG TO THE AIRCRAFT ALONE.
+
+       The scene lights everything with one sun and a hemisphere, tuned so
+       the LAND sits where it should — the note above records how hard
+       that was to land, and raising the sun to rescue the airframe took
+       the whole terrain up with it. The aircraft is a dark, mostly
+       clearcoated body with no environment map to pick up, so it loses
+       against a bright landscape at any exposure that keeps the slopes
+       from bleaching.
+
+       LAYERS ARE WHAT MAKE THIS SAFE. A light illuminates only objects
+       sharing one of its layers, so putting these on CRAFT_LAYER and
+       enabling that layer on the aircraft means they cannot touch the
+       terrain, the trees or the fleet however far they are pushed. The
+       craft keeps layer 0 as well, so the sun and hemisphere still reach
+       it and these ADD to that rather than replacing it.
+
+       WHY BOTH ENDPOINTS TRACK THE CRAFT. A DirectionalLight takes its
+       direction from position MINUS target and ignores the distance, so
+       moving the light alone would do nothing at all. Moving the target
+       with it holds a constant angle on the aircraft wherever it flies —
+       which is the point: the airframe is lit the same way in every beat
+       instead of drifting through the sun's fixed angle as the heading
+       turns.
+
+       Key from the front-upper-right, matching the sun's side so the two
+       do not cross; fill from behind-left at a third of it, because a
+       single hard key leaves the shaded flank black against dark ground
+       and this is a silhouette-heavy airframe. */
+    const CRAFT_LAYER = 1;
+    const KEY_OFFSET = new THREE.Vector3(70, 90, -55);
+    const FILL_OFFSET = new THREE.Vector3(-80, 20, 70);
+
+    const craftKey = new THREE.DirectionalLight(0xfff4e2, 2.2);
+    const craftFill = new THREE.DirectionalLight(0xc8d4e0, 0.75);
+    const craftLightTarget = new THREE.Object3D();
+    scene.add(craftLightTarget);
+    for (const l of [craftKey, craftFill]) {
+      l.layers.set(CRAFT_LAYER);
+      l.target = craftLightTarget;
+      scene.add(l);
+    }
+
+    /* Called for the procedural stand-in AND for the model that replaces
+       it — a layer set on the one that gets thrown away lights nothing. */
+    const litByCraftLights = (o: THREE.Object3D) => {
+      o.traverse((c) => c.layers.enable(CRAFT_LAYER));
+    };
+
     /* Before the terrain's texture is configured, which happens when its
        plates land. */
     setTerrainAnisotropy(renderer.capabilities.getMaxAnisotropy());
@@ -249,7 +361,11 @@ export const FlightScene: React.FC<FlightSceneProps> = ({
       terrain.castShadow = true;
     }
 
+    /* One detail layer or the other, never both. The photoreal one carries
+       its own colour grade; the grain is colour-neutral and exists to fix
+       the stylised mode's magnified texels — see attachTerrainGrain. */
     if (photoreal) detail = attachTerrainDetail(terrain);
+    else detail = attachTerrainGrain(terrain);
     const water = buildWater();
     scene.add(water);
 
@@ -258,48 +374,80 @@ export const FlightScene: React.FC<FlightSceneProps> = ({
        Draco GLB takes a moment and a blank sky in the meantime would read
        as a broken page rather than a loading one. */
     let vtol: Craft = buildVtol();
+    litByCraftLights(vtol);
     scene.add(vtol);
 
     let disposed = false;
-    /* Yawed a quarter turn. The model's long axis is X (bbox 27.7 wide
-       against 20.7 deep), so lookAt — which points -Z at the target —
-       flew it sideways. Measuring cannot tell a nose from a tail, so
-       this is the one thing the loader will not guess. */
+    /* THE LEAD IS THE VTOL AIRFRAME, as it was always going to be. This
+       call loaded the Mini standing in for it — that model is now
+       mini.glb and still flies the left corner of the formation. */
     loadCraft('/models/vtol.glb', {
-      span: 11,
-      /* ONE HUNDRED AND EIGHTY. Not plus or minus ninety, both of which
-         were wrong in the same way.
+      span: LEAD_SPAN,
+      /* PLUS NINETY. THE NOSE IS -X, and getting here took one wrong
+         answer worth recording.
 
-         THE NOSE IS -Z, and this is measured, not inferred. The LENS
-         material's two pieces sit at z -7.25, at the extreme -z end of a
-         model that runs -7.81 to 10.19 on that axis, and dead centre in x
-         (-0.05). The rotors span x symmetrically, -12.08 to +12.08 — that
-         is the ARM SPAN, and it being the longest extent (24.17 against
-         18.01 front-to-back) is exactly what made +x look like the nose.
+         The first value was -90, reasoned from the LENS material sitting
+         at x 1.309 — hard against the model's +x end, where a nose camera
+         would be. It flew tail-first. LENS is not the camera: the rotor
+         layout settles it. Four lift rotors sit at x -0.620 and +0.920 on
+         z +/-0.500, straddling the centre of mass; the pusher propeller
+         is at x 0.703 on the centreline; and the airframe runs out to
+         1.511. A prop that far aft with structure still behind it is a
+         PUSHER, which puts the tail at +x and the nose at -x, and makes
+         that lens a light on the tail rather than an eye on the front.
 
-         three's lookAt on a non-camera object aligns the object's +Z with
-         the target, so the rotation has to carry -Z onto +Z: a half turn
-         about y. Working it through — (x cos + z sin, y, -x sin + z cos) —
-         (0,0,-1) lands on (0,0,1) at 180 degrees.
+         THE BOX WAS NEVER GOING TO SAY. Z spans 4.415 against X's 2.412
+         because z is the WINGSPAN. Both of the airframes in this scene
+         have their longest extent across rather than along, and both have
+         now cost a wrong guess — the note this replaced records the same
+         mistake on the previous model from the opposite direction.
 
-         WHAT THE OLD VALUES DID. At -90, (0,0,-1) lands on (+1,0,0): the
-         nose points ninety degrees off the heading and the aircraft flies
-         sideways. At +90 it lands on (-1,0,0) — sideways the other way.
-         The note that used to be here reasoned confidently from "the nose
-         runs along its own +X", which was never checked against the mesh;
-         it read the arm span as the fuselage. Neither previous value ever
-         pointed the nose down the flight path. */
-      rotate: [0, Math.PI, 0],
+         three's lookAt aligns an object's +Z with its target, so the
+         rotation carries -X onto +Z. Working it through —
+         (x cos + z sin, y, -x sin + z cos) — at +90 cos is 0 and sin is
+         1, so (-1,0,0) lands on (0,0,1). */
+      rotate: [0, Math.PI / 2, 0],
+      /* ONLY THE PUSHER TURNS. This is cruise: a fixed-wing VTOL holds
+         its lift rotors stopped and flies on the propeller, and four
+         idle discs spinning for no reason is the detail that makes the
+         whole beat read as a toy.
+
+         The predicate is in the model's own coordinates. |z| < 0.25 keeps
+         the centreline group and drops both the lift rotors (z +/-0.500)
+         and the wingtip props (z +/-1.50); x > 0.4 guards the aft half so
+         nothing forward of the wing can qualify. It selects exactly the
+         four blade pieces at x 0.673-0.713.
+
+         single, because those four are ONE propeller — the default
+         quadrant binning would split them across z=0 into two hubs
+         turning opposite ways. axis 'x', because a pusher's disc faces
+         down the fuselage rather than lying flat. */
+      rotors: {
+        pick: (c) => Math.abs(c.z) < 0.25 && c.x > 0.4,
+        single: true,
+        axis: 'x',
+      },
     }).then((real) => {
       if (!real || disposed) return;
       scene.remove(vtol);
       vtol = real;
+      litByCraftLights(vtol);
       scene.add(vtol);
       if (process.env.NODE_ENV !== 'production') {
         const d = describe(real);
         // eslint-disable-next-line no-console
-        console.info('[flight] vtol.glb', d.triangles.toLocaleString(), 'tris,',
-          d.drawCalls, 'draw calls,', 'fitted span 11u');
+        console.info('[flight] vtol.glb (lead)', d.triangles.toLocaleString(), 'tris,',
+          d.drawCalls, 'draw calls,', 'fitted span 11u,',
+          /* Reported because it is the one thing here that fails SILENTLY.
+             A rotor predicate that matches nothing leaves a static
+             propeller, which reads as a still frame rather than as a
+             fault; 1 is correct for this airframe. */
+          `${(real.userData.rotors as unknown[]).length} rotor(s),`,
+          /* Same reason as the rotor count: a light whose layer nobody
+             joined illuminates nothing and reports nothing. Tested
+             against the key's own mask rather than a hardcoded 1, so it
+             cannot drift from the value above. */
+          `craft lights ${real.layers.test(craftKey.layers) ? 'ON' : 'NOT REACHING CRAFT'}`);
       }
     });
 
@@ -309,11 +457,76 @@ export const FlightScene: React.FC<FlightSceneProps> = ({
     const links = buildMeshLinks();
     scene.add(links.line);
 
-    const fleet: Craft[] = (['heavy', 'observer', 'compact'] as const).map((v) => {
-      const c = buildFleetCraft(v);
+    /* THE FLEET IS THE PRODUCT LINE, not three invented airframes. It was
+       heavy/observer/compact — procedural quadcopters built in craft.ts —
+       which made "one controller, every airframe" a claim about aircraft
+       nobody sells. These are the real models.
+
+       THREE MINIS BEHIND A VTOL LEAD. Two of the escorts were Noxr until
+       they were swapped for Minis; before that the lead itself was a Mini
+       standing in for a VTOL that had not been modelled yet. That model is
+       mini.glb now — it used to be called vtol.glb, which was true of
+       nothing — and the real airframe holds the lead slot.
+
+       THEY ARE NOT PEERS AND ARE NOT DRAWN AS ONE. Each escort carries its
+       size as a fraction of the VTOL — the Mini a fifth — applied to
+       LEAD_SPAN at the loadCraft call. At the swarm camera the lead stands
+       about 21% of frame height and each Mini about 4%. The Minis are
+       genuinely small there; that is the claim the shot makes rather than
+       a framing accident. FORMATION's spacing was tightened to 60% while
+       two of the escorts were a third of the lead, so with all three at a
+       fifth the gaps read slightly wider against the craft than they did.
+
+       FULL MODELS, NOT LODs. A decimated variant did ship here once — 5% of
+       triangles, textures cut to 128px — sized for the ~60px the old
+       procedural escorts occupied, and at the size the escorts were then
+       drawn it removed 72% of the geometry and ran an eighth of the
+       texture resolution: soft, and the wrong silhouette. If this beat
+       ever needs to be cheaper, the lever is a GENTLE LOD measured against
+       the on-screen size, not an aggressive one measured against an old
+       one.
+
+       THE DOWNLOAD IS ONE FILE PER MODEL REGARDLESS. loadCraft caches
+       templates by URL and clones them sharing geometry, so the three
+       Minis are one fetch and one decode between them, and the whole beat
+       is two files: vtol.glb and mini.glb. Dropping the Noxr escorts took
+       noxr.glb off the homepage entirely.
+
+       ROTATION IS MEASURED, NOT GUESSED. three's lookAt aligns an object's
+       +Z with its target. The Mini's LENS sits at -Z, so each escort takes
+       a half turn to carry -Z onto +Z. The lead needs a different value
+       because its nose is -X — see the note at its own loadCraft call.
+
+       Procedural stand-ins go in first and are swapped when the models
+       land, exactly as the lead does — a blank formation during the load
+       would read as a broken beat rather than a loading one. */
+
+    const fleet: Craft[] = FLEET.map((spec) => {
+      const c = buildFleetCraft(spec.stand);
+      /* Overwritten from the variant name buildFleetCraft sets, because
+         FORMATION is keyed by these labels and the frame loop reads
+         c.userData.label to place each craft. */
+      c.userData.label = spec.label;
       c.visible = false;
       scene.add(c);
       return c;
+    });
+
+    FLEET.forEach((spec, i) => {
+      loadCraft(spec.model, { span: LEAD_SPAN * spec.scale, rotate: spec.rotate }).then((real) => {
+        if (!real || disposed) return;
+        const stand = fleet[i];
+        /* loadCraft labels everything 'vtol'; FORMATION needs the slot. */
+        real.userData.label = spec.label;
+        real.visible = stand.visible;
+        real.position.copy(stand.position);
+        scene.remove(stand);
+        scene.add(real);
+        /* Mutated in place: the frame loop closed over this array, and
+           reads fleet[k] fresh each frame, so the swap is picked up
+           without it knowing a swap happened. */
+        fleet[i] = real;
+      });
     });
 
     /* Scratch, allocated once. A per-frame `new THREE.Vector3()` in a
@@ -355,6 +568,8 @@ export const FlightScene: React.FC<FlightSceneProps> = ({
        change must not make the ground jump — integrating keeps it
        continuous across a speed change. */
     let flown = 0;
+    /* The idle loops' phase, accumulated frame by frame. */
+    let loopPhase = 0;
     let lastT = 0;
 
     /* When the survey beat last SETTLED, on the scene clock.
@@ -442,6 +657,13 @@ export const FlightScene: React.FC<FlightSceneProps> = ({
       const locked = ramp * ramp * (3 - 2 * ramp) * detOn;
 
       V(a.craft, b.craft, blend, craftPos);
+
+      /* Both endpoints, every frame. Only the DIFFERENCE sets a
+         directional light's angle, so the target has to travel with the
+         light or the aircraft flies out from under its own key. */
+      craftLightTarget.position.copy(craftPos);
+      craftKey.position.copy(craftPos).add(KEY_OFFSET);
+      craftFill.position.copy(craftPos).add(FILL_OFFSET);
       V(a.heading, b.heading, blend, headPos);
       V(a.cam, b.cam, blend, camPos);
       V(a.aim, b.aim, blend, aimPos);
@@ -482,7 +704,6 @@ export const FlightScene: React.FC<FlightSceneProps> = ({
       const bob = lerp(la.bob, lb.bob, blend) * calm;
       const drift = lerp(la.drift, lb.drift, blend) * calm;
 
-      const phase = (t / Math.max(1, period)) * Math.PI * 2;
 
       /* THE LAND MOVES, NOT THE CRAFT.
 
@@ -497,6 +718,12 @@ export const FlightScene: React.FC<FlightSceneProps> = ({
          a multi-second delta and would otherwise jump the land a mile. */
       const dt = Math.min(0.1, Math.max(0, t - lastT));
       lastT = t;
+      /* INTEGRATED, not t / period — recomputing it jumped the loops by a
+         growing amount across any transition that changes the period, which
+         is what made them jitter after a while on the section. See
+         advancePhase. */
+      loopPhase = advancePhase(loopPhase, dt, period);
+      const phase = loopPhase;
       flown += lerp(a.loop.speed, b.loop.speed, blend) * dt;   // see follower below
       const shift = flown % LOOP;
       terrain.position.z = shift;
@@ -546,7 +773,20 @@ export const FlightScene: React.FC<FlightSceneProps> = ({
       craftPos.y += groundRef;
 
       vtol.position.copy(craftPos);
-      vtol.lookAt(headPos);
+      /* LEVEL, where the scene asks for it.
+
+         lookAt takes the pitch from the height difference between the
+         craft and the heading point, and craftPos.y has just had
+         groundRef added to it while headPos.y has not — so the nose-down
+         angle is the table's 6-unit drop plus the terrain below, and it
+         wanders as the ground does. Substituting the craft's own height
+         for the target's removes the pitch entirely without touching the
+         yaw, which is what the fleet has always done one block down.
+
+         Lerped rather than switched so the pitch eases in and out across
+         a transition instead of the aircraft snapping level. */
+      const levelAmt = lerp(a.level ? 1 : 0, b.level ? 1 : 0, blend);
+      vtol.lookAt(headPos.x, lerp(headPos.y, craftPos.y, levelAmt), headPos.z);
       /* A gentle bank, and it is ZEROED in photoreal for the same reason
          the other loops are: that mode is scroll-driven and nothing should
          move while the reader is still. It also removes any doubt about
@@ -608,7 +848,6 @@ export const FlightScene: React.FC<FlightSceneProps> = ({
       nodes[0].copy(craftPos);
       for (let k = 0; k < fleet.length; k++) nodes[k + 1].copy(fleet[k].position);
       links.update(nodes, fleetLit, t);
-
       /* The beam, and the two points the DOM callout hangs off.
 
          Projected here rather than in the component because this is the

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { advanceClock, MAX_FRAME_SEC } from './flightBeats';
+import { advanceClock, advancePhase, MAX_FRAME_SEC } from './flightBeats';
 
 /* THE SCENE CLOCK, and the bug it exists to prevent.
 
@@ -55,5 +55,65 @@ describe('advanceClock', () => {
        never comes back. Cheaper to refuse the value than to debug that. */
     expect(advanceClock(10, Number.NaN)).toBe(10);
     expect(advanceClock(10, Number.POSITIVE_INFINITY)).toBeCloseTo(10 + MAX_FRAME_SEC, 6);
+  });
+});
+
+/* THE LOOP PHASE, and why it must be integrated.
+
+   The idle loops (bob, drift, orbit, bank) were driven by
+   phase = t / period, with `period` lerped between the two scenes during a
+   transition. The phase then jumps by t x (1/periodA - 1/periodB) cycles
+   across one blend — a number that grows with every second spent on the
+   section. After five minutes, Approach (26s) to Transit (38s) swept 3.6
+   extra cycles inside a single transition, which is the jitter in the
+   recording: the aircraft flipping orientation frame to frame mid-blend.
+
+   A longer transition does not help: the extra cycles depend on t and the
+   periods only, so it would spread the same shake over more frames. */
+describe('advancePhase', () => {
+  const FPS = 60;
+  const dt = 1 / FPS;
+  const TRANSITION = 1.6;
+
+  /* The phase step per frame while a period change plays out, starting at
+     wall time `t0`. Returns the largest single-frame step. */
+  const worstStep = (step: (t: number, blend: number, prev: number) => number, t0: number) => {
+    let prev = step(t0, 0, 0);
+    let worst = 0;
+    for (let f = 1; f <= TRANSITION * FPS; f++) {
+      const blend = f / (TRANSITION * FPS);
+      const next = step(t0 + f * dt, blend, prev);
+      worst = Math.max(worst, Math.abs(next - prev));
+      prev = next;
+    }
+    return worst;
+  };
+  const periodAt = (blend: number) => 26 + (38 - 26) * blend;
+  /* The most a frame may advance: one frame at the SHORTER period. */
+  const bound = (dt / 26) * Math.PI * 2;
+
+  it('documents the bug: recomputing t / period jumps further the longer the scene has run', () => {
+    const recomputed = (t: number, blend: number) => (t / periodAt(blend)) * Math.PI * 2;
+    expect(worstStep(recomputed, 10)).toBeLessThan(bound * 2);
+    expect(worstStep(recomputed, 300)).toBeGreaterThan(bound * 10);
+  });
+
+  it('never steps more than one frame of the shorter period, however long the scene has run', () => {
+    const integrated = (_t: number, blend: number, prev: number) => advancePhase(prev, dt, periodAt(blend));
+    for (const t0 of [0, 10, 300, 3600]) {
+      expect(worstStep(integrated, t0)).toBeLessThanOrEqual(bound + 1e-12);
+    }
+  });
+
+  it('advances at exactly the period while the period is steady', () => {
+    let phase = 0;
+    for (let f = 0; f < 26 * FPS; f++) phase = advancePhase(phase, dt, 26);
+    expect(phase).toBeCloseTo(Math.PI * 2, 6);
+  });
+
+  it('holds still on a zero or negative delta and refuses a sub-1s period', () => {
+    expect(advancePhase(1.5, 0, 26)).toBe(1.5);
+    expect(advancePhase(1.5, -1, 26)).toBe(1.5);
+    expect(advancePhase(0, 1, 0)).toBeCloseTo(Math.PI * 2, 9);
   });
 });

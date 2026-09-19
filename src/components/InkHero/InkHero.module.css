@@ -1,0 +1,880 @@
+/* ============================================================
+   InkHero — chrome laid over InkReveal.
+
+   The paper, the marbling and the vignette are all painted by the
+   canvas underneath; nothing here draws a background. Everything in
+   this file is text sitting on top, which is what keeps the hero
+   readable to search engines and screen readers even though it looks
+   like a single rendered image.
+   ============================================================ */
+
+.hero {
+  /* Pure black by request rather than the redesign's #10140b. Kept in
+     step with InkReveal's ink prop so the rail, the cue and the marbling
+     are the same black — a split between them would be the one place the
+     0.89-level difference actually became visible, as an edge. */
+  /* --ink is the MARBLING colour, the thing the shader mixes into the
+     paper. --fg is the colour of TYPE on the sheet. They are the same on
+     the light scheme and opposites on the dark one, which is exactly why
+     they cannot be one token: inverting the sheet has to swap the ground
+     without also inverting the text into invisibility. */
+  --ink: #000000;
+  --fg: #000000;
+  --paper: #e8e2d0;
+  --flare: #fffc00;
+
+  /* The drawn mark's own colour, NOT --flare.
+
+     --flare is the UI accent — the cue dot below, the enquiry section's
+     pill dot, the summit markers on the survey. It stays yellow, and on
+     the near-black grounds those live on it measures 18.2:1 against the
+     ground, which is why it works there.
+
+     On THIS cream sheet the same yellow measures 1.06:1. It is
+     effectively a luminance no-op and reads by hue alone, which is what
+     made the mark look washy over the paper. Orange renders at
+     rgb(240,106,0) once the darken blend has clamped it, for 2.58:1
+     against the paper while staying 6.8:1 clear of the black letters —
+     far enough that the mark still reads as passing behind them.
+
+     A SECOND ACCENT, deliberately. Nothing else on the page is drawn by
+     hand; the mark is a gesture rather than a control, so it can carry
+     its own colour without claiming to be part of the interface. Note
+     the ceiling the blend imposes: R cannot exceed 240 and G cannot
+     exceed 234, so no colour paler than the paper will ever show here.
+
+     A DEEP GOLD, and both halves of that are load-bearing.
+
+     Flare yellow is the obvious "yellow" and it is wrong here twice
+     over. It breaches the ceiling above — (255,252,0) clips straight to
+     (240,234,0) — so the blend, not the stylesheet, would be choosing
+     the colour; and what comes back is an acid yellow-green that reads
+     as neon against a warm cream sheet.
+
+     Darkening flare yellow along its own hue does not rescue it either:
+     scaled to (209,207,0) it lands at 1.4:1 on the paper, which is a
+     wash rather than a mark, and yellow-green at low contrast on cream
+     goes sickly.
+
+     THE HUE IS WHAT KEEPS IT GOLD, not the lightness — which is the
+     useful thing to know if this is ever retuned. Acid comes from G
+     climbing toward R: flare yellow sits at hue 59 degrees, this at 48.
+     Hold the ratio near G/R = 0.8 and the colour stays gold however far
+     up or down the scale it moves, so lightness is free to be chosen on
+     looks alone.
+
+     Which it was. This started at (201,159,0) and read heavy against
+     the paper; lifted to (232,187,0) it is the same gold with more air
+     in it. The cost is contrast — 1.55:1 where the deeper gold held
+     2.11 and the orange before it 2.57 — and that is affordable only
+     because the mark is a GESTURE. It carries no information and nobody
+     has to read it. Anything here that did would want the deeper end. */
+  --mark-stroke: #e8bb00;
+
+  /* The source colour for the differenced type, NOT a palette colour.
+     mix-blend-mode: difference gives |source - backdrop|, so to land on
+     --ink over the paper the source has to be backdrop + ink. With --ink
+     now pure black, backdrop + 0 means the source EQUALS the backdrop:
+     rgb(230,224,206), measured across the band the wordmark occupies.
+
+     A useful consequence of the target being black: |x| is symmetric
+     about it, so wherever the marbling takes the backdrop a level or two
+     off this value the type lifts a level or two off black rather than
+     drifting to a wrong hue. It picks the pattern up faintly instead of
+     fighting it.
+
+     RE-MEASURE AND RE-DERIVE whenever --paper, --ink, inkDepth or the
+     paper's share of the vignette change. This has already moved twice:
+     #f5f3d8 when the vignette still darkened the sheet, #fffee3 once it
+     did not, #f0ead8 with the ink at pure black, and now this because the
+     paper itself came down ten levels to stop the sheet reading white.
+
+     These are FALLBACKS. InkHero sets --paper, --ink, --fg and
+     --mark-blend inline from SCHEMES, so that object is the source of
+     truth and these four only apply if the component is ever rendered
+     without it. Kept in step so a reader is not told two things. */
+  /* UNREAD SINCE THE HEADING STOPPED BLENDING, and kept deliberately:
+     it is the measured paper value the difference blend was derived
+     from, still set per-scheme from SCHEMES in InkHero.tsx, and the one
+     number that would have to be re-derived to restore that effect. */
+  --mark-blend: #e6e0ce;
+  --pad-x: clamp(18px, 3vw, 58px);
+  --pad-y: clamp(16px, 2.2vw, 34px);
+
+  position: relative;
+  width: 100%;
+  height: 100svh;
+  min-height: 540px;
+  overflow: hidden;
+  background: var(--paper);
+  color: var(--fg);
+  font-family: var(--font-body, 'Satoshi', Arial, sans-serif);
+  isolation: isolate;
+
+  /* The query container for the wordmark's size. It has to live HERE and
+     nowhere further in, because container-type computes to
+     `contain: layout inline-size style` and `contain: layout` forms a
+     stacking context — which would sever the wordmark's mix-blend-mode
+     from the canvas. On .hero that is harmless: isolation:isolate has
+     already made this element a stacking context, and it is the one the
+     blend is meant to resolve against, with the canvas inside it.
+
+     100cqw is the section's real inline size. 100vw is not: it counts a
+     classic scrollbar the layout viewport does not have, which is 0.6%
+     of a desktop width but 3% of a 260px one — enough to overflow the
+     measure at narrow widths while looking fine at wide ones. */
+  container-type: inline-size;
+
+  /* The legacy sheet sets `section { content-visibility: auto }` to skip
+     off-screen work. On a hero that reserves a viewport it never uses and
+     leaves the canvas sizing against a stale box. Opt out, the same way
+     the .home scope in globals.css does for the other new sections. */
+  content-visibility: visible;
+  contain-intrinsic-size: auto;
+}
+
+/* The canvas layer, at the bottom of the stack. z-index:0 rather than
+   auto so it is pinned below .layer regardless of how the chrome above
+   is later reordered — .layer itself must stay z-index:auto, see below. */
+.canvas {
+  z-index: 0;
+}
+
+/* Chrome must not eat the pointer — the reveal is driven by
+   pointermove on the canvas wrapper, and a full-bleed text layer over
+   the top would swallow every move event. Links re-enable themselves.
+
+   DELIBERATELY has no z-index. A positioned element with a z-index
+   forms a stacking context, and mix-blend-mode only ever reaches the
+   backdrop inside its own stacking context — so the wordmark would
+   difference against this layer's transparency instead of against the
+   canvas, and come out cream-on-cream. Both this and .canvas paint in
+   the same z-index:0 group, so tree order alone puts this on top. */
+.layer {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  padding: var(--pad-y) var(--pad-x);
+  pointer-events: none;
+}
+
+.layer a,
+.layer button {
+  pointer-events: auto;
+}
+
+/* ---------- top bar ---------- */
+
+/* The bar itself is SiteBar, rendered globally and fixed. This only
+   reserves the room it occupies so the wordmark stays optically centred
+   between the bar and the rail — .centre is flex:1 between them, and
+   without this it would centre against the top of the viewport instead
+   and sit noticeably high.
+
+   The two clamps must stay in step with SiteBar's own --pad-y and font
+   size: pad-y top, pad-y bottom, one line of type between them. */
+.barSpace {
+  flex: none;
+  height: calc(clamp(12px, 0.95vw, 15px) * 1.4);
+}
+
+/* ---------- centre ---------- */
+
+/* No container-type here — it belongs on .hero, for the stacking-context
+   reason documented there. Adding one at this level would cut the
+   wordmark's blend off from the canvas. */
+.centre {
+  /* Only the lockup is in flow here; everything below it is placed.
+
+     It was margin arithmetic before — a drop on the first element under
+     the heading and a matching negative on the last, so the column's
+     measured height stayed put and the centring did not move. That held
+     for one element and broke the moment the CTA joined: the button's
+     own height and the extra gap were not part of the cancellation, and
+     the heading rose 41px. Taking the group out of flow ends the whole
+     class of problem, because nothing added down there is measured at
+     all. */
+  position: relative;
+
+  /* Lifts the lockup above the true centre.
+
+     With the CTA group taken out of flow the heading became the only
+     thing being centred, which is 35px lower than where it has sat all
+     along — the tagline used to be in the column, and centring the PAIR
+     pushed the heading up. Padding on the container shifts the centred
+     child by half its value, so this restores the composition without
+     putting anything back into the flow that could move it again. */
+  padding-bottom: clamp(28px, 8.75vh, 90px);
+
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(18px, 3.5vh, 46px);
+}
+
+/* --mark-em is the wordmark's own width in ems. Measured on the real
+   render: "DroneAnatomy" sets 6.57em in Satoshi Display at weight 700
+   with -0.035em tracking. Both of those matter — the same string in
+   the legacy sheet's uppercase at weight 400 measures 8.05em, and
+   sizing against that ratio leaves the type at 78% of the measure.
+   6.75 is the measured figure plus air. CHANGE THIS if the wordmark
+   text or weight changes; a longer string will overflow.
+
+   The slack matters at small sizes: glyph advances and the negative
+   tracking both round to whole pixels, so the same string measures
+   6.64em at 33px against 6.57em at 180px. The divisor has to clear the
+   worst case, not the typical one. */
+.wordmark {
+  /* MEASURED, not guessed — see the note above.
+
+     "Autonomous Flight" sets 8.405em in Satoshi at weight 700 with
+     -0.02em tracking, and unlike "DroneAnatomy" it measures the SAME at
+     44px as at 240px — the rounding drift the note warns about does not
+     bite this string, so the slack here can be thin. 8.47 fills 99% of
+     the measure.
+
+     THE WEIGHT MOVES THIS. Measured across the axis for the same string
+     and tracking: 400 -> 7.911, 500 -> 8.145, 600 -> 8.273, 700 -> 8.405.
+     Bolder is wider, so changing --mark-main-weight without changing
+     this leaves the line either short of the measure or over it.
+
+     RE-MEASURE if the weight, the tracking or the string changes; all
+     three move it.
+
+     7.19 IS "Flight Inevitable" AT WEIGHT 400 WITH -0.02em TRACKING,
+     MEASURED IN A BROWSER. A Range over the text node reported 1018.3px
+     of glyphs at a font-size of 144.435px, so the true figure is 7.050;
+     7.19 is that plus 2% of headroom.
+
+     COMPUTING IT FROM THE FONT FILE DOES NOT WORK, and this is the whole
+     reason to write that down. Summing the advance widths out of
+     Satoshi-Variable — instanced to wght 400, since the file's default
+     instance is 900 — gives 6.882em, and subtracting the tracking as
+     0.02 x 17 gives 6.54. The browser renders 7.05. The model is wrong by
+     2.4% in the direction that matters: the type came out too large for
+     its block, and since .main carries white-space:nowrap it could not
+     wrap, so it overflowed 62px to the right. text-align:center cannot
+     centre something wider than its container, so the line sat flush left
+     and the headline read visibly off-centre.
+
+     What made that error survive review is worth knowing too. The method
+     was validated against the one other figure recorded here —
+     "DroneAnatomy" at weight 700 with -0.035em tracking — where it
+     predicted 6.62 against 6.57 measured, inside a per cent. But that
+     check was at a different weight AND a different tracking, so it
+     confirmed nothing about the case it was then used for.
+
+     MEASURE, DO NOT DERIVE. Set the string, load the page, and read the
+     glyph run off a Range; the arithmetic is only useful as a sanity
+     check on the answer. The 2% headroom stays for the reason it always
+     did: nowrap turns any shortfall into an overflow rather than a wrap,
+     and the fallback face rendering before Satoshi loads is not this
+     width at all. */
+  --mark-em: 7.19;
+
+  /* The headline's TRUE glyph width in ems — 7.05 measured, against the
+     7.19 divisor above. Two numbers rather than one because they answer
+     different questions: --mark-em sizes the type (deliberately 2% large,
+     so the line lands inside its block), and this says how wide the line
+     actually ends up.
+
+     Their ratio is what --mark-edge needs. Keep them together: change one
+     without the other and the prefix stops sitting on the headline. */
+  --mark-true: 7.05;
+
+  /* THE HEADLINE'S OWN LEFT EDGE, as an inset from the block's.
+
+     The h1 is --mark-measure wide and the line inside it is centred, so
+     with 2% of headroom the glyphs start about 1% of the measure in from
+     the block edge. Anything that wants to line up with the FIRST LETTER
+     rather than with the box has to know that number — which is this. */
+  --mark-edge: calc(var(--mark-measure) * (1 - var(--mark-true) / var(--mark-em)) / 2);
+
+  /* The share of the measure the lockup occupies.
+
+     It filled the measure edge to edge, which read as cramped rather
+     than confident — the reference sets the line in roughly four fifths
+     of its frame and lets the margins do some of the work.
+
+     APPLIED TO BOTH the block width and the size derived from it, which
+     is the only way to narrow this without breaking it. Shrinking the
+     type alone would leave the h1 spanning the full measure while the
+     big line no longer did, and "Making" and "Inevitable" — which hang
+     off the BLOCK's corners — would drift away from the line they belong
+     to. Width and font-size have to come from the same number. */
+  --mark-fill: 0.8;
+  --mark-measure: calc((100cqw - 2 * var(--pad-x)) * var(--mark-fill));
+
+  width: var(--mark-measure);
+  margin: 0 auto;
+  /* --font-body, NOT --font-display, and that is deliberate.
+
+     'Satoshi Display' is declared in globals.css as `font-weight: 700
+     700` — a single pinned weight. Asking it for 400 does not fail
+     loudly; it just hands back 700, which is why the first render of
+     this lockup came out a slab when the CSS plainly said 400. The
+     'Satoshi' family is the SAME woff2 file declared across 300-900, so
+     this costs no extra bytes and gets the weight actually asked for.
+
+     Widening the Display declaration instead would have fixed it here
+     and silently restyled every heading on the site that currently asks
+     for a weight it is not getting. */
+  font-family: var(--font-body, 'Satoshi', Arial, sans-serif);
+  font-size: calc(var(--mark-measure) / var(--mark-em));
+  /* Light, not the old 700.
+
+     The weight is doing compositional work here rather than decorative:
+     the lockup's whole effect is a wide, airy line with two quiet words
+     hung off its corners, and a heavy face closes the counters up and
+     turns it into a slab. At this size 400 is still a very substantial
+     stroke in absolute terms — plenty for the differenced blend to hold
+     against the photograph. */
+  font-weight: 400;
+  line-height: 0.92;
+  letter-spacing: -0.02em;
+  text-align: center;
+
+  /* The legacy sheet styles h1 directly for the old dark theme —
+     uppercase, near-white, 3rem. A direct rule beats an inherited one,
+     so these have to be stated rather than left to inherit. */
+  text-transform: none;
+
+  /* THIS NO LONGER BLENDS. It was painted in --mark-blend and
+     differenced against whatever sat behind it, so one declaration
+     stayed legible over three backdrops: --ink over the sheet, dark over
+     the bright daylight photograph, cream if the photograph were ever
+     swapped for a dark one.
+
+     The spans below now paint flat --fg instead, because the visible
+     half of that adaptation was the type inverting as the cursor's hole
+     passed under it. The trade is recorded there in full; the part that
+     matters here is that a fixed colour cannot follow a dark image, so
+     swapping the hero photograph for a night frame means revisiting the
+     heading colour rather than trusting it to cope.
+
+     isolation:isolate on .hero is still wanted: the drawn mark below
+     blends with darken, and this keeps that inside the section so it
+     cannot reach the footer behind it. */
+}
+
+/* THE BLEND LIVES ON THE TEXT SPANS, not on the h1 above them.
+
+   It used to sit on the heading itself, which was right while the
+   heading was nothing but letters. The drawn underline changed that:
+   mix-blend-mode blends an element together with everything inside it,
+   so a yellow stroke anywhere under the h1 would be differenced with the
+   letters and come out blue over the cream sheet — |#fffc00 - #f0ead8|
+   is rgb(15,18,216).
+
+   Pushing the blend down one level costs nothing visually — the three
+   spans do not overlap, so blending them separately against the same
+   backdrop gives the identical result — and it leaves the underline
+   outside every blended group, free to paint flat. */
+.lead,
+.mainInk,
+.trail {
+  /* FLAT INK, NOT DIFFERENCED — by request.
+
+     These carried `color: var(--mark-blend); mix-blend-mode: difference`,
+     which made the type adaptive: --mark-blend is the measured paper
+     value, so |source - backdrop| landed on --ink over the sheet, and
+     wherever the cursor opened a hole to the photograph the backdrop
+     changed underneath and the letters inverted to cream.
+
+     That adaptation was the feature and the inversion was its cost; the
+     inversion is the half that was actually being noticed, so the type is
+     now simply --fg and holds one colour wherever the pointer goes.
+
+     WHAT THIS GIVES UP: legibility over a dark patch of the photograph.
+     The blend guaranteed contrast against any backdrop; a fixed colour
+     cannot. It is safe here because the hole is only a few hundred pixels
+     across and the photograph behind the lockup is bright, but it is the
+     thing to re-check if the hero image is ever swapped for a darker one.
+
+     --fg, not --ink: they are the same on the light scheme and opposites
+     on the dark one, and this is type, not marbling. */
+  color: var(--fg);
+}
+
+/* The two small words.
+
+   Sized in em so they track the large line automatically — the whole
+   lockup then scales as one object from a phone to a wide desktop, and
+   there is no second breakpoint to keep in step with the first.
+
+   They hang off the CORNERS: lead flush left above, trail flush right
+   below. That asymmetry is the whole figure; centring either of them
+   collapses it into an ordinary three-line stack. */
+.lead,
+.trail {
+  display: block;
+  /* The mask each word travels through.
+
+     THE BLEND STAYS ON THIS ELEMENT, not on the mover inside it. An
+     ancestor that creates a stacking context severs a descendant's
+     mix-blend-mode from the canvas, and `transform` creates one — so
+     putting the blend on the inner span and the movement on the outer
+     would have differenced the words against transparency and rendered
+     them cream on cream. This way the wrapper blends its whole group,
+     movement included, and the arrangement cannot come apart. */
+  overflow: hidden;
+
+  /* 1.45, not 1.
+
+     With the leading at exactly 1em the mask sits on the glyph box and
+     shears the descender off the "g" in Making — at rest, not just
+     during the reveal. 1.3 was the first attempt and still clipped it:
+     counting ink pixels per row, the tail ended on 3, 4, 5 at the mask's
+     last row, and a "g" tail that is still WIDENING where it stops is a
+     tail that has been cut. 1.45 leaves about 4px of clear space below
+     the descender at this size.
+
+     The extra leading is split half above and half below by the line
+     box, so the negative margins below hand it back and the lockup keeps
+     the position it had. */
+  line-height: 1.45;
+
+  font-size: 0.17em;
+  /* LIGHTER than the large line, deliberately.
+
+     500 was the first choice, on the usual reasoning that small type
+     wants a little more weight to hold up. It backfired: the two small
+     words came out visibly bolder than the line they hang off, and the
+     eye went to "Making" before "Autonomous Flight". With the main line
+     now at 600 the gap does the ordering by itself — these stay at the
+     lockup's 400 and read as the asides they are. */
+  font-weight: 400;
+  letter-spacing: 0.005em;
+  /* The h1 is centred; these are not. */
+  text-align: left;
+}
+
+.lead {
+  /* Tucked close. The margins are em of the SMALL size, so 0.4em here is
+     under 0.07em of the large line — the two words sit against the big
+     one rather than floating above and below it. */
+  /* -0.225em cancels the half-leading added above; 0.175em plus that
+     same half-leading still adds up to the 0.4em gap this always had. */
+  margin: -0.225em 0 0.175em;
+
+  /* STARTS ON THE F OF "FLIGHT", not on the edge of the block.
+
+     Both lines live in the same h1, but they were finding their left edge
+     differently: the headline is centred, so it sits --mark-edge inside
+     the block, while this was left-aligned against the block itself and
+     began ~6px further out. Close enough to look like a mistake rather
+     than a decision.
+
+     Shifting it by --mark-edge is the fix, and it holds at every width
+     because the inset is derived from the same two numbers that size the
+     type rather than typed in as a pixel value.
+
+     THE 0.15em OPTICAL NUDGE IS GONE with it. It predated this — a hand
+     correction for the old arrangement — and on top of a real alignment
+     it would only reintroduce the error it used to hide. Both letters
+     here are flat-sided caps, M and F, so their side bearings are close
+     enough that no further optical fudge is wanted. */
+  padding-left: var(--mark-edge);
+}
+
+.trail {
+  text-align: right;
+  /* Back to matching the lead.
+
+     This carried 1.3em to clear the old horizontal rule, which ran the
+     full width of the line and passed straight through "Inevitable" —
+     measured, they overlapped by 10px. The diagonal ends high and to
+     the right instead, climbing away from this word rather than across
+     it, so the clearance it was bought for is no longer needed and the
+     lockup can close back up. */
+  margin: 0.175em 0 -0.225em;
+  padding-right: 0.15em;
+}
+
+/* The movers. Hidden by default and brought in by the animation, for
+   the same reason the drawn mark is: data-booted only lands when the
+   curtain has FINISHED travelling, so anything visible by default is
+   revealed already-arrived during the slide-up and then jumps back to
+   replay itself. */
+.leadInk,
+.trailInk {
+  display: block;
+}
+
+/* 120% of their own line box, which is more than the mask is tall — so
+   they start fully outside it rather than peeking at the edge. */
+.leadInk { transform: translateY(120%); }
+.trailInk { transform: translateY(-120%); }
+
+@keyframes leadRise {
+  from { transform: translateY(120%); }
+  to { transform: none; }
+}
+
+@keyframes trailFall {
+  from { transform: translateY(-120%); }
+  to { transform: none; }
+}
+
+/* Staggered, and both land before the mark starts drawing over them —
+   the stroke reads as annotating a finished lockup rather than racing
+   it into place. */
+:global(html[data-booted]) .leadInk {
+  animation: leadRise 700ms cubic-bezier(0.22, 1, 0.36, 1) 260ms both;
+}
+
+:global(html[data-booted]) .trailInk {
+  animation: trailFall 700ms cubic-bezier(0.22, 1, 0.36, 1) 380ms both;
+}
+
+/* The large line carries the weight; the lockup's own 400 is what the
+   two small words inherit. Keeping them separate is what lets the line
+   be bold without dragging "Making" and "Inevitable" up with it. */
+.main {
+  /* Positioned so the stroke can be hung off it.
+
+     IT MAY NOW FORM A STACKING CONTEXT, which it deliberately did not
+     before. The old rule was that any stacking context here would sever
+     the differenced text's blend from the canvas behind it. Neither the
+     letters nor the stroke blend any more, so that constraint is gone —
+     and a contained context is now what orders them: the stroke at
+     z-index 0, the letters at 1, both of them flat. */
+  position: relative;
+  isolation: isolate;
+  display: block;
+  /* NEVER BREAKS, and the guarantee has to live here rather than in the
+     measurement.
+
+     The size is derived so the line fills its block, which puts it a
+     fraction of a per cent inside the wrap threshold by construction —
+     fine when everything is exact, and not something to rely on. Two
+     things make it inexact in practice: --mark-em is computed from the
+     font's own advance tables rather than a render, so kerning and
+     sub-pixel rounding are unaccounted for; and before Satoshi loads the
+     fallback face renders instead, at widths that have nothing to do
+     with this number. Without this the headline would wrap for the
+     length of the font swap and then snap back.
+
+     Safe on `.main` specifically because it is display:block — the
+     prefix above it is a separate line and cannot be dragged up onto
+     this one. On the h1 it would have merged the two.
+
+     This lived in the narrow-screen media query until now, which is a
+     useful clue: the wrap had already been hit once on a phone and
+     patched where it was seen rather than where it came from. Wide
+     viewports were only safe because the old string happened to fit.
+     Now it is declared once, here, and the mobile copy is gone. */
+  white-space: nowrap;
+  font-weight: 700;
+}
+
+.mainInk {
+  /* Inline, so the stroke below can be sized and placed against the LINE
+     rather than against the full-width block — the block spans the
+     measure, the letters do not quite. */
+  display: inline;
+
+  /* ABOVE THE STROKE, by paint order. The stroke is a later sibling and
+     absolutely positioned, so without this it would paint over the
+     letters; it used to yield via mix-blend-mode: darken instead. Now
+     that both are flat, lifting the letters one level is all that is
+     needed, and unlike the blend it holds whatever colour either one
+     happens to be. z-index needs a positioned element — relative with no
+     offsets moves nothing. */
+  position: relative;
+  z-index: 1;
+}
+
+/* The stroke. Sized in em so it scales with the line at every width,
+   and stretched rather than fitted (preserveAspectRatio="none") so one
+   short path covers a long phrase without being redrawn. */
+/* The mark. A DIAGONAL SWEEP, not an underline.
+
+   It rises about a full em from left to right, so the box it needs is
+   tall — roughly the height of the type itself — rather than the sliver
+   a horizontal rule wanted.
+
+   DERIVED FROM THE REFERENCE, in cap-heights rather than pixels, since
+   that is the only unit that survives a change of type size. Measured
+   off it: the left tip sits 1.11 cap-heights BELOW the baseline, the
+   right tip 0.78 above, and the mark is about 0.17 cap-heights thick at
+   its heaviest.
+
+   The left tip has since been brought UP to about 0.56 cap-heights
+   below the baseline — closer to the words than the reference has it.
+   Note that raising one tip and not the other necessarily flattens the
+   whole sweep: the angle is the box's diagonal, so the rise fell from
+   6.3 to 5.2 degrees. If the original pitch is ever wanted back with
+   the tip left where it is, take it out of `width` rather than
+   `height`, which would fatten the mark along with it.
+
+   The first attempt sat far too high and crossed the letters almost
+   from the start, which read as a strikethrough drawn at an angle. The
+   sweep has to run mostly UNDER the words and only cut through them in
+   the last third — that is what makes it look aimed at the line rather
+   than scored across it.
+
+   The one place this departs from the reference is the right overshoot.
+   There it runs 21% of the text width past the end, which it can afford
+   because its type occupies about two thirds of its frame. Ours nearly
+   fills the measure, so the same figure would put the tip off the side
+   of the viewport; 6% keeps the gesture and stays on the page. */
+.underline {
+  position: absolute;
+  left: -3.5%;
+  bottom: -0.59em;
+  width: 109%;
+  height: 1.12em;
+  overflow: visible;
+  color: var(--mark-stroke);
+  pointer-events: none;
+
+  /* Hidden until drawn. The animation's forwards fill holds it open
+     afterwards, so this is only ever the pre-draw state. */
+  clip-path: inset(0 100% 0 0);
+
+  /* BEHIND THE LETTERS — by paint order now, not by blend.
+
+     THE HISTORY MATTERS, because the obvious fix was genuinely wrong
+     once. While the letters were differenced, the mark could not sit
+     below them in the stack: mix-blend-mode blends against everything
+     painted beneath it, so the moment this became part of the letters'
+     backdrop, cream differenced against yellow gave rgb(15,18,216) and
+     the letters turned blue wherever they crossed it. No paint order
+     avoided that and no source colour fixed it — difference cannot
+     produce a saturated yellow from a cream ground. So the mark stayed
+     on top and yielded with `mix-blend-mode: darken`, which kept the
+     darker of the two per channel: the black letters won over it, the
+     cream sheet lost to it.
+
+     THAT COST IT A CONSTANT COLOUR. darken compares against whatever is
+     behind, so over the cream sheet the mark came through at
+     rgb(240,234,0) while inside the cursor's reveal hole the photograph
+     took channels off it — the stroke shifting as the pointer passed.
+
+     Both halves are moot now the letters are flat: .mainInk is lifted to
+     z-index 1 and this paints below it at 0, occluded by opaque glyphs
+     rather than by arithmetic. The mark holds --mark-stroke everywhere,
+     over paper and over photograph alike. */
+  z-index: 0;
+}
+
+/* DRAWN ON, like a pencil stroke.
+
+   A wipe, not a dash offset. The usual trick for this —
+   stroke-dasharray with an animated stroke-dashoffset — only works on a
+   STROKED path, and this mark is a filled ribbon precisely so it can
+   taper. There is no dash to offset. Clipping the fill from the left
+   achieves the same read at a fraction of the complexity.
+
+   The leading edge is a vertical cut rather than one square to the
+   stroke's direction, which is technically wrong for a pencil tip. At
+   this sweep's 5.2 degrees the difference is about a pixel across a
+   14px ribbon, so it is not worth a polygon and a second set of numbers
+   to keep in step with the path.
+
+   GATED ON THE CURTAIN, in CSS rather than JavaScript. BootCurtain puts
+   data-booted on the root when it lifts, and the animation begins the
+   moment that selector starts matching — so the stroke draws when there
+   is someone to watch it, without this file knowing the curtain exists.
+
+   THE DEFAULT IS HIDDEN, and it has to be. It was unclipped at first,
+   on the reasoning that the mark sits behind the curtain until boot so
+   nothing is gained by hiding it. That was wrong about WHEN the
+   attribute lands: it is set on `lifted`, which fires at the END of the
+   curtain's 1100ms travel — so the whole slide-up revealed the mark
+   already finished, and it then snapped away and redrew itself. Hidden
+   by default, the curtain reveals bare paper and the stroke arrives
+   after.
+
+   Safe to hide by default here, which it would not be everywhere: the
+   hero is mounted with ssr:false, so if there is no JavaScript there is
+   no heading and no mark to strand. */
+@keyframes markDraw {
+  from { clip-path: inset(0 100% 0 0); }
+  to { clip-path: inset(0 0 0 0); }
+}
+
+:global(html[data-booted]) .underline {
+  /* `both` so the clipped start applies through the delay too —
+     otherwise the mark shows in full, waits, then redraws itself. */
+  /* NOT a UI ease-out. cubic-bezier(.22,1,.36,1) — the curve used for
+     the boot curtain's travel and the CTA hovers — had the stroke 93%
+     drawn at 42% of its own timeline, so it snapped out and then crept
+     the last few per cent. That reads as a wipe, not as drawing.
+
+     A hand accelerates briefly, holds a fairly steady speed, and eases
+     off at the end. This is that: a short lead-in, a long linear middle
+     and a soft finish. */
+  animation: markDraw 780ms cubic-bezier(0.5, 0.08, 0.35, 1) 560ms both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Both halves are needed. Dropping the animation alone would leave
+     the hidden default in place and the mark would never appear at
+     all — so the clip has to be lifted here too. */
+  .underline {
+    clip-path: none;
+  }
+
+  :global(html[data-booted]) .underline {
+    animation: none;
+  }
+
+  .leadInk,
+  .trailInk {
+    transform: none;
+  }
+
+  :global(html[data-booted]) .leadInk,
+  :global(html[data-booted]) .trailInk {
+    animation: none;
+  }
+
+  .intro {
+    opacity: 1;
+  }
+
+  .rail {
+    opacity: var(--rail-rest);
+  }
+
+  :global(html[data-booted]) .intro,
+  :global(html[data-booted]) .rail {
+    animation: none;
+  }
+}
+
+/* The tagline, placed against the section rather than stacked under the
+   lockup.
+
+   POSITIONED, NOT IN FLOW, and that is what keeps the heading still.
+   .centre is a centred flex column, so anything in flow down here pushes
+   the lockup UP by half its height — the tagline could not be moved
+   without the heading moving with it. Taking it out of flow entirely
+   means the column's measured height never changes and only this
+   travels.
+
+   The 72% is of .centre's height rather than a vh figure, so it holds
+   its position proportionally as the viewport shortens instead of
+   marching into the rail.
+
+   It used to share this spot with a CTA in a flex column; with the
+   button gone the wrapper was a single-child column with a gap that did
+   nothing, so the placement moved onto the tagline itself. 72% is
+   unchanged and correct — it was tuned for the tagline alone in the
+   first place, and the button only ever pushed it down from here. */
+.intro {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 72%;
+
+  margin: 0 auto;
+  max-width: 30ch;
+  text-align: center;
+  font-family: var(--font-body, 'Satoshi', Arial, sans-serif);
+  font-size: clamp(14px, 1.05vw, 20px);
+  font-weight: 400;
+  line-height: 1.45;
+  text-transform: none;
+
+  /* Flat, for the same reason the lockup above is: it crosses the hole
+     often, and inverting as the cursor passed was the whole complaint. */
+  color: var(--fg);
+
+  /* Hidden until the fade, for the same reason everything else in this
+     sequence is: data-booted lands only when the curtain has FINISHED
+     travelling, so anything visible by default gets revealed
+     already-arrived during the slide-up and then blinks out to replay. */
+  opacity: 0;
+}
+
+/* ---------- bottom rail ---------- */
+
+/* One item now that the pointer cue is gone, so flex-end rather than
+   space-between — space-between with a single child pushes it to the
+   LEFT, which is where the cue used to sit. */
+.rail {
+  /* The rest opacity, held in a custom property because the fade has to
+     land on it rather than on 1 — animating to a literal would leave two
+     copies of this number to keep in step. */
+  --rail-rest: 0.7;
+
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  gap: 1rem;
+  font-size: clamp(11px, 0.85vw, 14px);
+  color: var(--fg);
+  text-transform: none;
+  opacity: 0;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeInRail {
+  from { opacity: 0; }
+  to { opacity: var(--rail-rest); }
+}
+
+/* Last in the sequence, and overlapping the stroke rather than queueing
+   behind it — the mark finishes at 1340ms and a strictly serial entrance
+   would leave the hero feeling slow to settle. */
+/* 820ms, moved up from 940 — the slot the CTA used to hold. The
+   sequence steps 260 / 380 / 560 / 820 / 1120, and leaving the tagline
+   at 940 put a 380ms hole where the button used to arrive, which read as
+   the entrance stalling rather than as a beat. */
+:global(html[data-booted]) .intro {
+  animation: fadeIn 760ms ease 820ms both;
+}
+
+:global(html[data-booted]) .rail {
+  animation: fadeInRail 760ms ease 1120ms both;
+}
+
+/* ---------- narrow ---------- */
+
+@media (max-width: 700px) {
+  .hero {
+    min-height: 460px;
+  }
+
+  /* No size override — the formula fills the measure at every width and
+     a flat vw value here (19vw was the first attempt) overflows a phone
+     by ~200px, because it ignores --pad-x entirely.
+
+     "Autonomous Flight" CAN break at its space, unlike the single word
+     this replaced, and on a phone at the measure-filling size it would
+     be about 22px — too small to read. Nowrap keeps it one line and lets
+     the formula do its job; the small words grow a little to stay
+     legible when the big one is that size. */
+  .wordmark {
+    letter-spacing: -0.018em;
+    /* Nearly the full measure again. At 0.72 of a 390px screen the line
+       lands around 32px, which is not a hero — the side margins are a
+       luxury only a wide viewport can afford. */
+    --mark-fill: 0.97;
+  }
+
+
+  .lead,
+  .trail {
+    font-size: 0.24em;
+  }
+
+  .intro {
+    max-width: 24ch;
+  }
+
+  .nav {
+    display: none;
+  }
+}
+

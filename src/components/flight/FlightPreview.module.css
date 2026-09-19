@@ -1,0 +1,346 @@
+/* ============================================================
+   FlightPreview — chrome over the fixed flight canvas.
+
+   Nothing here paints a background except the copy's own legibility
+   scrim. The sky, the land and the haze are all rendered.
+   ============================================================ */
+
+.root {
+  --pad-x: clamp(18px, 3vw, 58px);
+  --pad-y: clamp(16px, 2.2vw, 34px);
+  --paper: #f2ecd9;
+  --ink: #10140b;
+
+  /* THE COPY PAINTS WHITE — by request, and it is the one value in this
+     block that carries every word in the section: the kicker, the title,
+     the body and the rail all resolve to --copy.
+
+     WHAT IT WAS AND WHY. This was ink. The copy had been cream when the
+     sky was a mid-tone and the land was darker; once the skies ran
+     #c2beb5 to #d6d3ce and the survey beat became a bleached overhead
+     plate, cream measured roughly 1.5:1 against them and the whole
+     section went dark to fix it.
+
+     SO THIS REOPENS A MEASURED PROBLEM, and the note is here rather than
+     lost in history because the numbers have not changed: white on those
+     pale skies is thinner than the cream that failed, not better. The
+     first beat is now safe — its camera looks down at terrain rather than
+     out at sky, so that frame is dark behind the words — but beats two
+     through four still have pale ground behind them in places, and the
+     survey plate is the worst of it.
+
+     THE HALO CARRIES IT, and had to flip back. A glow only works in the
+     opposite tone to its type: the cream glow that sat under ink type
+     would be invisible under white, so this is the dark drop that light
+     type wants, at the same two radii. It is doing real work here rather
+     than polishing — on the bleached beats it is most of what separates
+     the letters from the plate. */
+  --copy: #ffffff;
+  --halo: 0 1px 2px rgba(20, 22, 16, 0.85), 0 0 16px rgba(20, 22, 16, 0.7);
+
+  position: relative;
+  width: 100%;
+  font-family: var(--font-body, 'Satoshi', Arial, sans-serif);
+
+  /* The legacy sheet sets `section { content-visibility: auto }`, which on
+     a spacer this tall reserves a viewport per off-screen chunk and leaves
+     the height unstable until scrolled into view — which would corrupt the
+     progress measurement this whole scene reads from. */
+  content-visibility: visible;
+  contain-intrinsic-size: auto;
+}
+
+/* The sticky stage. Pins to the top for exactly as long as .root is
+   passing the viewport, then releases — which is what keeps the flight
+   inside its own section instead of over the whole document. */
+.stage {
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  width: 100%;
+  overflow: hidden;
+
+  /* Its own stacking context, so nothing inside can paint over a section
+     that comes after it. */
+  isolation: isolate;
+}
+
+.canvas {
+  z-index: 0;
+}
+
+/* The approach beat's footage. Between the canvas and the copy.
+
+   `cover` because this is full-bleed: the clip is 16:9 and the stage is
+   whatever the viewport is, so on a tall window it crops rather than
+   letterboxes. That crop is the one real cost of footage over a live
+   camera — a portrait phone loses the sides — and it is why the aircraft
+   is composed near frame centre.
+
+   Opacity is written from the rAF in FlightPreview, so the value here is
+   only the starting point before the first frame runs. */
+/* The two closing stills. Same box as the canvas, one on top of the
+   other, both faded by the scroll rAF.
+
+   z-index 1 puts them over the render and under the copy (2). `cover`
+   because they are 16:9 and the stage is the viewport — on a tall window
+   they crop, which is why the aircraft is composed into the lower left
+   rather than the corner. */
+/* The wrapper the plate and the beam share. It is the box the beam's
+   anchor maths measures, and it carries the cool-down filter. */
+.stills {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  will-change: filter;
+}
+
+/* The sensor beam. Dotted rather than solid: a solid leader reads as a
+   drawn annotation, a dotted one reads as something being sampled. */
+.beam {
+  position: absolute;
+  inset: 0;
+  /* ABOVE THE PLATE. .still carries z-index 1 and this carried none, so the
+     plate painted over every line drawn here — the sensor graphics were
+     being positioned correctly and never seen. */
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+/* THE SENSOR LOCK. Cream rather than the old amber beam, and longer dashes
+   — the brief sketched it as a white dashed pair and a white frame, and
+   against this plate's greens a warm line disappears into the grass. */
+.lockLine {
+  stroke: #f2ecd9;
+  stroke-width: 1.8;
+  stroke-dasharray: 7 7;
+  stroke-linecap: round;
+  opacity: 0.95;
+  filter: drop-shadow(0 1px 1.5px rgba(9, 11, 7, 0.6));
+}
+
+/* Drawn on with pathLength=1: dasharray 1 and a dashoffset ramped 1 -> 0. */
+.lockBox {
+  fill: none;
+  stroke: #f2ecd9;
+  stroke-width: 2;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  stroke-linejoin: round;
+}
+
+/* The approach beat's footage. Between the canvas and the copy.
+
+   `cover` because this is full-bleed: the clip is 16:9 and the stage is
+   whatever the viewport is, so on a tall window it crops rather than
+   letterboxes. That crop is the one real cost of footage over a live
+   camera — a portrait phone loses the sides — and it is why the aircraft
+   is composed near frame centre.
+
+   Opacity is written from the rAF in FlightPreview, so the value here is
+   only the starting point before the first frame runs. */
+/* The two closing stills. Same box as the canvas, one on top of the
+   other, both faded by the scroll rAF.
+
+   z-index 1 puts them over the render and under the copy (2). `cover`
+   because they are 16:9 and the stage is the viewport — on a tall window
+   they crop, which is why the aircraft is composed into the lower left
+   rather than the corner. */
+.still {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+}
+
+.clip {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.clipCanvas {
+  width: 100%;
+  height: 100%;
+}
+
+.video {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 1;
+  pointer-events: none;
+}
+
+/* One pinned pane, holding whichever scene's copy is lit. */
+.pane {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  align-items: flex-end;
+  padding: var(--pad-y) var(--pad-x) calc(var(--pad-y) + clamp(38px, 5vh, 62px));
+  pointer-events: none;
+}
+
+.card {
+  position: absolute;
+  left: var(--pad-x);
+  bottom: calc(var(--pad-y) + clamp(38px, 5vh, 62px));
+  max-width: min(46ch, 62vw);
+  transition: opacity 260ms ease;
+  color: var(--copy);
+
+  /* The land underneath ranges from bleached plate to shadowed valley, so
+     the copy cannot rely on any one ground being there. A soft glow
+     rather than a panel keeps it legible over both without boxing the
+     type in. */
+  text-shadow: var(--halo);
+}
+
+/* SURVEY'S COPY SITS BOTTOM RIGHT. Every other beat keeps it bottom left,
+   but this beat's plate puts the Mini exactly there and the words covered
+   the aircraft the sensor lines leave from. Same height as every other
+   card now that the telemetry read-out that used to share this corner is
+   gone; ranged right, to sit against the edge it is anchored to. */
+.card[data-scene='survey'] {
+  left: auto;
+  right: var(--pad-x);
+  text-align: right;
+}
+
+.kicker {
+  margin: 0 0 clamp(8px, 1vh, 14px);
+  font-family: var(--font-mono, monospace);
+  font-size: clamp(10px, 0.72vw, 13px);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--copy);
+  opacity: 0.72;
+}
+
+.title {
+  margin: 0 0 clamp(10px, 1.4vh, 20px);
+  font-family: var(--font-display, 'Satoshi Display', Arial, sans-serif);
+  font-size: clamp(30px, 4.4vw, 76px);
+  font-weight: 700;
+  line-height: 1.02;
+  letter-spacing: -0.025em;
+  color: var(--copy);
+  text-transform: none;
+}
+
+/* Authored line breaks, so a two-line headline stays two lines rather
+   than rewrapping into an orphan at some intermediate width. */
+.line {
+  display: block;
+}
+
+.body {
+  margin: 0;
+  font-size: clamp(14px, 1.05vw, 19px);
+  font-weight: 400;
+  line-height: 1.5;
+  color: var(--copy);
+  text-transform: none;
+  opacity: 0.86;
+  max-width: 42ch;
+}
+
+.rail {
+  position: absolute;
+  left: var(--pad-x);
+  right: var(--pad-x);
+  bottom: var(--pad-y);
+  z-index: 2;
+  display: flex;
+  font-size: clamp(11px, 0.85vw, 14px);
+  color: var(--copy);
+  opacity: 0.7;
+  pointer-events: none;
+  text-shadow: var(--halo);
+}
+
+.cue {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+}
+
+.cue::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  /* Orange, not flare yellow. Yellow on ground this pale is a dot you
+     have to be told is there; it was chosen when the sky was darker. */
+  background: #ff6a00;
+  box-shadow: 0 0 0 4px rgba(255, 106, 0, 0.18);
+}
+
+@keyframes leadMarch {
+  to {
+    stroke-dashoffset: -22px;
+  }
+}
+
+/* Below this the copy needs the whole width and the two stacks would
+   overlap. The reference drops its telemetry on narrow screens for the
+   same reason — an instrument panel squeezed into a phone gutter reads
+   as clutter rather than as instrumentation. */
+@media (max-width: 860px) {
+  .hud,
+  .callout {
+    display: none;
+  }
+}
+
+@media (max-width: 700px) {
+  .card {
+    max-width: none;
+    right: var(--pad-x);
+  }
+
+  .body {
+    max-width: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cue::before {
+    box-shadow: none;
+  }
+
+  /* The stagger and the pulse both go; the read-out simply is or is not.
+     The numbers stop ticking too — that half is handled in the component,
+     which checks the same query before starting its interval. */
+  .hud,
+  .hud .hudRow,
+  .hud .hudRule {
+    transition: none;
+    transform: none;
+  }
+
+  .hud .hudAlert::before {
+    animation: none;
+  }
+
+  .callout {
+    transition: none;
+    transform: none;
+  }
+
+  .callout[data-on='true'] .lead {
+    animation: none;
+  }
+}

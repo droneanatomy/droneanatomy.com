@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import localFont from 'next/font/local';
 import { GoogleAnalytics } from '@next/third-parties/google';
 import { HeaderGate, FooterGate } from '@/components/Chrome/ChromeGate';
+import { BootCurtain } from '@/components/Chrome/BootCurtain';
 import './globals.css';
 
 const robotoMono = localFont({
@@ -25,9 +26,14 @@ export default function RootLayout({
   return (
     <html lang="en" className={robotoMono.variable}>
       <body>
-        <HeaderGate />
-        <main>{children}</main>
-        <FooterGate />
+        {/* Wraps the whole shell so any route can hold the curtain while
+            its own assets land — see useBootGate. It renders its own
+            overlay above these children, and the chrome with them. */}
+        <BootCurtain>
+          <HeaderGate />
+          <main>{children}</main>
+          <FooterGate />
+        </BootCurtain>
       </body>
       {process.env.NEXT_PUBLIC_GA_ID && (
         <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID} />

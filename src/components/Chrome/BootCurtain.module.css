@@ -1,0 +1,75 @@
+/* ============================================================
+   BootCurtain — the site's opening screen.
+
+   Lifted verbatim from the field hero's own curtain, which is where this
+   design was settled: dark ground, a large count in the bottom-left, a
+   hairline rule filling underneath it. Only the plumbing changed.
+   ============================================================ */
+
+.curtain {
+  position: fixed;
+  inset: 0;
+  /* Above everything, the fixed nav included. The field hero's version
+     sat at 50 because the only thing it had to cover was its own hero;
+     a site-wide curtain has to cover the chrome as well. */
+  z-index: 9999;
+
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-end;
+  gap: 1rem;
+
+  padding: clamp(20px, 3.55vw, 68px);
+  background: #10140b;
+  color: #f2ecd9;
+
+  /* A deep ease-out: leaves immediately, then decelerates all the way out
+     of frame. An ease-in-out would slow through the middle, which on a
+     full-screen curtain reads as hesitation. */
+  transition: transform 1100ms cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
+}
+
+.up {
+  transform: translateY(-100%);
+}
+
+.count {
+  font-family: var(--font-display, 'Satoshi Display', Arial, sans-serif);
+  font-size: clamp(44px, 7vw, 120px);
+  font-weight: 700;
+  line-height: 0.8;
+  letter-spacing: -0.02em;
+  /* So the three digits do not jostle as they climb. */
+  font-variant-numeric: tabular-nums;
+  color: #f2ecd9;
+  text-transform: none;
+}
+
+.track {
+  display: block;
+  width: 100%;
+  max-width: 420px;
+  height: 1px;
+  background: rgba(242, 236, 217, 0.2);
+}
+
+.bar {
+  display: block;
+  height: 1px;
+  width: 0;
+  background: #f2ecd9;
+}
+
+/* The travel is the whole gesture, so with reduced motion it simply
+   stops existing rather than sliding. */
+@media (prefers-reduced-motion: reduce) {
+  .curtain {
+    transition: opacity 200ms linear;
+  }
+  .up {
+    transform: none;
+    opacity: 0;
+  }
+}

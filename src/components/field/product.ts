@@ -199,6 +199,28 @@ export type ProductPage = {
    *  a missing act behaves. */
   viewer?: ProductViewer;
 
+  /** A full-bleed looping film BETWEEN the hero and the viewer.
+   *
+   *  Not `film`, which is a YouTube card inside the hero with a lightbox
+   *  behind it. This is a section in its own right that the hero dissolves
+   *  into and the viewer then dissolves over — see ProductLoop for why it
+   *  has to overlap the section after it. Absent => nothing mounts. */
+  loop?: {
+    /** H.264, for everything. */
+    mp4: string;
+    /** VP9, offered first; about half the bytes where it is supported. */
+    webm?: string;
+    /** First frame of the film, so the section is never a black box while
+     *  the video buffers or when motion is reduced. */
+    poster: string;
+    /** The statement laid over the film: a two-line headline on the left,
+     *  a paragraph on the right — the same pair, type and entrance as the
+     *  hero's void statement. Either may be omitted and simply does not
+     *  render. */
+    head?: [string, string];
+    body?: string;
+  };
+
   /** The hero's bottom-right media card, and the lightbox behind it.
    *
    *  Optional for the usual reason, and it was found the usual way: the id
@@ -470,7 +492,7 @@ export const MINI: ProductPage = {
 
      ORDER IS THE ORDER THEY ARE READ, and the arrows step through it. */
   viewer: {
-    model: '/models/vtol.glb',
+    model: '/models/mini.glb',
     span: 3.2,
     poster: '/images/mini-viewer-poster.webp',
     /* 2,587,764 bytes, which is the 2.5 MB the gate has always claimed. */
@@ -663,9 +685,24 @@ export const NOXR: ProductPage = {
        the sharp version and lets the aircraft sit small, at 22.8% of the
        poster, exactly as it sits in the frame it came from. */
     poster: '/images/noxr-viewer-poster.webp',
-    /* 3,864,476 bytes. Draco-compressed from an 11.3 MB export; the loader
-       already decodes Draco for the Mini, so this cost nothing to adopt. */
-    bytes: 3864476,
+    /* 1,416,544 bytes, down from 3,864,476. Two changes, no geometry lost:
+       the 10.79 MB export is Draco-compressed (which is what got it to 3.86
+       MB), and its two 1024x1024 maps are now webp rather than PNG — 2.79 MB
+       of texture became 331 KB for the same pixels.
+
+       WEBP HERE IS NOT OPTIONAL. glTF core admits only JPEG and PNG, so the
+       file declares EXT_texture_webp as REQUIRED and carries no PNG
+       fallback. three.js has read that extension since r132 and every
+       browser this site targets decodes webp; a loader that does not will
+       refuse the file outright rather than render it untextured, which is
+       the honest failure and the reason the flag is set.
+
+       The geometry is the original's, untouched: 46 meshes with the body
+       instanced 48 times. An export that applied a decimate modifier
+       instead measured LARGER (5.63 MB), because flattening those instances
+       into distinct meshes more than doubled the unique vertex count.
+       Encoding was always the lever here; detail never was. */
+    bytes: 1416544,
 
     /* The Mini's opening framing, reused deliberately: it is a neutral
        three-quarter view and there is no reason for two product pages to
@@ -709,6 +746,139 @@ export const NOXR: ProductPage = {
     { label: 'Intro', href: '/products/noxr-1' },
     { label: 'Systems', href: '/products' },
     { label: 'Mini', href: '/products/mini' },
+    { label: 'Contact', href: '/contact' },
+  ],
+};
+
+/* ---------------------------------------------------------------------- */
+
+/* CYCLOPS — the VTOL airframe, and the first page to run THREE steps: the
+   sequence, a looping film, then the model.
+
+   Same scaffold discipline as NOXR. The assets and every number derived
+   from them are measured off this product's own files; the words are
+   PLACEHOLDER and say so on the page. */
+export const CYCLOPS: ProductPage = {
+  acts: [{ kind: 'hero', vh: ACT_ONE_VH }],
+
+  /* Seven characters against the Mini's and Noxr's four. The wordmark is
+     solved against its own length, so this sets smaller than those two —
+     expected, not a fault, and the thing to look at first if the hero's
+     headline reads undersized. */
+  name: 'Cyclops',
+
+  kicker: 'PLACEHOLDER — one line, sets the product up',
+  tabLabel: '• Cyclops Model',
+  lede:
+    'PLACEHOLDER — the opening paragraph, three or four lines. The Mini’s ' +
+    'runs to about forty words and is sized against that length, so this ' +
+    'wants to be in the same range.',
+
+  statement: {
+    head: ['PLACEHOLDER', 'TWO LINES'],
+    body: 'PLACEHOLDER — the paragraph that sits beside the statement.',
+  },
+  coda: 'PLACEHOLDER — the closing line',
+  slide: 'placeholder',
+
+  /* 140 frames at 2560x1440 from "04 SEQ S", through build-sequence.mjs at
+     q96: 86.6 MB of PNG became 14.1 MB at 2K and 5.7 MB at 1K. There is no
+     4K render, so '4k' points at the native 2K build, as NOXR's does. */
+  sequence: {
+    hero: { '1k': 'cyclops1k', '2k': 'cyclops2k', '4k': 'cyclops2k' },
+    end: { '1k': 'end1k', '2k': 'end2k', '4k': 'end' },
+    heroFrames: 140,
+    endFrames: 40,
+    /* Frame 0's alpha bounding box spans x 726..2058 of 2560. The largest
+       of the three products by a distance — the Mini is 0.336 and Noxr
+       0.1445 — so this page leans least on the larger tier. */
+    firstFrameSubjectWidth: 0.5207,
+  },
+
+  /* "04 DRONE LOOP.mp4" was 2560x1440 H.264 at 7.78 MB for four seconds —
+     15.5 Mbps, which is a master rather than something to put in a page.
+     Scaled to 1920 and re-encoded with no audio track (it had none):
+     H.264 CRF 22 is 4.17 MB, VP9 CRF 34 is 1.89 MB. */
+  loop: {
+    mp4: '/video/cyclops.mp4',
+    webm: '/video/cyclops.webm',
+    poster: '/video/cyclops-poster.jpg',
+    head: ['PLACEHOLDER', 'TWO LINES'],
+    body: 'PLACEHOLDER — the paragraph that sits beside the headline on the film.',
+  },
+
+  /* THE ANCHORS ARE MEASURED, THE FRAMINGS ARE NOT.
+
+     Anchors come from this model's own geometry — the rotor blade centroids
+     and the bounding box — mapped into the space the viewer draws in. That
+     space is not the file's: loadCraft moves the root by minus the bbox
+     centre (0.3045, 0.097, -0.005) and scales it by span / widest extent =
+     3.2 / 4.415 = 0.7248, and the scale lands on the vertices while the
+     offset does not, so a point p in the file draws at 0.7248 * p - centre.
+
+     THE NOSE IS -X, not the +X the LENS material suggests; that lens is a
+     light on the tail. The rotor layout settles it — see the note at the
+     lead's loadCraft call in FlightScene. Pose azimuth 0 faces +z and -pi/2
+     faces -x, which is where every framing below is aimed from.
+
+     Poses are arithmetic pointing roughly at each anchor. Replace them with
+     framings composed in the browser: shift-click with the dev picker and
+     paste — see pickAnchor.ts. */
+  viewer: {
+    model: '/models/vtol.glb',
+    span: 3.2,
+    /* The sequence's own last frame, cropped so the aircraft fills 62% of
+       the poster width — the Mini's convention. That frame's subject is
+       1013px wide, so this is a 0.70x DOWNscale and stays sharp, unlike
+       Noxr's, which had to sit small to avoid enlarging a 260px aircraft. */
+    poster: '/images/cyclops-viewer-poster.webp',
+    /* 2,650,256 bytes. 17.23 MB as exported: webp textures and Draco took
+       it to 2.71 MB, and joining every non-blade mesh took the draw calls
+       from 463 to 31 for another 0.18 MB off. The ten blade nodes were
+       kept separate on purpose — join merges by material, and a merged
+       blade mesh cannot turn about more than one hub. */
+    bytes: 2650256,
+
+    /* A front three-quarter: between the nose at -x and the right wing at
+       +z, a little above the wing plane. */
+    home: { azimuth: -0.9, polar: 1.25, radius: 1.0 },
+
+    hotspots: [
+      {
+        label: 'PLACEHOLDER 01',
+        /* The nose, at the bbox's -x extreme (-0.902 in the file). */
+        anchor: [-0.958, 0.0, 0.005],
+        normal: [-1, 0, 0],
+        pose: { azimuth: -1.45, polar: 1.35, radius: 0.5 },
+      },
+      {
+        label: 'PLACEHOLDER 02',
+        /* A forward lift rotor: blade centroid (-0.620, -0.067, 0.500). */
+        anchor: [-0.754, -0.146, 0.367],
+        normal: [0, 1, 0],
+        pose: { azimuth: -0.9, polar: 0.75, radius: 0.5 },
+      },
+      {
+        label: 'PLACEHOLDER 03',
+        /* The wingtip propeller on +z: centroid (0.245, 0.040, 1.495). */
+        anchor: [-0.127, -0.068, 1.089],
+        normal: [0, 0, 1],
+        pose: { azimuth: 0.2, polar: 1.3, radius: 0.5 },
+      },
+      {
+        label: 'PLACEHOLDER 04',
+        /* The pusher on the centreline: hub (0.703, 0.100, 0.000). */
+        anchor: [0.205, -0.025, 0.005],
+        normal: [1, 0, 0],
+        pose: { azimuth: 1.6, polar: 1.25, radius: 0.5 },
+      },
+    ],
+  },
+
+  nav: [
+    { label: 'Intro', href: '/products/cyclops' },
+    { label: 'Systems', href: '/products' },
+    { label: 'Noxr', href: '/products/noxr-1' },
     { label: 'Contact', href: '/contact' },
   ],
 };

@@ -6,23 +6,60 @@
   --card: #0e0e12;
   --line: rgba(20, 21, 26, 0.35);
   --flare: #fffc00;
+  /* Chrome ink, for type that now sits ON the terrain rather than beside
+     it. --ink stays for anything still on a light ground. */
+  --ink-lit: #f0f0fa;
 
   position: relative;
   width: 100%;
   min-height: 100svh;
-  background: var(--lav);
-  color: var(--ink);
-  padding: clamp(28px, 4.6vh, 50px) clamp(24px, 3.05vw, 44px);
+  /* The terrain is the page now, not a card sitting on one, so the
+     section's own ground is the card colour rather than the lavender.
+     It still shows through wherever the canvas has not painted yet. */
+  background: var(--card);
+  color: var(--ink-lit);
+  /* Page frame, shared with every section via :root in globals.css.
+     It no longer frames the visual — the visual is full bleed — it just
+     keeps the chrome off the edges. */
+  padding: var(--page-pad-y) var(--page-pad-x);
   display: flex;
   flex-direction: column;
+  /* space-between, not gap-and-grow: the card used to be the flex child
+     that filled the middle, and it is absolute now, so the top chrome and
+     the bottom rail have to be pushed apart by the container instead. */
+  justify-content: space-between;
   gap: clamp(16px, 2.2vh, 26px);
-  font-family: var(--font-family, 'D-DIN', Arial, sans-serif);
+  font-family: var(--font-family, 'Satoshi', Arial, sans-serif);
   overflow: hidden;
+  isolation: isolate;
+}
+
+/* Legibility scrim.
+
+   The terrain is photographic and the thermal lens tracks the cursor, so
+   the brightness under any given word changes as the reader moves. Type
+   laid straight onto that is legible only some of the time. Two short
+   gradients — one under the header, one under the rail — cost nothing and
+   make the contrast independent of what the visual happens to be doing.
+
+   On ::before so it needs no element, and z-index 1 puts it between the
+   canvas and the chrome. */
+.hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    linear-gradient(to bottom, rgba(8, 8, 12, 0.62) 0%, rgba(8, 8, 12, 0) 34%),
+    linear-gradient(to top, rgba(8, 8, 12, 0.55) 0%, rgba(8, 8, 12, 0) 22%);
 }
 
 /* ---------- Top chrome ---------- */
 
 .top {
+  position: relative;
+  z-index: 2;
   display: grid;
   grid-template-columns: 1fr auto 1fr;
   align-items: start;
@@ -30,12 +67,12 @@
 }
 
 .mark {
-  font-family: var(--font-family-heading, 'D-DIN-Bold', sans-serif);
+  font-family: var(--font-family-heading, 'Satoshi Display', sans-serif);
   font-weight: 700;
   font-size: clamp(19px, 1.8vw, 26px);
   letter-spacing: 0.01em;
   text-transform: uppercase;
-  color: var(--ink);
+  color: var(--ink-lit);
   text-decoration: none;
 }
 
@@ -46,7 +83,7 @@
   font-size: clamp(18px, 2.5vw, 36px);
   line-height: 1.1;
   letter-spacing: -0.01em;
-  color: var(--ink);
+  color: var(--ink-lit);
 }
 
 .nav {
@@ -86,7 +123,11 @@
 }
 
 .pillDark {
-  background: #2b2e3a;
+  /* A hairline, because a dark pill on a dark terrain has no edge of its
+     own — against the lavender it did not need one. */
+  background: rgba(43, 46, 58, 0.82);
+  border: 1px solid rgba(240, 240, 250, 0.22);
+  backdrop-filter: blur(6px);
   color: #fff;
 }
 .pillDark i {
@@ -130,11 +171,15 @@
 
 /* ---------- 3D card ---------- */
 
+/* Full bleed. It was an inset rounded card with the page showing around
+   it; now it IS the page and the chrome floats over it. Absolute rather
+   than a flex child, so the header and rail lay out against the viewport
+   and the visual fills everything behind them. */
 .card {
-  position: relative;
-  flex: 1;
-  min-height: 0;
-  border-radius: clamp(14px, 1.4vw, 20px);
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: 0;
   background: var(--card);
   overflow: hidden;
 }
@@ -160,33 +205,38 @@
   user-select: none;
   pointer-events: none;
 }
+/* On the page frame, not on the old card's inner edge. At 12px they were
+   marking the corners of a card; with no card they were just crowding the
+   corners of the screen. */
 .tl {
-  top: 12px;
-  left: 14px;
+  top: var(--page-pad-y);
+  left: var(--page-pad-x);
 }
 .tr {
-  top: 12px;
-  right: 14px;
+  top: var(--page-pad-y);
+  right: var(--page-pad-x);
 }
 .bl {
-  bottom: 12px;
-  left: 14px;
+  bottom: var(--page-pad-y);
+  left: var(--page-pad-x);
 }
 .br {
-  bottom: 12px;
-  right: 14px;
+  bottom: var(--page-pad-y);
+  right: var(--page-pad-x);
 }
 
 /* ---------- Bottom rail ---------- */
 
 .rail {
+  position: relative;
+  z-index: 2;
   display: grid;
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
   padding: 2px clamp(4px, 1vw, 14px) 0;
 }
 .plus {
-  color: var(--line);
+  color: rgba(240, 240, 250, 0.4);
   font-size: 15px;
 }
 .plus:last-child {
@@ -198,14 +248,17 @@
   font-weight: 700;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: var(--ink);
+  color: var(--ink-lit);
 }
 
 /* Scan hint inside the card */
 .hint {
   position: absolute;
   left: 50%;
-  bottom: 14px;
+  /* Clear of the rail. Both are bottom-centred, and inside a card that was
+     fine because the rail sat outside it — full bleed puts them on the
+     same line. */
+  bottom: calc(var(--page-pad-y) + clamp(34px, 5vh, 52px));
   transform: translateX(-50%);
   font-size: 11px;
   font-weight: 700;

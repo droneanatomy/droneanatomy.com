@@ -306,7 +306,9 @@ export const ThermalTerrain: React.FC<ThermalTerrainProps> = ({ imageSrc, therma
       uHover: { value: 0 },
       uTime: { value: 0 },
       uRes: { value: new THREE.Vector2(1, 1) },
-      uRadius: { value: 0.17 },
+      // Larger than the old hard-edged lens: a soft falloff reads smaller than
+      // its nominal radius, since the outer band is nearly transparent.
+      uRadius: { value: 0.24 },
       uImgAspect: { value: 1280 / 720 }, // procedural default; updated on real load
       uParallax: { value: 0.016 },
     };
@@ -339,6 +341,34 @@ export const ThermalTerrain: React.FC<ThermalTerrainProps> = ({ imageSrc, therma
         uniform vec2 uMouse, uMouseUV, uRes;
         uniform float uHover, uTime, uRadius, uImgAspect, uParallax;
 
+        /* Cheap value noise + fbm, used only to break up the lens boundary so
+           it reads as a sensor footprint rather than a drawn circle. */
+        float hash(vec2 p){
+          return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
+        }
+
+        float noise(vec2 p){
+          vec2 i = floor(p);
+          vec2 f = fract(p);
+          vec2 u = f * f * (3.0 - 2.0 * f);
+          return mix(
+            mix(hash(i), hash(i + vec2(1.0, 0.0)), u.x),
+            mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), u.x),
+            u.y
+          );
+        }
+
+        float fbm(vec2 p){
+          float v = 0.0;
+          float a = 0.5;
+          for (int i = 0; i < 4; i++) {
+            v += a * noise(p);
+            p *= 2.02;
+            a *= 0.5;
+          }
+          return v;
+        }
+
         void main(){
           // cover-fit the image to the card without distortion
           float viewAspect = uRes.x / uRes.y;
@@ -355,17 +385,31 @@ export const ThermalTerrain: React.FC<ThermalTerrainProps> = ({ imageSrc, therma
           day = pow(day * 1.18, vec3(0.94)); // brighten daytime a little
           vec3 therm = texture2D(uThermal, uv).rgb;
 
-          // screen-space lens circle around the cursor
+          // Screen-space lens around the cursor.
           vec2 sdiff = vUv - uMouseUV;
           sdiff.x *= viewAspect;
           float dist = length(sdiff);
-          float mask = smoothstep(uRadius, uRadius * 0.7, dist) * uHover;
+
+          /* Irregular boundary. Noise is sampled on the unit circle
+             (cos/sin of the angle) so it wraps seamlessly — sampling the raw
+             angle would leave a visible seam at the +/-PI wrap. Drifts slowly
+             over time so the footprint breathes instead of sitting static. */
+          float ang = atan(sdiff.y, sdiff.x);
+          vec2 ring = vec2(cos(ang), sin(ang));
+          float lobe = fbm(ring * 2.1 + uTime * 0.07);
+          float radius = uRadius * (0.80 + lobe * 0.46);
+
+          /* Finer noise pushes the edge in and out at small scale, giving the
+             wispy, torn quality a hard circle can't have. */
+          float fray = fbm(sdiff * 13.0 + uTime * 0.12) - 0.5;
+          float d = dist + fray * uRadius * 0.11;
+
+          /* Wide falloff: fully thermal only near the centre, fading the whole
+             way out to the boundary. No hard edge anywhere, and no scan ring. */
+          float mask = 1.0 - smoothstep(radius * 0.22, radius, d);
+          mask = pow(clamp(mask, 0.0, 1.0), 1.3) * uHover;
 
           vec3 col = mix(day, therm, mask);
-
-          // bright scan ring at the lens edge
-          float ring = (1.0 - smoothstep(0.0, uRadius * 0.05, abs(dist - uRadius))) * uHover;
-          col += ring * vec3(1.0, 0.95, 0.7) * 0.55;
 
           gl_FragColor = vec4(col, 1.0);
         }
