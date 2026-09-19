@@ -209,6 +209,17 @@ describe('step — wing', () => {
     expect(s.vy).toBeGreaterThan(3);
   });
 
+  /* The multirotor has this test; the wing needs its own, because Task 1
+     only asserts the ALGEBRA that thrustMax should deliver the published
+     rate, which is a different claim from the loop actually settling
+     there. Starts low so 15 seconds of climb stays under the ceiling. */
+  it('climbs at its published rate and no faster', () => {
+    const s = settle(a, { throttle: 1 }, 40, newState(0, 60, 0));
+    for (let i = 0; i < 60 * 15; i++) step(s, a, { ...NEUTRAL, throttle: 1, lift: 1 }, 0, 1 / 60);
+    expect(s.vy).toBeCloseTo(CYCLOPS.climb, 0);
+    expect(s.y).toBeLessThan(900); // never touched the ceiling clamp
+  });
+
   it('sinks below the stall however hard it is asked to climb', () => {
     const s = newState(0, 300, 0);
     s.mode = 'flying';
@@ -271,6 +282,35 @@ describe('step — wing', () => {
     step(s, a, { ...NEUTRAL, throttle: 1, steer: 1, lift: 1 }, 0, 12);
     expect(Number.isFinite(s.x + s.y + s.z + s.vx + s.vy + s.vz + s.yaw + s.pitch + s.roll)).toBe(true);
     expect(s.y).toBeGreaterThanOrEqual(0);
+  });
+
+  /* `turn` was a dead field for the wing until bankMax was solved from
+     it. This is the claim that makes it live: holding the key at cruise
+     gives the rate the fleet table advertises, reached by banking and
+     nothing else. Measured off the state's own yaw over a single frame,
+     with the wrap normalised, because yaw is an atan2 and wraps at pi.
+
+     Only at CRUISE. omega = G * tan(phi) / v, so the same bank turns more
+     slowly the faster it goes — real, and deliberately not asserted
+     against the table. */
+  it('turns at the published rate at cruise, by banking', () => {
+    const s = settle(a, { throttle: 1 }, 40);
+    const c = { ...NEUTRAL, throttle: 1, steer: 1 } as Controls;
+    for (let i = 0; i < 60 * 8; i++) step(s, a, c, 0, 1 / 60); // let the bank settle
+
+    const yaw0 = s.yaw;
+    step(s, a, c, 0, 1 / 60);
+    let d = s.yaw - yaw0;
+    if (d > Math.PI) d -= 2 * Math.PI;
+    if (d < -Math.PI) d += 2 * Math.PI;
+
+    /* Still at cruise, but not to the last unit: yaw is slaved to the
+       velocity one frame late, so in a hard turn the bank's horizontal
+       lift lags the flight path slightly and leaks a little thrust
+       forward. Measured 71.46 at 60Hz and 72.85 at 30Hz. Asserted at the
+       size it really is rather than hidden behind a loose tolerance. */
+    expect(Math.abs(Math.hypot(s.vx, s.vz) - CYCLOPS.speed)).toBeLessThan(2);
+    expect(d * 60).toBeCloseTo(CYCLOPS.turn, 1);
   });
 
   /* The mirror image of Task 2's "never below weight": the two lift

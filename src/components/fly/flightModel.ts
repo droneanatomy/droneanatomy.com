@@ -74,6 +74,9 @@ export type Airframe = {
   liftThrustMax: number;
   tiltMax: number;
   tiltCruise: number;
+  /** How far a wing banks on full stick. Solved from the table's turn
+      rate; 0 for a multirotor, which yaws with a key instead. */
+  bankMax: number;
   vTransStart: number;
   vTransEnd: number;
 };
@@ -112,6 +115,14 @@ export function deriveAirframe(s: AirframeSpec): Airframe {
       liftThrustMax: G * LIFT_TWR,
       tiltMax: TILT_MAX,
       tiltCruise: TILT_MAX,
+      /* A banked turn's rate is omega = G * tan(phi) / v, so the bank that
+         delivers the table's turn rate AT CRUISE is atan(turn * cruise / G)
+         — 49.4 degrees for the Cyclops. Solved rather than typed, like
+         everything else here, and it is what finally gives `turn` a
+         meaning for an airframe that has no rudder key. The rate falling
+         off as the aircraft goes faster is not a loss of authority, it is
+         what a real banked turn does. */
+      bankMax: Math.atan((s.turn * s.speed) / G),
       vTransStart: vStall * TRANS_START,
       vTransEnd: vStall * TRANS_END,
     };
@@ -128,6 +139,7 @@ export function deriveAirframe(s: AirframeSpec): Airframe {
     liftThrustMax: G * QUAD_TWR,
     tiltMax: TILT_MAX,
     tiltCruise: Math.atan((s.speed * s.speed * CD) / G),
+    bankMax: 0, // a multirotor banks to strafe, and that is capped by tiltMax
     vTransStart: 0,
     vTransEnd: 0,
   };
@@ -327,13 +339,24 @@ function stepWing(s: FlightState, a: Airframe, c: Controls, h: number, airspeed:
   /* Roll is positive-right, the same convention the multirotor's
      `rx * Math.sin(s.roll)` above already uses. steer is 1 for A, which
      is left, so it banks left — and the multirotor's `yaw += steer *
-     turn` turns left on the same key. One set of controls, two airframes. */
-  const wantRoll = -c.steer * 0.62;
+     turn` turns left on the same key. One set of controls, two airframes.
+
+     bankMax is solved from the fleet table's turn rate, so holding the
+     key at cruise delivers exactly the rate the table advertises. */
+  const wantRoll = -c.steer * a.bankMax;
   s.roll = approach(s.roll, wantRoll, 2.2, h);
 
   /* ---- lift, trimmed to hold the commanded climb, clamped at CLmax -- */
+  /* The same drag feedforward the multirotor's climb controller carries,
+     and for the same reason: drag opposes the full 3D velocity, so a
+     climbing aircraft pays ay = -CD * v * vy, and the proportional term
+     cannot cover it because it goes to zero exactly as vy reaches the
+     target. Left out, the Cyclops settles around 28 against a published
+     30. Adding back the drag it will be fighting at that rate puts the
+     equilibrium ON wantClimb: the (wantClimb - vy) factor then cancels
+     out of both sides. Inert whenever no climb is commanded. */
   const wantClimb = c.lift * a.climb;
-  const climbAccel = (wantClimb - s.vy) * 0.9;
+  const climbAccel = a.CD * airspeed * wantClimb + (wantClimb - s.vy) * 0.9;
   const demand = G + climbAccel;
   const cosRoll = Math.max(0.2, Math.cos(s.roll));
   /* Tilted lift has to be longer to leave the same amount pointing up,
