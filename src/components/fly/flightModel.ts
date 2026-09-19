@@ -134,3 +134,20 @@ export function deriveAirframe(s: AirframeSpec): Airframe {
 }
 
 export const stallSpeed = (a: Airframe) => (a.wing ? Math.sqrt(G / a.CLmax) : 0);
+
+export const clamp01 = (v: number) => (v < 0 ? 0 : v > 1 ? 1 : v);
+
+export const smoothstep = (a: number, b: number, x: number) => {
+  const t = clamp01((x - a) / (b - a));
+  return t * t * (3 - 2 * t);
+};
+
+/* THE TRANSITION IS NOT A STATE. It is this one number, and because it is
+   a function of airspeed rather than of a timer, it runs backwards for
+   free: slow down and the lift rotors come back, which is the whole of
+   back-transition and the reason landing needs no code of its own.
+
+   A multirotor returns 1 always — it has nothing to transition to, and
+   giving it the same call keeps step() free of airframe branches here. */
+export const liftShare = (airspeed: number, a: Airframe) =>
+  a.wing ? 1 - smoothstep(a.vTransStart, a.vTransEnd, airspeed) : 1;

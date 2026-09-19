@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { G, deriveAirframe, stallSpeed, type AirframeSpec } from './flightModel';
+import { G, deriveAirframe, stallSpeed, liftShare, type AirframeSpec } from './flightModel';
 
 /* The three specs from FlyGame's fleet table, copied rather than imported:
    importing FlyGame.tsx would drag three and React into a node test. */
@@ -62,5 +62,51 @@ describe('deriveAirframe — quad', () => {
   it('has no wing', () => {
     expect(a.wing).toBe(false);
     expect(stallSpeed(a)).toBe(0);
+  });
+});
+
+describe('liftShare', () => {
+  const a = deriveAirframe(CYCLOPS);
+
+  it('gives the lift rotors everything below the window', () => {
+    expect(liftShare(0, a)).toBe(1);
+    expect(liftShare(a.vTransStart, a)).toBe(1);
+  });
+
+  it('gives them nothing above it', () => {
+    expect(liftShare(a.vTransEnd, a)).toBe(0);
+    expect(liftShare(999, a)).toBe(0);
+  });
+
+  it('falls monotonically through the window', () => {
+    let prev = 1;
+    for (let v = a.vTransStart; v <= a.vTransEnd; v += 0.5) {
+      const s = liftShare(v, a);
+      expect(s).toBeLessThanOrEqual(prev + 1e-9);
+      prev = s;
+    }
+  });
+
+  /* THE TEST THIS MODULE EXISTS FOR. If the two lift sources ever sum to
+     less than weight, the aircraft sinks in the middle of its transition —
+     the failure that makes tiltrotor sims feel broken, and the one bug in
+     this design most likely to reach a person's screen.
+
+     Written against CLmax, not CL: CL is the coefficient trimmed for
+     cruise, so it only equals weight at 70 u/s and would report a hole
+     that is an artefact of the wrong coefficient. A wing carries its
+     weight anywhere above stall by flying at a higher angle of attack, so
+     what matters is the lift AVAILABLE. */
+  it('never lets total available support fall below weight', () => {
+    for (let v = 0; v <= a.vTransEnd + 20; v += 0.25) {
+      const support = liftShare(v, a) * a.liftThrustMax + a.CLmax * v * v;
+      expect(support).toBeGreaterThan(G);
+    }
+  });
+
+  it('is always 1 for a multirotor, which has nothing to transition to', () => {
+    const q = deriveAirframe(MINI);
+    expect(liftShare(0, q)).toBe(1);
+    expect(liftShare(500, q)).toBe(1);
   });
 });
