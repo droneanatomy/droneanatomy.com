@@ -223,10 +223,25 @@ export function step(s: FlightState, a: Airframe, c: Controls, groundY: number, 
 
   if (s.mode !== 'flying') return; // Task 5 fills in the other modes
 
-  const speed = Math.hypot(s.vx, s.vz);
-  s.liftShare = liftShare(Math.hypot(speed, s.vy), a);
+  const airspeed = Math.hypot(s.vx, s.vy, s.vz);
+  s.liftShare = liftShare(airspeed, a);
 
+  /* The two airframes write this frame's accelerations into s.ax/ay/az and
+     nothing else; everything downstream of a force is shared. */
+  if (a.wing) stepWing(s, a, c, h, airspeed);
+  else stepQuad(s, a, c, h, airspeed);
+
+  integrate(s, a, h, groundY);
+}
+
+/* ============================================================
+   The multirotor.
+   ============================================================ */
+function stepQuad(s: FlightState, a: Airframe, c: Controls, h: number, airspeed: number) {
   /* ---- yaw -------------------------------------------------------- */
+  /* A multirotor turns because a key said so: yaw is a direct rate
+     command, independent of where the craft is actually going. The wing
+     below has no such line — see stepWing. */
   s.yaw += c.steer * a.turn * h;
 
   const fx = -Math.sin(s.yaw);
@@ -258,33 +273,127 @@ export function step(s: FlightState, a: Airframe, c: Controls, groundY: number, 
      climbing at that rate, so the equilibrium lands ON wantClimb instead
      of below it. It uses this frame's incoming speed, one step stale,
      which is accurate enough at 60 Hz and costs nothing to compute. */
-  const v = Math.hypot(s.vx, s.vy, s.vz);
   const wantClimb = c.lift * a.climb;
-  const climbDragFF = a.CD * v * wantClimb;
+  const climbDragFF = a.CD * airspeed * wantClimb;
   const climbAccel = climbDragFF + (wantClimb - s.vy) * 1.6;
   const lean = Math.max(0.3, Math.cos(s.pitch) * Math.cos(s.roll));
   const thrust = Math.min(a.thrustMax, Math.max(0, (G + climbAccel) / lean));
 
-  let ax = (fx * Math.sin(s.pitch) + rx * Math.sin(s.roll)) * thrust;
-  let az = (fz * Math.sin(s.pitch) + rz * Math.sin(s.roll)) * thrust;
-  let ay = thrust * lean - G;
+  s.ax = (fx * Math.sin(s.pitch) + rx * Math.sin(s.roll)) * thrust;
+  s.az = (fz * Math.sin(s.pitch) + rz * Math.sin(s.roll)) * thrust;
+  s.ay = thrust * lean - G;
+}
 
+/* ============================================================
+   The wing.
+
+   A WING IS NOT A QUAD WITH DIFFERENT NUMBERS.
+
+   Three things make it different and all three are here:
+
+   LIFT COMES FROM SPEED, not from a rotor. It acts along the aircraft's
+   own up vector, so banking tilts it and the horizontal component turns
+   the aircraft. That is a real coordinated turn and it is why the wing
+   needs no rudder key — the bank IS the turn.
+
+   THE ANGLE OF ATTACK IS TRIMMED FOR YOU, up to CLmax. That clamp is the
+   stall: ask for more lift than the wing can make at this speed and you
+   simply do not get it, and the aircraft sinks. Nothing anywhere says
+   "if airspeed < stall then". It falls out.
+
+   THE AUTOTHROTTLE IS AN ASSIST and is marked as one. It converts the
+   speed demand into thrust, which is what lets the published cruise and
+   boost speeds be steady states a pilot reaches by holding one key.
+   ============================================================ */
+function stepWing(s: FlightState, a: Airframe, c: Controls, h: number, airspeed: number) {
+  const fx = -Math.sin(s.yaw);
+  const fz = -Math.cos(s.yaw);
+  const rx = Math.cos(s.yaw);
+  const rz = -Math.sin(s.yaw);
+
+  /* ---- autothrottle ------------------------------------------------ */
+  /* The thrust REQUIRED to hold the target is known exactly — it is the
+     drag there, and CD was solved from the fleet table — so ask for it
+     directly and leave the proportional term only the gap to close. A
+     bare gain cannot do this: at the target the error is zero, so the
+     thrust is zero, and the aircraft settles wherever gain and drag
+     happen to balance — for the Cyclops that is 66.7, not the 70 printed
+     on the page. The feedforward makes both published speeds exact fixed
+     points of this loop rather than numbers it approaches from below. */
+  const target = c.throttle > 0 ? (c.boost ? a.top : a.cruise) : c.throttle < 0 ? 0 : a.cruise * 0.6;
+  const thrust = Math.max(0, Math.min(a.thrustMax, a.CD * target * target + (target - airspeed) * 0.5));
+
+  /* ---- bank, and the turn it produces ------------------------------ */
+  /* Roll is positive-right, the same convention the multirotor's
+     `rx * Math.sin(s.roll)` above already uses. steer is 1 for A, which
+     is left, so it banks left — and the multirotor's `yaw += steer *
+     turn` turns left on the same key. One set of controls, two airframes. */
+  const wantRoll = -c.steer * 0.62;
+  s.roll = approach(s.roll, wantRoll, 2.2, h);
+
+  /* ---- lift, trimmed to hold the commanded climb, clamped at CLmax -- */
+  const wantClimb = c.lift * a.climb;
+  const climbAccel = (wantClimb - s.vy) * 0.9;
+  const demand = G + climbAccel;
+  const cosRoll = Math.max(0.2, Math.cos(s.roll));
+  /* Tilted lift has to be longer to leave the same amount pointing up,
+     which is why a banked turn holds its altitude instead of descending. */
+  const needed = demand / cosRoll;
+
+  /* The two lift sources SPLIT the demand rather than both answering it
+     in full. Answering it twice is what makes a tiltrotor balloon on its
+     way through the window with the stick centred — the mirror image of
+     the hole liftShare() exists to prevent, and just as visible. The
+     wing can always cover its share: liftShare's own invariant, that
+     share * liftThrustMax + CLmax * v^2 exceeds weight, says so. */
+  const v2 = airspeed * airspeed;
+  const wingShare = (1 - s.liftShare) * needed;
+  const CLcmd = v2 > 1 ? Math.min(a.CLmax, Math.max(0, wingShare / v2)) : 0;
+  const wingLift = CLcmd * v2;
+
+  /* The lift rotors, while the blend still gives them a share. */
+  const rotorLift = s.liftShare * Math.min(a.liftThrustMax, Math.max(0, demand));
+
+  s.ax = fx * thrust + rx * Math.sin(s.roll) * wingLift;
+  s.az = fz * thrust + rz * Math.sin(s.roll) * wingLift;
+  s.ay = wingLift * cosRoll + rotorLift - G;
+
+  /* The nose follows the flight path, which is what makes a stall LOOK
+     like one: lift runs out, the aircraft sinks, and the nose drops
+     because the aircraft is now going downwards. */
+  const path = Math.atan2(-s.vy, Math.max(1, Math.hypot(s.vx, s.vz)));
+  s.pitch = approach(s.pitch, path, 2.5, h);
+
+  /* Yaw follows the velocity for a wing — it goes where it is pointed
+     only because it is turning, never because a key said so. */
+  if (Math.hypot(s.vx, s.vz) > 5) s.yaw = Math.atan2(-s.vx, -s.vz);
+}
+
+/* ============================================================
+   Drag, the wall, integration and the ground — shared, because they are
+   downstream of a force and a force does not care what made it.
+
+   Takes the airframe: Task 5 hangs the touchdown verdict off the ground
+   clamp below, and that verdict is airframe-dependent.
+   ============================================================ */
+function integrate(s: FlightState, a: Airframe, h: number, groundY: number) {
   /* ---- drag, always opposing the way it is actually going --------- */
+  const v = Math.hypot(s.vx, s.vy, s.vz);
   if (v > 0.001) {
     const d = a.CD * v * v;
-    ax -= (s.vx / v) * d;
-    ay -= (s.vy / v) * d;
-    az -= (s.vz / v) * d;
+    s.ax -= (s.vx / v) * d;
+    s.ay -= (s.vy / v) * d;
+    s.az -= (s.vz / v) * d;
   }
 
   /* ---- the wall --------------------------------------------------- */
   const over = Math.abs(s.x) - WALL_X;
-  if (over > 0) ax -= Math.sign(s.x) * over * 4;
+  if (over > 0) s.ax -= Math.sign(s.x) * over * 4;
 
   /* ---- integrate --------------------------------------------------- */
-  s.vx += ax * h;
-  s.vy += ay * h;
-  s.vz += az * h;
+  s.vx += s.ax * h;
+  s.vy += s.ay * h;
+  s.vz += s.az * h;
   s.x += s.vx * h;
   s.y += s.vy * h;
   s.z += s.vz * h;

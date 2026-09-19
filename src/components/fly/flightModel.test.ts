@@ -172,3 +172,120 @@ describe('step — multirotor', () => {
     expect(s.y).toBeGreaterThanOrEqual(0);
   });
 });
+
+describe('step — wing', () => {
+  const a = deriveAirframe(CYCLOPS);
+
+  it('cannot hover: at rest with the rotors down it falls', () => {
+    const s = newState(0, 300, 0);
+    s.mode = 'flying';
+    /* Above the transition window, so the lift rotors are out of it — the
+       aircraft is being asked to hang on its wing at zero airspeed. */
+    s.liftShare = 0;
+    const before = s.vy;
+    step(s, { ...a, vTransStart: -2, vTransEnd: -1 }, NEUTRAL, 0, 1 / 60);
+    expect(s.vy).toBeLessThan(before);
+    expect(s.vy / (1 / 60)).toBeCloseTo(-G, 0);
+  });
+
+  it('holds altitude at cruise', () => {
+    const s = newState(0, 300, 0);
+    s.mode = 'flying';
+    s.vz = -CYCLOPS.speed; // yaw 0 faces -z
+    for (let i = 0; i < 60 * 8; i++) step(s, a, { ...NEUTRAL, throttle: 1 }, 0, 1 / 60);
+    expect(Math.abs(s.y - 300)).toBeLessThan(6);
+  });
+
+  it('settles at the published cruise and boost speeds', () => {
+    expect(speedOf(settle(a, { throttle: 1 }))).toBeCloseTo(CYCLOPS.speed, 0);
+    expect(speedOf(settle(a, { throttle: 1, boost: true }))).toBeCloseTo(CYCLOPS.boost, 0);
+  });
+
+  it('pays for a climb in airspeed', () => {
+    const s = settle(a, { throttle: 1 }, 40);
+    const cruising = speedOf(s);
+    for (let i = 0; i < 60 * 5; i++) step(s, a, { ...NEUTRAL, throttle: 1, lift: 1 }, 0, 1 / 60);
+    expect(speedOf(s)).toBeLessThan(cruising - 2);
+    expect(s.vy).toBeGreaterThan(3);
+  });
+
+  it('sinks below the stall however hard it is asked to climb', () => {
+    const s = newState(0, 300, 0);
+    s.mode = 'flying';
+    s.vz = -(stallSpeed(a) * 0.8);
+    s.liftShare = 0;
+    const slow = { ...a, vTransStart: -2, vTransEnd: -1 };
+    for (let i = 0; i < 60 * 2; i++) step(s, slow, { ...NEUTRAL, lift: 1 }, 0, 1 / 60);
+    expect(s.vy).toBeLessThan(-1);
+  });
+
+  it('turns by banking, without a rudder key', () => {
+    const s = settle(a, { throttle: 1 }, 20);
+    const yaw0 = s.yaw;
+    for (let i = 0; i < 60 * 3; i++) step(s, a, { ...NEUTRAL, throttle: 1, steer: 1 }, 0, 1 / 60);
+    expect(Math.abs(s.roll)).toBeGreaterThan(0.2);
+    expect(Math.abs(s.yaw - yaw0)).toBeGreaterThan(0.5);
+  });
+
+  it('does not strafe', () => {
+    const s = settle(a, { throttle: 1, slide: 1 }, 10);
+    expect(Math.abs(s.vx)).toBeLessThan(2);
+  });
+
+  /* THE SIGN TEST. Stated without reference to any key or to the sign of
+     yaw, so it cannot be satisfied by flipping a convention: bank one way
+     and the aircraft must end up travelling that way. Starting from yaw 0
+     the craft faces -z, so its own right is +x.
+
+     Roll is positive-right throughout this module — the same convention
+     the multirotor's `rx * sin(roll)` already uses — so a positive roll
+     must produce motion towards +x, and a negative roll towards -x. If
+     this ever fails, the fix is the sign in stepWing, never here. */
+  it('goes the way it banks', () => {
+    const right = settle(a, { throttle: 1 }, 20);
+    for (let i = 0; i < 60 * 3; i++) step(right, a, { ...NEUTRAL, throttle: 1, steer: -1 }, 0, 1 / 60);
+    expect(right.roll).toBeGreaterThan(0.2); // banked right
+    expect(right.vx).toBeGreaterThan(5); // and is now going right
+
+    const left = settle(a, { throttle: 1 }, 20);
+    for (let i = 0; i < 60 * 3; i++) step(left, a, { ...NEUTRAL, throttle: 1, steer: 1 }, 0, 1 / 60);
+    expect(left.roll).toBeLessThan(-0.2);
+    expect(left.vx).toBeLessThan(-5);
+  });
+
+  /* Both airframes must answer the same key with the same turn, or the
+     fleet flies with two different sets of controls. */
+  it('turns the same way a multirotor does for the same key', () => {
+    const q = deriveAirframe(MINI);
+    const sq = settle(q, { throttle: 1, steer: 1 }, 3);
+    const sw = settle(a, { throttle: 1 }, 20);
+    const yaw0 = sw.yaw;
+    for (let i = 0; i < 60 * 3; i++) step(sw, a, { ...NEUTRAL, throttle: 1, steer: 1 }, 0, 1 / 60);
+    expect(Math.sign(sw.yaw - yaw0)).toBe(Math.sign(sq.yaw));
+  });
+
+  it('survives a frame the length of a tab refocus without exploding', () => {
+    const s = newState(0, 300, 0);
+    s.mode = 'flying';
+    s.vz = -CYCLOPS.speed;
+    step(s, a, { ...NEUTRAL, throttle: 1, steer: 1, lift: 1 }, 0, 12);
+    expect(Number.isFinite(s.x + s.y + s.z + s.vx + s.vy + s.vz + s.yaw + s.pitch + s.roll)).toBe(true);
+    expect(s.y).toBeGreaterThanOrEqual(0);
+  });
+
+  /* The mirror image of Task 2's "never below weight": the two lift
+     sources must not BOTH carry the weight while the blend has them both
+     switched on, or the aircraft balloons on its way through the window
+     with the stick centred. */
+  it('does not balloon through the transition', () => {
+    const s = newState(0, 300, 0);
+    s.mode = 'flying';
+    let highest = s.y;
+    for (let i = 0; i < 60 * 12; i++) {
+      step(s, a, { ...NEUTRAL, throttle: 1 }, 0, 1 / 60);
+      if (s.y > highest) highest = s.y;
+    }
+    expect(speedOf(s)).toBeGreaterThan(a.vTransEnd); // it did go through
+    expect(highest - 300).toBeLessThan(8);
+  });
+});
