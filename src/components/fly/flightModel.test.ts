@@ -304,12 +304,18 @@ describe('step — wing', () => {
     if (d > Math.PI) d -= 2 * Math.PI;
     if (d < -Math.PI) d += 2 * Math.PI;
 
-    /* Still at cruise, but not to the last unit: yaw is slaved to the
-       velocity one frame late, so in a hard turn the bank's horizontal
-       lift lags the flight path slightly and leaks a little thrust
-       forward. Measured 71.46 at 60Hz and 72.85 at 30Hz. Asserted at the
-       size it really is rather than hidden behind a loose tolerance. */
-    expect(Math.abs(Math.hypot(s.vx, s.vz) - CYCLOPS.speed)).toBeLessThan(2);
+    /* Still at cruise. Straight and level the wing holds 70.000 at every
+       refresh rate; a sustained full-stick turn leaves a small residual
+       that scales with dt, because a turn is a curve and the integrator
+       walks it in straight segments. Measured 70.494 at 60Hz against
+       70.980 at 30Hz (70.207 at 144Hz, 71.461 at 20Hz).
+
+       The bound is 0.75 — about 1.5x the residual this test actually
+       sees, and comfortably under the 1.46 that the same 60Hz run
+       produced while yaw was computed after the forces instead of before
+       them. So it is also the regression test for that line's placement:
+       move it back and this fails. */
+    expect(Math.abs(Math.hypot(s.vx, s.vz) - CYCLOPS.speed)).toBeLessThan(0.75);
     expect(d * 60).toBeCloseTo(CYCLOPS.turn, 1);
   });
 

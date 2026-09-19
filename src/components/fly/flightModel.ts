@@ -318,6 +318,20 @@ function stepQuad(s: FlightState, a: Airframe, c: Controls, h: number, airspeed:
    boost speeds be steady states a pilot reaches by holding one key.
    ============================================================ */
 function stepWing(s: FlightState, a: Airframe, c: Controls, h: number, airspeed: number) {
+  /* Yaw follows the velocity for a wing — it goes where it is pointed
+     only because it is turning, never because a key said so.
+
+     FIRST, before any force reads it. Every other quantity in here is
+     built from this frame's velocity, and yaw must be too: computed after
+     the forces instead, it describes the velocity from before the last
+     integrate, so in a hard turn the craft's right vector trails the
+     flight path and the bank's horizontal lift leaks a component forward.
+     That leak acts as free thrust, and since it scales with dt the
+     autothrottle trims to a different cruise speed on every refresh rate
+     — 71.46 u/s at 60Hz against 72.85 at 30Hz. From here the spread is
+     70.49 against 70.98. */
+  if (Math.hypot(s.vx, s.vz) > 5) s.yaw = Math.atan2(-s.vx, -s.vz);
+
   const fx = -Math.sin(s.yaw);
   const fz = -Math.cos(s.yaw);
   const rx = Math.cos(s.yaw);
@@ -386,10 +400,6 @@ function stepWing(s: FlightState, a: Airframe, c: Controls, h: number, airspeed:
      because the aircraft is now going downwards. */
   const path = Math.atan2(-s.vy, Math.max(1, Math.hypot(s.vx, s.vz)));
   s.pitch = approach(s.pitch, path, 2.5, h);
-
-  /* Yaw follows the velocity for a wing — it goes where it is pointed
-     only because it is turning, never because a key said so. */
-  if (Math.hypot(s.vx, s.vz) > 5) s.yaw = Math.atan2(-s.vx, -s.vz);
 }
 
 /* ============================================================
