@@ -166,6 +166,19 @@ export const liftShare = (airspeed: number, a: Airframe) =>
 
 export type Mode = 'grounded' | 'spooling' | 'flying' | 'lost';
 
+/* Long enough that the aircraft is visibly getting ready rather than
+   leaping. This beat IS the takeoff: a craft that unsticks the instant a
+   key goes down reads as a toy, however good the model under it is. */
+export const SPOOL_SEC = 1.2;
+export const LOST_SEC = 1.5;
+
+/* How gently, and how level, an arrival has to be. */
+const LAND_SINK = 4;
+const LAND_TILT = (12 * Math.PI) / 180;
+
+export const touchdownVerdict = (s: FlightState, a: Airframe): 'landed' | 'lost' =>
+  -s.vy < LAND_SINK && Math.abs(s.pitch) < LAND_TILT && Math.abs(s.roll) < LAND_TILT ? 'landed' : 'lost';
+
 export type Controls = {
   /** 1 = W, -1 = S. A SPEED demand, not a thrust lever: the autothrottle
       below turns it into thrust, which is the assist that lets the fleet
@@ -228,20 +241,57 @@ const MAX_DT = 0.1;
 const approach = (current: number, target: number, rate: number, dt: number) =>
   current + (target - current) * (1 - Math.exp(-dt * rate));
 
+const setMode = (s: FlightState, m: Mode) => {
+  s.mode = m;
+  s.since = 0;
+};
+
 export function step(s: FlightState, a: Airframe, c: Controls, groundY: number, dt: number): void {
   const h = Math.min(MAX_DT, Math.max(0, dt));
   if (h === 0) return;
   s.since += h;
 
-  if (s.mode !== 'flying') return; // Task 5 fills in the other modes
+  if (s.mode === 'grounded') {
+    s.rotor = 0;
+    s.vx = s.vy = s.vz = 0;
+    s.pitch = s.roll = 0;
+    s.y = groundY;
+    if (c.start) setMode(s, 'spooling');
+    return;
+  }
+
+  if (s.mode === 'spooling') {
+    /* Ramp rotor 0..1 purely for feel and the HUD. No thrust is computed
+       here at all — the craft stays glued to the ground for the whole
+       beat and only starts flying, at full rotor, the frame after this
+       one ends. (Thrust is NOT scaled by rotor once flying starts: every
+       test above that jumps straight into 'flying' does so without ever
+       touching rotor, so gating thrust on it would zero their thrust and
+       take the whole regression suite down with it. See the ground-effect
+       comment in stepQuad for the rest of this reasoning.) */
+    s.rotor = clamp01(s.since / SPOOL_SEC);
+    s.y = groundY;
+    if (s.rotor >= 1) setMode(s, 'flying');
+    return;
+  }
+
+  if (s.mode === 'lost') {
+    s.rotor = 0;
+    s.vx = s.vy = s.vz = 0;
+    s.y = groundY;
+    if (s.since >= LOST_SEC) setMode(s, 'grounded');
+    return;
+  }
+
+  if (s.mode !== 'flying') return;
 
   const airspeed = Math.hypot(s.vx, s.vy, s.vz);
   s.liftShare = liftShare(airspeed, a);
 
   /* The two airframes write this frame's accelerations into s.ax/ay/az and
      nothing else; everything downstream of a force is shared. */
-  if (a.wing) stepWing(s, a, c, h, airspeed);
-  else stepQuad(s, a, c, h, airspeed);
+  if (a.wing) stepWing(s, a, c, h, airspeed, groundY);
+  else stepQuad(s, a, c, h, airspeed, groundY);
 
   integrate(s, a, h, groundY);
 }
@@ -249,7 +299,7 @@ export function step(s: FlightState, a: Airframe, c: Controls, groundY: number, 
 /* ============================================================
    The multirotor.
    ============================================================ */
-function stepQuad(s: FlightState, a: Airframe, c: Controls, h: number, airspeed: number) {
+function stepQuad(s: FlightState, a: Airframe, c: Controls, h: number, airspeed: number, groundY: number) {
   /* ---- yaw -------------------------------------------------------- */
   /* A multirotor turns because a key said so: yaw is a direct rate
      command, independent of where the craft is actually going. The wing
@@ -289,7 +339,22 @@ function stepQuad(s: FlightState, a: Airframe, c: Controls, h: number, airspeed:
   const climbDragFF = a.CD * airspeed * wantClimb;
   const climbAccel = climbDragFF + (wantClimb - s.vy) * 1.6;
   const lean = Math.max(0.3, Math.cos(s.pitch) * Math.cos(s.roll));
-  const thrust = Math.min(a.thrustMax, Math.max(0, (G + climbAccel) / lean));
+
+  /* GROUND EFFECT. A rotor close to the ground works against its own
+     reflected downwash and gets more thrust for nothing, which is why a
+     real quad feels like it unsticks rather than climbs. Two lines.
+
+     NOT also scaled by rotor^2: rotor is pinned at exactly 1 for the
+     entire time this function can run. The 'spooling' branch above
+     returns before stepQuad is ever called, so rotor never takes any
+     other value while a force is being computed — squaring it here would
+     be decoration, not a real gate. Worse than decoration, actually: every
+     test that sets s.mode = 'flying' directly skips spooling and leaves
+     s.rotor at newState's default of 0, so gating thrust on rotor^2 would
+     zero their thrust and fail the whole existing suite. */
+  const agl = s.y - groundY;
+  const ge = agl < a.span ? 1 + 0.12 * (1 - agl / a.span) : 1;
+  const thrust = Math.min(a.thrustMax, Math.max(0, (G + climbAccel) / lean)) * ge;
 
   s.ax = (fx * Math.sin(s.pitch) + rx * Math.sin(s.roll)) * thrust;
   s.az = (fz * Math.sin(s.pitch) + rz * Math.sin(s.roll)) * thrust;
@@ -317,7 +382,7 @@ function stepQuad(s: FlightState, a: Airframe, c: Controls, h: number, airspeed:
    speed demand into thrust, which is what lets the published cruise and
    boost speeds be steady states a pilot reaches by holding one key.
    ============================================================ */
-function stepWing(s: FlightState, a: Airframe, c: Controls, h: number, airspeed: number) {
+function stepWing(s: FlightState, a: Airframe, c: Controls, h: number, airspeed: number, groundY: number) {
   /* Yaw follows the velocity for a wing — it goes where it is pointed
      only because it is turning, never because a key said so.
 
@@ -407,8 +472,12 @@ function stepWing(s: FlightState, a: Airframe, c: Controls, h: number, airspeed:
   const CLcmd = v2 > 1 ? Math.min(a.CLmax, Math.max(0, wingShare / v2)) : 0;
   const wingLift = CLcmd * v2;
 
-  /* The lift rotors, while the blend still gives them a share. */
-  const rotorLift = s.liftShare * Math.min(a.liftThrustMax, Math.max(0, demand));
+  /* The lift rotors, while the blend still gives them a share.
+     GROUND EFFECT, same two lines as the quad's — see the comment there
+     for why this is not also scaled by rotor^2. */
+  const agl = s.y - groundY;
+  const ge = agl < a.span ? 1 + 0.12 * (1 - agl / a.span) : 1;
+  const rotorLift = s.liftShare * Math.min(a.liftThrustMax, Math.max(0, demand)) * ge;
 
   s.ax = fx * thrust + rx * Math.sin(s.roll) * wingLift;
   s.az = fz * thrust + rz * Math.sin(s.roll) * wingLift;
@@ -451,8 +520,20 @@ function integrate(s: FlightState, a: Airframe, h: number, groundY: number) {
   s.z += s.vz * h;
 
   /* ---- the ground -------------------------------------------------- */
+  /* -0.2 rather than 0: this only fires for a craft that just ARRIVED
+     while flying, fast enough that it did not merely settle a few
+     hundredths of a unit from float drift. A craft already resting here
+     is not in this branch at all — the frame it lands, its mode stops
+     being 'flying', and step() routes it to the grounded/spooling/lost
+     branches above instead, which return before integrate() is ever
+     called again. So there is no repeat-verdict case to guard here; the
+     mode switch already took the craft out of this code path. */
   if (s.y < groundY) {
     s.y = groundY;
+    if (s.mode === 'flying' && s.vy < -0.2) {
+      setMode(s, touchdownVerdict(s, a) === 'landed' ? 'grounded' : 'lost');
+      return;
+    }
     if (s.vy < 0) s.vy = 0;
   }
   if (s.y > 900) {

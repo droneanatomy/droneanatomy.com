@@ -370,3 +370,81 @@ describe('step — wing', () => {
     expect(300 - lowest).toBeLessThan(1e-6);
   });
 });
+
+import { LOST_SEC, SPOOL_SEC, touchdownVerdict } from './flightModel';
+
+describe('modes', () => {
+  const a = deriveAirframe(MINI);
+
+  it('ignores the stick on the ground until start is pressed', () => {
+    const s = newState(0, 0, 0);
+    for (let i = 0; i < 120; i++) step(s, a, { ...NEUTRAL, throttle: 1, lift: 1 }, 0, 1 / 60);
+    expect(s.mode).toBe('grounded');
+    expect(s.y).toBe(0);
+    expect(s.rotor).toBe(0);
+  });
+
+  it('spools before it moves', () => {
+    const s = newState(0, 0, 0);
+    step(s, a, { ...NEUTRAL, start: true }, 0, 1 / 60);
+    expect(s.mode).toBe('spooling');
+    for (let i = 0; i < Math.floor(SPOOL_SEC * 60) - 2; i++) step(s, a, { ...NEUTRAL, lift: 1 }, 0, 1 / 60);
+    expect(s.mode).toBe('spooling');
+    expect(s.y).toBe(0);
+    expect(s.rotor).toBeGreaterThan(0.5);
+    expect(s.rotor).toBeLessThan(1);
+  });
+
+  it('is flying, with the rotors up, once the spool finishes', () => {
+    const s = newState(0, 0, 0);
+    step(s, a, { ...NEUTRAL, start: true }, 0, 1 / 60);
+    for (let i = 0; i < Math.ceil(SPOOL_SEC * 60) + 2; i++) step(s, a, { ...NEUTRAL, lift: 1 }, 0, 1 / 60);
+    expect(s.mode).toBe('flying');
+    expect(s.rotor).toBe(1);
+  });
+
+  it('counts a slow level arrival as a landing', () => {
+    const s = newState(0, 0, 0);
+    s.vy = -3;
+    expect(touchdownVerdict(s, a)).toBe('landed');
+  });
+
+  it('counts a fast arrival as a crash', () => {
+    const s = newState(0, 0, 0);
+    s.vy = -9;
+    expect(touchdownVerdict(s, a)).toBe('lost');
+  });
+
+  it('counts a banked arrival as a crash however gently it lands', () => {
+    const s = newState(0, 0, 0);
+    s.vy = -1;
+    s.roll = 0.4; // ~23 degrees
+    expect(touchdownVerdict(s, a)).toBe('lost');
+  });
+
+  it('returns to grounded after the lost beat', () => {
+    const s = newState(0, 0, 0);
+    s.mode = 'lost';
+    s.since = 0;
+    for (let i = 0; i < Math.ceil(LOST_SEC * 60) + 2; i++) step(s, a, NEUTRAL, 0, 1 / 60);
+    expect(s.mode).toBe('grounded');
+    expect(s.rotor).toBe(0);
+  });
+
+  /* NOT vy = -2: measured by probe, a MINI recovers from that on its own
+     — the rate-hold hover controller plus ground effect's own cushioning
+     (both real, both already covered by other tests) arrest a -2 sink
+     around y=4.8 and it never reaches the ground at all, so the mode
+     machinery below would never even be exercised. -20 clears the
+     recovery envelope (empirically the cutoff sits between -14 and -16
+     for this airframe from this height) with comfortable margin, so
+     ground contact — and therefore a verdict — is guaranteed regardless
+     of small future tuning changes to the hover gains. */
+  it('picks up a verdict instead of getting stuck once it reaches the ground while flying', () => {
+    const s = newState(0, 6, 0);
+    s.mode = 'flying';
+    s.vy = -20;
+    for (let i = 0; i < 60 * 8; i++) step(s, a, NEUTRAL, 0, 1 / 60);
+    expect(['grounded', 'lost']).toContain(s.mode);
+  });
+});
