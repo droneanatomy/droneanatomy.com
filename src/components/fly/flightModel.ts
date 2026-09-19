@@ -380,9 +380,28 @@ function stepWing(s: FlightState, a: Airframe, c: Controls, h: number, airspeed:
   /* The two lift sources SPLIT the demand rather than both answering it
      in full. Answering it twice is what makes a tiltrotor balloon on its
      way through the window with the stick centred — the mirror image of
-     the hole liftShare() exists to prevent, and just as visible. The
-     wing can always cover its share: liftShare's own invariant, that
-     share * liftThrustMax + CLmax * v^2 exceeds weight, says so. */
+     the hole liftShare() exists to prevent, and just as visible.
+
+     The split is only safe while the wing can actually cover the part
+     handed to it, and the condition for that is
+
+         CLmax * v^2  >=  (1 - liftShare(v)) * G
+
+     What guarantees it is TRANS_END being greater than 1: the window
+     CLOSES ABOVE THE STALL, so by the time liftShare reaches 0 and the
+     wing is asked for the whole weight, it is already flying fast enough
+     to make it. Inside the window it is asked for strictly less than the
+     weight while flying at a speed that is already most of the stall
+     speed, and the margin is comfortable — the tightest point in the
+     whole sweep is 14.4 of slack out of a weight of 45.
+
+     NOT implied by liftShare's own invariant, which is a statement about
+     the lift AVAILABLE from both sources and is weaker than this. That
+     invariant gives CLmax * v^2 > G - liftShare * liftThrustMax, and with
+     liftThrustMax = 1.6G the subtracted term is LARGER than the
+     liftShare * G this needs, so the bound it yields is looser, not
+     tighter: at liftShare 0.5 it promises only 9 where 22.5 is required.
+     TRANS_END is what does the work here, so tune that, not this. */
   const v2 = airspeed * airspeed;
   const wingShare = (1 - s.liftShare) * needed;
   const CLcmd = v2 > 1 ? Math.min(a.CLmax, Math.max(0, wingShare / v2)) : 0;

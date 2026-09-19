@@ -39,6 +39,24 @@ describe('deriveAirframe — wing', () => {
   it('gives the lift rotors authority over weight, so it can climb in the hover', () => {
     expect(a.liftThrustMax).toBeGreaterThan(G);
   });
+
+  /* bankMax is solved from the fleet table and has no ceiling of its own,
+     so the table can ask for a bank the wing cannot hold. A level banked
+     turn needs lift G / cos(phi), and the most the wing can make at cruise
+     is CLmax * cruise^2, which is exactly CLmax/CL times weight — so the
+     steepest SUSTAINABLE bank is acos(CL / CLmax), 62.96 degrees here.
+     Past it the CLmax clamp bites and the aircraft descends through the
+     very turn its fleet entry advertises.
+
+     Equivalently the table must keep turn * cruise under G * tan(that) =
+     88.2. The Cyclops sits at 52.5. Asserted rather than clamped, so a
+     new airframe fails loudly here instead of quietly under-turning; any
+     wing added to the fleet belongs in this assertion. */
+  it('cannot ask for a bank its own wing cannot hold', () => {
+    const sustainable = Math.acos(a.CL / a.CLmax);
+    expect(a.bankMax).toBeLessThan(sustainable);
+    expect(CYCLOPS.turn * CYCLOPS.speed).toBeLessThan(G * Math.tan(sustainable));
+  });
 });
 
 describe('deriveAirframe — quad', () => {
@@ -243,9 +261,10 @@ describe('step — wing', () => {
     expect(Math.abs(s.vx)).toBeLessThan(2);
   });
 
-  /* THE SIGN TEST. Stated without reference to any key or to the sign of
-     yaw, so it cannot be satisfied by flipping a convention: bank one way
-     and the aircraft must end up travelling that way. Starting from yaw 0
+  /* THE SIGN TEST. It names a key, but it asserts nothing about the sign
+     of steer or of yaw — only that the bank and the resulting motion
+     agree — so it cannot be satisfied by flipping a convention: bank one
+     way and the aircraft must end up travelling that way. Starting from yaw 0
      the craft faces -z, so its own right is +x.
 
      Roll is positive-right throughout this module — the same convention
@@ -319,19 +338,35 @@ describe('step — wing', () => {
     expect(d * 60).toBeCloseTo(CYCLOPS.turn, 1);
   });
 
-  /* The mirror image of Task 2's "never below weight": the two lift
-     sources must not BOTH carry the weight while the blend has them both
-     switched on, or the aircraft balloons on its way through the window
-     with the stick centred. */
-  it('does not balloon through the transition', () => {
+  /* THE TEST THE SPLIT EXISTS FOR, and it has to watch BOTH directions.
+     Summing the two lift sources balloons the aircraft through the
+     window; handing over too little sags it, which is the hole
+     liftShare() was written to prevent. Tracking only the peak would let
+     a hole through silently, so this tracks the floor too.
+
+     The tolerance is 1e-6 either way, which is not a comfort margin: with
+     the stick centred the two sources sum to exactly the weight, so the
+     only deviation is the rounding in CLcmd's divide-then-multiply by
+     v^2 — under a ulp of G per frame, and measured at 1.9e-16 of vy
+     across the whole sweep, with y never leaving 300.0 to ten decimals.
+     A real imbalance would be a percentage of weight, which is metres.
+
+     Task 2's invariant test measures the lift AVAILABLE from both
+     sources. That is no longer what the model commands, so this is the
+     test that describes what actually runs. */
+  it('neither balloons nor sags through the transition', () => {
     const s = newState(0, 300, 0);
     s.mode = 'flying';
     let highest = s.y;
+    let lowest = s.y;
     for (let i = 0; i < 60 * 12; i++) {
       step(s, a, { ...NEUTRAL, throttle: 1 }, 0, 1 / 60);
       if (s.y > highest) highest = s.y;
+      if (s.y < lowest) lowest = s.y;
     }
     expect(speedOf(s)).toBeGreaterThan(a.vTransEnd); // it did go through
-    expect(highest - 300).toBeLessThan(8);
+    expect(s.liftShare).toBe(0); // and came out the far side of the blend
+    expect(highest - 300).toBeLessThan(1e-6);
+    expect(300 - lowest).toBeLessThan(1e-6);
   });
 });
