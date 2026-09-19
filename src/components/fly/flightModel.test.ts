@@ -422,6 +422,40 @@ describe('modes', () => {
     expect(touchdownVerdict(s, a)).toBe('lost');
   });
 
+  it('counts a fast horizontal arrival as a crash for a multirotor, even with gentle sink and level attitude', () => {
+    const s = newState(0, 0, 0);
+    s.vy = -1; // gentle sink
+    s.vx = MINI.boost; // 60 u/s sideways — pitch/roll/vy alone would call this a landing
+    expect(touchdownVerdict(s, a)).toBe('lost');
+  });
+
+  /* THE HOLE THIS ROUND EXISTS TO CLOSE. Before the horizontal-speed
+     term, touchdownVerdict read only sink and attitude, so a wing
+     arriving level and gently sinking but still doing 70 u/s — cruise
+     speed, still wing-borne — counted as a landing. liftShare is set the
+     same way step()'s flying branch sets it every frame (from the
+     actual airspeed), not hand-waved, so this is what a real cruise-speed
+     arrival into rising ground looks like to touchdownVerdict. Run
+     against the pre-fix code (sink/attitude only), this returned
+     'landed' — confirmed before writing the fix, so this is not vacuous. */
+  it('counts a cruise-speed arrival into rising ground as a crash for a wing', () => {
+    const wing = deriveAirframe(CYCLOPS);
+    const s = newState(0, 0, 0);
+    s.vy = -1; // gentle sink
+    s.vx = CYCLOPS.speed; // 70 u/s — cruise, well above vTransEnd
+    s.liftShare = liftShare(Math.hypot(s.vx, s.vy, s.vz), wing);
+    expect(touchdownVerdict(s, wing)).toBe('lost');
+  });
+
+  it('counts a wing that has back-transitioned to vertical flight as able to land', () => {
+    const wing = deriveAirframe(CYCLOPS);
+    const s = newState(0, 0, 0);
+    s.vy = -1; // gentle sink
+    s.vx = 0;
+    s.liftShare = 1; // fully back-transitioned — hover-borne, not wing-borne
+    expect(touchdownVerdict(s, wing)).toBe('landed');
+  });
+
   it('returns to grounded after the lost beat', () => {
     const s = newState(0, 0, 0);
     s.mode = 'lost';

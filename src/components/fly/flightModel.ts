@@ -176,41 +176,89 @@ export const LOST_SEC = 1.5;
 const LAND_SINK = 4;
 const LAND_TILT = (12 * Math.PI) / 180;
 
-export const touchdownVerdict = (s: FlightState, a: Airframe): 'landed' | 'lost' =>
-  -s.vy < LAND_SINK && Math.abs(s.pitch) < LAND_TILT && Math.abs(s.roll) < LAND_TILT ? 'landed' : 'lost';
+/* A slow, LEVEL touchdown is a landing; anything faster or steeper is a
+   crash — and "faster" has to include HORIZONTAL speed, or a 70 u/s
+   arrival into a ridge face reads as a landing because only sink and
+   attitude were ever checked. What "slow enough, horizontally" means is
+   airframe-specific, and each half is an existing derived quantity
+   rather than a new invented number:
 
-/* THE LANDING FLARE, in stepQuad/stepWing: within FLARE_SPANS of the
-   ground, a commanded descent already sinking faster than FLARE_SINK
-   gets pulled back to FLARE_SINK.
+   A WING has exactly one honest way to say it has stopped FLYING: it
+   has back-transitioned onto its lift rotors, which this module already
+   computes as liftShare (1 - smoothstep(vTransStart, vTransEnd, v), a
+   quantity solved from the fleet table via vTransStart/vTransEnd, not
+   typed in). liftShare hits exactly 1 only once airspeed has dropped to
+   vTransStart — checking that is a stronger and more honest statement
+   than any raw speed threshold, because it is the same test the module
+   already uses everywhere else to mean "no longer wing-borne", and it
+   is why the pitch/attitude check above is even meaningful for a wing:
+   a fast, wing-borne arrival is what THIS is for.
 
-   Both numbers were swept against MINI's held-descent-from-hover, not
-   assumed:
+   A MULTIROTOR has no transition to check — liftShare is always 1 for
+   one regardless of speed (it can hover from a standstill at any
+   altitude), so it says nothing here. It also has no stall speed or any
+   other fleet-table-derived quantity that scales a "safe horizontal
+   speed" per airframe the way liftShare does for a wing. Rather than
+   invent one, it reuses LAND_SINK: the same absolute "slow" its sink
+   rate is already held to, applied to the other two axes. Every
+   existing quad landing test arrives at essentially zero horizontal
+   speed anyway (none of them steer or slide on the way down), so this
+   changes nothing for them while still closing the same hole for a
+   quad drifting in fast sideways. */
+export const touchdownVerdict = (s: FlightState, a: Airframe): 'landed' | 'lost' => {
+  const gentle = -s.vy < LAND_SINK;
+  const level = Math.abs(s.pitch) < LAND_TILT && Math.abs(s.roll) < LAND_TILT;
+  const slowEnough = a.wing ? s.liftShare >= 1 : Math.hypot(s.vx, s.vz) < LAND_SINK;
+  return gentle && level && slowEnough ? 'landed' : 'lost';
+};
 
-   FLARE_SPANS. At 1 span (a first attempt, matching only the altitude
-   half of this gate), MINI's climb controller cannot bleed a held,
-   fully-commanded -16 u/s dive down to under LAND_SINK before reaching
-   the ground — it still hits at -9.2 u/s, a hard crash, because 1 span
-   (2.2 units) is less ground than the controller's own response time
-   needs at that speed. 5 spans lands with a real margin (-2.5 u/s).
+/* THE LANDING FLARE, in stepQuad/stepWing: within a stopping distance of
+   the ground, a commanded descent already sinking faster than
+   FLARE_SINK gets pulled back to FLARE_SINK.
 
-   GATING ON CURRENT SINK, NOT JUST ON "A DESCENT IS COMMANDED": the
-   first version of this flare clamped the TARGET the instant any
-   descent was commanded near the ground, with no regard for how fast
-   the craft actually was falling. That is what a HELD key needs, but it
-   also caught the PULSED, low-duty-cycle descent used elsewhere to
-   reach the ground without this flare at all (a 15-30% duty cycle,
-   already gentle by construction) — the same clamp that rescues a full
-   dive also flattened a duty cycle that was never in danger, pinning it
-   in a permanent low hover next to the ground it was trying to reach.
-   Gating on "-vy already past FLARE_SINK" leaves a descent that is
-   already gentle alone, and only intervenes once it genuinely is not:
-   with this gate, a 1-in-6 pulse (16.7%, inside the working range)
-   lands at -0.5 u/s exactly as it did before the flare existed, a
-   1-in-7 pulse (14.3%, below it) still doesn't — matching the same
-   15-30% boundary — and a held key still lands at -2.5 u/s instead of
-   crashing at -9.2. */
-const FLARE_SPANS = 5;
+   GATING ON CURRENT SINK, NOT JUST ON "A DESCENT IS COMMANDED": an
+   earlier version clamped the TARGET the instant any descent was
+   commanded near the ground, with no regard for how fast the craft
+   actually was falling. That is what a HELD key needs, but it also
+   caught the PULSED, low-duty-cycle descent used elsewhere to reach the
+   ground without this flare at all (a 15-30% duty cycle, already gentle
+   by construction) — the same clamp that rescues a full dive also
+   flattened a duty cycle that was never in danger, pinning it in a
+   permanent low hover next to the ground it was trying to reach. Gating
+   on "-vy already past FLARE_SINK" leaves a descent that is already
+   gentle alone, and only intervenes once it genuinely is not: with this
+   gate, a 1-in-6 pulse (16.7%, inside the working range) lands as it
+   did before the flare existed, a 1-in-7 pulse (14.3%, below it) still
+   doesn't — matching the same 15-30% boundary — and a held key still
+   lands instead of crashing.
+
+   flareRadius() BELOW, NOT A SPAN MULTIPLE: an earlier version triggered
+   at a fixed number of spans (5, chosen by sweeping MINI's
+   held-descent-from-hover until it stopped crashing). That number was a
+   typed-in proxy for something the climb controller already determines
+   exactly — this module's stated ethos is coefficients solved from the
+   fleet table, never typed in, and a span multiple fails that twice
+   over: it doesn't explain the 5, and for CYCLOPS (span 11, gain 0.9,
+   climb 30) it gives a 55-unit trigger radius on a 1600-unit-wide plate
+   with peaks at 240 and valleys at -30 — 55 AGL is ordinary low cruise,
+   so a held descent from y=120 at cruise took 14.9s and 1045 world
+   units to reach the ground: a forced glideslope across 65% of the map,
+   not a flare.
+
+   The real quantity is the climb loop's own stopping distance: bringing
+   vy from -a.climb to -FLARE_SINK at rate `gain` (the same 1.6 / 0.9
+   literal already in each function's climbAccel line, ignoring the
+   drag feedforward and ge as second-order) integrates to exactly
+   (a.climb - FLARE_SINK) / gain of altitude. 1.3x that is the margin
+   sweeping found necessary once drag, ge and discrete stepping are
+   accounted for — MINI: 8.5 * 1.3 = 11.05 (indistinguishable from the
+   5-span, 11-unit value found by sweeping), CYCLOPS: 30.7 * 1.3 = 39.9
+   (against 55 for 5 spans), Noxr: predicted 14.3. Tried and rejected:
+   an altitude-proportional cap (-max(FLARE_SINK, agl*0.8)) — CYCLOPS
+   still crashes at -13.6 u/s under it, and it reintroduces the
+   pulsed-technique regression on every airframe. */
 const FLARE_SINK = LAND_SINK * 0.6;
+const flareRadius = (a: Airframe, gain: number) => 1.3 * (a.climb - FLARE_SINK) / gain;
 
 export type Controls = {
   /** 1 = W, -1 = S. A SPEED demand, not a thrust lever: the autothrottle
@@ -376,19 +424,21 @@ function stepQuad(s: FlightState, a: Airframe, c: Controls, h: number, airspeed:
      ground effect. */
   const agl = s.y - groundY;
 
-  /* LANDING FLARE — see the FLARE_SPANS/FLARE_SINK comment above the
-     Mode type for the full reasoning, including why this is gated on
-     the CURRENT sink rate and not just on a descent being commanded.
-     A held descend key commands the airframe's full climb rate, which
-     for every ship in the fleet sinks far faster than LAND_SINK — so a
-     visitor doing the obvious thing (hold Shift and wait) crashes every
-     time. Within FLARE_SPANS of the ground, once already sinking faster
-     than FLARE_SINK, pull the commanded sink back to it. Climbing is
-     untouched — this only softens a commanded DEScent that has already
-     become dangerous. */
+  /* LANDING FLARE — see the FLARE_SINK/flareRadius comment above the
+     Mode type for the full reasoning, including why the radius is this
+     loop's own stopping distance and why the gate reads the CURRENT
+     sink rate rather than just "a descent is commanded". A held descend
+     key commands the airframe's full climb rate, which for every ship
+     in the fleet sinks far faster than LAND_SINK — so a visitor doing
+     the obvious thing (hold Shift and wait) crashes every time. Once
+     already sinking faster than FLARE_SINK, and within stopping
+     distance of the ground at THIS loop's gain (1.6), pull the
+     commanded sink back to FLARE_SINK. Climbing is untouched — this
+     only softens a commanded DEScent that has already become
+     dangerous. */
   const wantClimbRaw = c.lift * a.climb;
   const wantClimb =
-    wantClimbRaw < 0 && agl < a.span * FLARE_SPANS && -s.vy > FLARE_SINK ? Math.max(wantClimbRaw, -FLARE_SINK) : wantClimbRaw;
+    wantClimbRaw < 0 && agl < flareRadius(a, 1.6) && -s.vy > FLARE_SINK ? Math.max(wantClimbRaw, -FLARE_SINK) : wantClimbRaw;
   const climbDragFF = a.CD * airspeed * wantClimb;
   const climbAccel = climbDragFF + (wantClimb - s.vy) * 1.6;
   const lean = Math.max(0.3, Math.cos(s.pitch) * Math.cos(s.roll));
@@ -489,13 +539,14 @@ function stepWing(s: FlightState, a: Airframe, c: Controls, h: number, airspeed:
      30. Adding back the drag it will be fighting at that rate puts the
      equilibrium ON wantClimb: the (wantClimb - vy) factor then cancels
      out of both sides. Inert whenever no climb is commanded. */
-  /* LANDING FLARE — see the FLARE_SPANS/FLARE_SINK comment above the
+  /* LANDING FLARE — see the FLARE_SINK/flareRadius comment above the
      Mode type for the full reasoning. Applied here too so both
-     airframes answer a held descend key the same way. */
+     airframes answer a held descend key the same way, at THIS loop's
+     own gain (0.9). */
   const agl = s.y - groundY;
   const wantClimbRaw = c.lift * a.climb;
   const wantClimb =
-    wantClimbRaw < 0 && agl < a.span * FLARE_SPANS && -s.vy > FLARE_SINK ? Math.max(wantClimbRaw, -FLARE_SINK) : wantClimbRaw;
+    wantClimbRaw < 0 && agl < flareRadius(a, 0.9) && -s.vy > FLARE_SINK ? Math.max(wantClimbRaw, -FLARE_SINK) : wantClimbRaw;
   const climbAccel = a.CD * airspeed * wantClimb + (wantClimb - s.vy) * 0.9;
   const demand = G + climbAccel;
   const cosRoll = Math.max(0.2, Math.cos(s.roll));
