@@ -64,6 +64,16 @@ export type LoadOptions = {
     /* World axis the hub turns about: 'y' for a lift rotor lying flat,
        'x' for a tractor or pusher facing down the fuselage. */
     axis?: 'x' | 'y';
+    /* NAMED GROUPS, for an aircraft whose propellers do different jobs.
+       The Cyclops has four lift rotors and a pusher, and /fly drives them
+       at different rates through a transition — the lift rotors spooling
+       down as the pusher spools up. Each entry is picked and binned
+       exactly as the flat form above is.
+
+       ADDITIVE. With no `groups`, this behaves precisely as it did, which
+       is what FlightScene depends on: the homepage spins the pusher only
+       and must go on doing that. */
+    groups?: Record<string, { pick?: (centre: THREE.Vector3) => boolean; single?: boolean; axis?: 'x' | 'y' }>;
   };
 };
 
@@ -139,13 +149,35 @@ function normalise(root: THREE.Object3D, opts: LoadOptions) {
    nose-over-tail.
 
    attach(), not add(): it preserves each blade's world transform while
-   reparenting, so nothing shifts at the moment the hubs appear. */
-const findRotors = (root: THREE.Object3D, opts: LoadOptions['rotors']) => {
+   reparenting, so nothing shifts at the moment the hubs appear.
+
+   CALLED MORE THAN ONCE PER ROOT when the caller uses `groups`: once for
+   the flat `pick` and once per named group, so that `userData.rotors` and
+   `userData.rotorGroups` both exist. That is dangerous by construction —
+   this function REPARENTS blades into hubs it creates, so a naive second
+   call would traverse a tree where the blades it wants are no longer
+   direct children of `root` but of the FIRST call's hubs, and a
+   quadrant-agnostic pick (or none at all) could also merge two physically
+   different propellers into one hub before the group calls ever get a
+   chance to tell them apart.
+
+   The fix is to gather the candidate blades and their measured centres
+   EXACTLY ONCE per root — before any hub exists — and cache that list
+   against the root object. Every call after the first, flat or grouped,
+   reads from that frozen list rather than re-traversing a tree that its
+   own previous call (or a sibling group's) has been rearranging. The
+   cache is a WeakMap keyed by `root`, which is a fresh clone per
+   `loadCraft()` call, so it never leaks across craft or outlives the
+   root it was built for. */
+const rotorCandidates = new WeakMap<THREE.Object3D, { named: THREE.Object3D[]; blades: BladeCandidate[] }>();
+
+type BladeCandidate = { mesh: THREE.Mesh; centre: THREE.Vector3 };
+
+function collectRotorCandidates(root: THREE.Object3D) {
   const named: THREE.Object3D[] = [];
   root.traverse((o) => {
     if (/^rotor/i.test(o.name) || /^prop/i.test(o.name)) named.push(o);
   });
-  if (named.length) return named;
 
   const blades: THREE.Mesh[] = [];
   root.traverse((o) => {
@@ -157,16 +189,32 @@ const findRotors = (root: THREE.Object3D, opts: LoadOptions['rotors']) => {
       : !!mat && /blade/i.test(mat.name);
     if (isBlade) blades.push(m);
   });
-  if (!blades.length) return [];
 
   root.updateMatrixWorld(true);
   const box = new THREE.Box3();
   const centre = new THREE.Vector3();
-  const bins = new Map<string, { sum: THREE.Vector3; n: number; parts: THREE.Mesh[] }>();
-  for (const b of blades) {
-    box.setFromObject(b);
+  const measured: BladeCandidate[] = blades.map((mesh) => {
+    box.setFromObject(mesh);
     box.getCenter(centre);
     root.worldToLocal(centre);
+    return { mesh, centre: centre.clone() };
+  });
+
+  return { named, blades: measured };
+}
+
+const findRotors = (root: THREE.Object3D, opts: LoadOptions['rotors']) => {
+  let candidates = rotorCandidates.get(root);
+  if (!candidates) {
+    candidates = collectRotorCandidates(root);
+    rotorCandidates.set(root, candidates);
+  }
+
+  if (candidates.named.length) return candidates.named;
+  if (!candidates.blades.length) return [];
+
+  const bins = new Map<string, { sum: THREE.Vector3; n: number; parts: THREE.Mesh[] }>();
+  for (const { mesh, centre } of candidates.blades) {
     if (opts?.pick && !opts.pick(centre.clone())) continue;
     /* One key for everything when the caller says these are one
        propeller — the quadrant split exists to separate a quad's four
@@ -178,7 +226,7 @@ const findRotors = (root: THREE.Object3D, opts: LoadOptions['rotors']) => {
     const bin = bins.get(key) ?? { sum: new THREE.Vector3(), n: 0, parts: [] };
     bin.sum.add(centre);
     bin.n += 1;
-    bin.parts.push(b);
+    bin.parts.push(mesh);
     bins.set(key, bin);
   }
 
@@ -263,6 +311,10 @@ export async function loadCraft(url: string, opts: LoadOptions): Promise<Craft |
     holder.add(root);
 
     holder.userData.rotors = findRotors(root, opts.rotors);
+    holder.userData.rotorGroups = {};
+    for (const [name, g] of Object.entries(opts.rotors?.groups ?? {})) {
+      holder.userData.rotorGroups[name] = findRotors(root, g);
+    }
     holder.userData.label = 'vtol';
     return holder as Craft;
   } catch {

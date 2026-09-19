@@ -78,6 +78,7 @@ import {
 } from './photoreal';
 import { loadCraft, describe } from './loadCraft';
 import { buildMeshLinks } from './meshLinks';
+import { CYCLOPS_PUSHER } from './rotorPicks';
 
 /* What the survey beat publishes for the DOM chrome to draw against.
 
@@ -423,7 +424,7 @@ export const FlightScene: React.FC<FlightSceneProps> = ({
          turning opposite ways. axis 'x', because a pusher's disc faces
          down the fuselage rather than lying flat. */
       rotors: {
-        pick: (c) => Math.abs(c.z) < 0.25 && c.x > 0.4,
+        pick: CYCLOPS_PUSHER,
         single: true,
         axis: 'x',
       },

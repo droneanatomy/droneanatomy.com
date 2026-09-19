@@ -60,7 +60,7 @@ const tube = (r: number, len: number, mat: THREE.Material, segs = 12) => {
 };
 
 export type Craft = THREE.Group & {
-  userData: { rotors: THREE.Object3D[]; label: string };
+  userData: { rotors: THREE.Object3D[]; rotorGroups?: Record<string, THREE.Object3D[]>; label: string };
 };
 
 const asCraft = (g: THREE.Group, label: string, rotors: THREE.Object3D[]): Craft => {
@@ -201,8 +201,8 @@ export function buildFleetCraft(variant: FleetVariant): Craft {
    over half their frame repaints with the scroll untouched, which is why
    a paused scene still looks alive instead of dead. It also means scroll
    jitter never has to look smooth — the ambient motion covers it. */
-export function spinRotors(craft: Craft, t: number, rate = 26) {
-  const r = craft.userData.rotors;
+export function spinRotors(craft: Craft, t: number, rate = 26, hubs?: THREE.Object3D[]) {
+  const r = hubs ?? craft.userData.rotors;
   for (let i = 0; i < r.length; i++) {
     // alternate direction, and detune slightly so they never strobe together
     const dir = i % 2 === 0 ? 1 : -1;
