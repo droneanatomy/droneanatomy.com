@@ -32,7 +32,7 @@ export default function Home() {
       <LazyInkHero
         lead="Making Autonomous"
         wordmark="Flight Inevitable"
-        tagline="We build the autonomous systems that define the next era of flight."
+        tagline="The future of flight is autonomous and building it responsibly is one of the most important engineering challenges of our time."
         imageSrc="/images/vtol.jpg"
       />
 

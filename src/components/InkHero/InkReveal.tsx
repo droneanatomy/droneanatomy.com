@@ -4,9 +4,12 @@
    InkReveal — the hero's visual layer.
 
    A sheet of marbled ink sits over a still photograph. The cursor
-   dissolves a hole in the ink and the photograph shows through. The
-   pointer is the only thing that reveals it, and nothing here responds
-   to a click.
+   dissolves a hole in the ink and the photograph shows through, and
+   nothing here responds to a click.
+
+   ON TOUCH DEVICES THE HOLE DRIFTS ON ITS OWN, because a phone has no
+   cursor to follow: see the frame loop. A finger still takes it over
+   while pressed.
 
    A HOLD DOES, but not in this file: HoldToFly sits alongside this as a
    sibling in the hero and takes a held pointer into the flight sim. It
@@ -164,7 +167,11 @@ export const InkReveal: React.FC<InkRevealProps> = ({
          and the vignette it was always in the right neighbourhood. */
       uInkDepth: { value: inkDepth },
       uAmbient: { value: ambient },
-      uRadius: { value: radius },
+      /* Larger on touch. The drifting phone hole is there to SHOW the
+         aircraft, not to be chased: at the desktop radius its clear core
+         was ~77px across on a 390px screen, a peephole. 1.6x makes it
+         about 60% of the width while still reading as a hole in the ink. */
+      uRadius: { value: radius * (coarse ? 1.6 : 1) },
       uWarpRadius: { value: 0.34 },
       uWarpStrength: { value: 0.09 },
       uScale: { value: 1.15 },
@@ -432,6 +439,10 @@ export const InkReveal: React.FC<InkRevealProps> = ({
     const ptr = { x: 0.5, y: 0.5, tx: 0.5, ty: 0.5, hover: 0, thover: 0 };
     let rippleStart = -1;
 
+    /* A finger is on the glass. On touch devices the hole DRIFTS on its
+       own whenever this is false — see the frame loop. */
+    let touching = false;
+
     const track = (e: PointerEvent) => {
       const b = wrap.getBoundingClientRect();
       ptr.tx = (e.clientX - b.left) / b.width;
@@ -439,13 +450,17 @@ export const InkReveal: React.FC<InkRevealProps> = ({
       ptr.thover = 1;
     };
     const onDown = (e: PointerEvent) => {
+      if (e.pointerType === 'touch') touching = true;
       track(e);
       if (!reduced) rippleStart = performance.now();
     };
-    /* Touch has no hover to leave, so the hole closes when the finger
-       lifts. A mouse keeps it open until it leaves the section. */
+    /* A mouse keeps the hole open until it leaves the section. A finger
+       hands the hole back to the drift when it lifts — it used to close
+       it, and a touch hole that only exists while pressed is one no
+       phone visitor ever sees: any swipe is taken as a scroll and
+       cancelled at once. */
     const onUp = () => {
-      if (coarse) ptr.thover = 0;
+      touching = false;
     };
     const onLeave = () => {
       ptr.thover = 0;
@@ -500,6 +515,27 @@ export const InkReveal: React.FC<InkRevealProps> = ({
          the same filter expressed against real time; the constants are
          the old values' time constants at 60fps, so the feel is
          unchanged where it was already being designed. */
+      /* TOUCH HAS NO HOVER, so on a phone the hole moves itself.
+
+         Without this the hero on a phone was a plain sheet of paper and
+         a headline: the photograph only showed while a finger was held
+         down, and a finger that moves is a scroll. Now, whenever nobody
+         is touching it, the hole wanders a slow Lissajous loop around the
+         middle of the frame — where the aircraft sits in the cover-fit
+         photo — so the page shows what it is about without asking for a
+         gesture nobody makes on a phone. Two incommensurate periods, so
+         the path never visibly repeats.
+
+         Under reduced motion uTime does not advance, so this settles to
+         one fixed point near the centre: the photo is still revealed,
+         it just does not move. */
+      if (coarse && !touching) {
+        const t = uniforms.uTime.value;
+        ptr.tx = 0.5 + Math.sin(t * 0.52) * 0.2;
+        ptr.ty = 0.52 + Math.sin(t * 0.37 + 1.3) * 0.15;
+        ptr.thover = 1;
+      }
+
       const kPos = 1 - Math.exp(-frameDt / 0.177);
       const kHover = 1 - Math.exp(-frameDt / 0.23);
       ptr.x += (ptr.tx - ptr.x) * kPos;

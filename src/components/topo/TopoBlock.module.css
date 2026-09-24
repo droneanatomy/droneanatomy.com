@@ -74,7 +74,9 @@
   left: var(--pad-x);
   bottom: calc(var(--pad-y) + clamp(40px, 6vh, 74px));
   max-width: min(52ch, 60vw);
-  transition: opacity 300ms ease;
+  /* No opacity transition: this is scrubbed from scroll every frame, and
+     a 300ms ease would leave the title trailing a quarter-second behind
+     the thumb that is driving it. */
 }
 
 .title {
@@ -95,16 +97,101 @@
   display: block;
 }
 
-.body {
-  margin: 0;
-  max-width: 44ch;
-  font-size: clamp(14px, 1.05vw, 19px);
-  font-weight: 400;
-  line-height: 1.5;
+/* ---------- the paragraph that writes itself ---------- */
+
+/* Darkens the terrain behind the words. Heaviest where the paragraph
+   sits and lighter toward the edges, so the mountain still reads as a
+   mountain around it rather than the whole frame going grey. */
+.scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: radial-gradient(
+    /* 45% -> 50% ON THE X, following the paragraph. This gradient is
+       aimed at the words (see above), and the words moved. */
+    ellipse 70% 75% at 50% 38%,
+    rgba(5, 6, 7, 0.78) 0%,
+    rgba(5, 6, 7, 0.55) 55%,
+    rgba(5, 6, 7, 0.35) 100%
+  );
+}
+
+/* Pinned, like the reference: the words hold still while the camera
+   climbs behind them, which is what makes the terrain feel like it is
+   moving rather than the page.
+
+   A NARROW MEASURE on purpose, about thirty characters a line. At this
+   size a full-width line would be read in one sweep; short lines make the
+   writing visible line by line. */
+.copy {
+  position: absolute;
+  /* CENTRED IN THE FRAME, and by auto margins rather than by a transform.
+
+     It used to hang off left: max(--pad-x, 22vw), which put its box a
+     little left of centre — measured at 1920, the block ran 422 to 1296
+     for a centre of 859 against the frame's 960.
+
+     translateX(-50%) is not available here: TopoBlock writes this
+     element's transform every frame to run the climb (translate3d(0,
+     -climb …)), so anything this stylesheet put there would be gone on
+     the first rAF. Two opposite offsets plus auto margins is the same
+     centring done in layout, which the climb cannot reach — the box is
+     solved to fill 0..0, max-width clamps it back to its measure, and the
+     remainder is split evenly between the two auto margins.
+
+     The width has to be DEFINITE for that to work, which is why the
+     measure is a width rather than the max-width it was. With width:auto
+     the browser zeroes the auto margins FIRST and only then clamps to
+     max-width, so there is no remainder left to split and the box lands
+     flush left — measured, exactly that: 0..874 at 1920. min() keeps the
+     clamp that max-width was there for.
+
+     The mobile rule below puts width back to auto with both offsets at
+     --pad-x, so there the box fills the gutters as before. */
+  left: 0;
+  right: 0;
+  width: min(17.5em, 100%);
+  margin-inline: auto;
+  /* NOT the top of the text: the line the WRITTEN part of the paragraph
+     stays centred on. TopoBlock lifts the block by half its written
+     height every frame, so the first line appears here and the paragraph
+     climbs as lines are added below it. A little above the middle, where
+     the reference holds it. */
+  top: 44svh;
+  margin-block: 0;
+  font-family: var(--font-body, 'Satoshi', Arial, sans-serif);
+  /* LIGHT, and tracked open. The reference sets this paragraph in a light
+     humanist sans; Satoshi at 400 is a dense geometric that read close to
+     bold at this size — measured side by side at 1916x914. Satoshi ships
+     here as a variable font, so 300 is a real weight rather than a
+     synthesised one, and staying in the site's own face keeps the page to
+     one typeface. */
+  font-size: clamp(22px, 2.6vw, 52px);
+  font-weight: 300;
+  line-height: 1.22;
+  letter-spacing: 0.005em;
   color: var(--paper);
   text-transform: none;
-  opacity: 0.85;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+  will-change: opacity, transform, filter;
+}
+
+/* The keyword. `--key` is animated 0 -> 1 by the timeline at the moment
+   its word is written, so the box arrives with the word instead of
+   sitting in the unwritten paragraph and giving the line away. The
+   flare yellow is the hero's underline yellow: one accent on the page. */
+.key {
+  --key: 0;
+  padding: 0 0.14em;
+  margin: 0 -0.04em;
+  border-radius: 1px;
+  background: rgb(255 252 0 / var(--key));
+  color: color-mix(in srgb, #0a0908 calc(var(--key) * 100%), var(--paper));
+  /* A dark halo round dark letters on yellow reads as a smudge. */
+  text-shadow: none;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
 }
 
 /* ---------- the plate caption ---------- */
@@ -194,11 +281,55 @@
     max-width: none;
   }
 
-  .body {
-    max-width: none;
+  .copy {
+    left: var(--pad-x);
+    right: var(--pad-x);
+    /* Back to auto: the desktop rule's definite width exists only to give
+       the auto margins something to centre, and here the two offsets
+       already place the box. */
+    width: auto;
   }
 
   .coords {
     display: none;
+  }
+
+  /* ON A PHONE THE MOUNTAIN FILLS THE FRAME, and it is near-white.
+
+     On a wide screen the title sits low-left over dark sky and ground and
+     its text-shadow is plenty. On a tall one the massif runs all the way
+     down behind it, and cream type on a lit white slope was measured as
+     barely there. A soft dark pool behind the title fixes that without
+     boxing it in. It is a pseudo-element of .intro, so it fades out with
+     the title and can never be on screen without it; `isolation` keeps it
+     behind the words rather than behind the whole chrome layer. */
+  .intro {
+    isolation: isolate;
+  }
+
+  .intro::before {
+    content: '';
+    position: absolute;
+    inset: -60% -30% -40% -30%;
+    z-index: -1;
+    pointer-events: none;
+    background: radial-gradient(
+      ellipse 60% 55% at 40% 55%,
+      rgba(5, 6, 7, 0.72) 0%,
+      rgba(5, 6, 7, 0.45) 55%,
+      rgba(5, 6, 7, 0) 100%
+    );
+  }
+
+  /* Same cause, for the paragraph: taller and darker, because on a phone
+     the text spans the full width and the bright summit sits directly
+     behind it rather than off to one side. */
+  .scrim {
+    background: radial-gradient(
+      ellipse 120% 70% at 50% 42%,
+      rgba(5, 6, 7, 0.86) 0%,
+      rgba(5, 6, 7, 0.7) 55%,
+      rgba(5, 6, 7, 0.5) 100%
+    );
   }
 }

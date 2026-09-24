@@ -323,8 +323,8 @@ export const SCENES: readonly SceneSpec[] = [
       loop: { orbit: 0.42, push: 2.2, bob: 0.5, drift: 0.4, period: 26, speed: 24 },
     },
     kicker: 'VTOL',
-    title: 'Vertical launch,\nfixed-wing range',
-    body: 'Lifts on rotors, transitions to wing-borne cruise. No runway, no launcher.',
+    title: 'Launch from anywhere.',
+    body: 'No runway. No limits.',
   },
   {
     id: 'transit',
@@ -339,8 +339,8 @@ export const SCENES: readonly SceneSpec[] = [
       loop: { orbit: 0.10, push: 6.0, bob: 1.6, drift: 3.2, period: 38, speed: 58 },
     },
     kicker: 'Transit',
-    title: 'Cruise to the\nwork area',
-    body: 'Wing-borne flight covers the distance a multirotor spends its battery on.',
+    title: 'Goes where others turn back.',
+    body: '[6hr] endurance · [150+ km] range · [120 km/h] cruise · [5,500 m] ceiling',
   },
   {
     id: 'swarm',
@@ -355,8 +355,8 @@ export const SCENES: readonly SceneSpec[] = [
       loop: { orbit: 0.30, push: 3.4, bob: 0.9, drift: 2.0, period: 22, speed: 36 },
     },
     kicker: 'Fleet',
-    title: 'One controller,\nevery airframe',
-    body: 'The VTOL, the P10 Pro and the observation platform fly the same radio and the same ground station.',
+    title: 'Three aircraft,\none command.',
+    body: 'One ground station · AES-256 · Frequency hopping · Anti-jam · 150 km',
   },
   {
     id: 'survey',
@@ -480,8 +480,8 @@ export const SCENES: readonly SceneSpec[] = [
       loop: { orbit: 0.08, push: 3.0, bob: 1.6, drift: 0.6, period: 22, speed: 0 },
     },
     kicker: 'Survey',
-    title: 'Reads the field\nas it flies',
-    body: 'Onboard detection tags what it sees and streams it down live.',
+    title: 'It sees first.\nYou act first.',
+    body: 'Person ID at [1.5 km] · Vehicle ID at [3 km] · [100×] zoom EO/IR · [<200 ms] live feed',
   },
 ];
 

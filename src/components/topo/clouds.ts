@@ -29,7 +29,7 @@ import { MASSIF_SIZE } from './massif';
    a ShaderMaterial never receives three's colorspace_fragment chunk, so
    whatever is handed over is written to the framebuffer untouched, and
    new THREE.Color('#...') would arrive converted to linear and far too
-   dark. See the same note in massif.ts and EnquiryScene.tsx. */
+   dark. See the same note in massif.ts. */
 const GREY = new THREE.Color(0x9a / 255, 0x94 / 255, 0x8a / 255);
 
 const VERT = `

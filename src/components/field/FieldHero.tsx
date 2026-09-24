@@ -24,7 +24,8 @@
    visible gain.
    ============================================================ */
 
-import type { ProductPage } from './product';
+import type { CodaSize, ProductPage } from './product';
+import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { FieldBenchMobile, FieldClosingMobile } from './FieldMobileSections';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
@@ -150,8 +151,17 @@ const DEFAULT_LAYOUT: HeroLayout = 'split';
 
    Shared by the slide tween's from-state and the reset in apply(), because
    the two have to agree exactly and there is no way to notice at review
-   time that they have drifted — the symptom is a line half a page early. */
-const SLIDE_FROM = { xPercent: 40, yPercent: -50, opacity: 0, scale: 1, color: '#6f6a58' } as const;
+   time that they have drifted — the symptom is a line half a page early.
+
+   x AND y ARE ZEROED HERE, and must stay. When the scroll machine is
+   rebuilt (revertOnUpdate, at the bottom of this component), GSAP restores
+   the line's inline transform and the new run re-reads it as a matrix — and
+   a matrix can only give back PIXELS. So this very start state, 40% / -50%,
+   came back as a permanent x 572px, y -126px, added under every later
+   xPercent/yPercent: the lockup aimed at the kicker's column and landed
+   572px to the right of it, top-centre behind the gallery. Measured, not
+   inferred: 572.36 = 0.40 x the line's 1431px width. */
+const SLIDE_FROM = { xPercent: 40, yPercent: -50, x: 0, y: 0, opacity: 0, scale: 1, color: '#6f6a58' } as const;
 
 /* Rendered frames instead of WebGL for act one's aircraft.
 
@@ -285,6 +295,30 @@ const pickTier = (): '1k' | '2k' | '4k' => {
 
 
 
+
+/* THE CODA'S SIZE STEPS — whole class strings, not numbers.
+
+   They have to be written out in full: Tailwind reads the source as text
+   and generates only the classes it can SEE, so a size built by splicing a
+   value into `text-[clamp(28px,${n}vw,170px)]` would compile and then
+   render at the browser's default size.
+
+   `lg` is the original pair, untouched, and is what every page without a
+   `codaSize` still gets. The two smaller steps change breakpoint as well as
+   size, and that is the point rather than an oversight: the line goes
+   nowrap at sm (640px) while `lg` does not shrink until md (768px), so
+   between those two widths a long line is set at the PHONE size with no
+   wrapping left to save it. At 700px that is 9.5vw = 66.5px, and P10 Pro's
+   fifteen ems of it run 997px across a 700px screen. The steps that exist
+   for long lines therefore land their smaller size at sm, where the
+   nowrap starts, instead of at md. `lg` keeps md because nothing short
+   enough to use it has that problem, and its 9.5vw phone size was tuned
+   deliberately (see the note on the element). */
+const CODA_SIZE: Record<CodaSize, string> = {
+  lg: 'text-[clamp(28px,9.5vw,170px)] md:text-[clamp(24px,6.8vw,132px)]',
+  md: 'text-[clamp(26px,8.2vw,150px)] sm:text-[clamp(22px,5.6vw,110px)]',
+  sm: 'text-[clamp(24px,7.2vw,132px)] sm:text-[clamp(20px,4.6vw,90px)]',
+};
 
 const NAV = [
   { label: 'Intro', href: '/preview/field' },
@@ -1551,7 +1585,16 @@ export const FieldHero: React.FC<{
        when the solved hero length arrives just after mount, and again on a
        rotation that flips `narrow`. Without this the hook runs a single
        time and closes over the first render's fractions forever. */
-    { scope: rootRef, dependencies: [clock, spacerVh] }
+    /* revertOnUpdate IS LOAD-BEARING. useGSAP does NOT tear down the
+       previous run when its dependencies change unless told to — the
+       default is false. So the rebuild above ADDED a second copy of this
+       whole scroll machine instead of replacing the first: two scrub
+       tweens, two apply()s, both writing the same elements every frame,
+       one on the declared act lengths and one on the solved ones. On the
+       P10 that made "it's compact" jump between two positions mid-pass.
+       Mini, Noxr and Cyclops had the same two copies, invisibly: with a
+       single act, both compute nearly the same values. */
+    { scope: rootRef, dependencies: [clock, spacerVh], revertOnUpdate: true }
   );
 
   const introStyle = { opacity: 'var(--intro, 1)' } as React.CSSProperties;
@@ -1811,12 +1854,12 @@ export const FieldHero: React.FC<{
                 <span className="pointer-events-auto rounded-[3px] border border-dashed border-[#f2ecd9]/40 px-[clamp(18px,2vw,34px)] py-[clamp(9px,1vw,15px)] font-display text-[clamp(10px,0.82vw,15px)] font-bold uppercase tracking-[0.12em]">
                   {product.closing.label}
                 </span>
-                <a
-                  href={product.closing.cta.href}
-                  className="pointer-events-auto rounded-[3px] bg-[#f2ecd9] px-[clamp(18px,2vw,34px)] py-[clamp(9px,1vw,15px)] font-display text-[clamp(10px,0.82vw,15px)] font-bold uppercase tracking-[0.12em] text-[#090b07] transition-opacity hover:opacity-85"
-                >
+                {/* The button this page used to draw itself. Its styling now
+                    lives in PrimaryButton and is the site's only filled CTA;
+                    all that is left here is where it sits. */}
+                <PrimaryButton href={product.closing.cta.href} className="pointer-events-auto">
                   {product.closing.cta.label}
-                </a>
+                </PrimaryButton>
               </div>
             </div>
           </div>
@@ -2194,8 +2237,50 @@ export const FieldHero: React.FC<{
                left-1/2 with -translate-x-1/2 to centre, and the desktop
                anchor is right-[8%], which would be shifted half its own
                width if the transform survived. Same trap as translate-y on
-               the headline above. */
-            className="absolute bottom-[10%] left-1/2 w-[84vw] -translate-x-1/2 text-right text-[clamp(15px,1.77vw,34px)] leading-[1.42] md:bottom-auto md:left-auto md:right-[8%] md:top-[42%] md:w-[clamp(230px,18.8vw,360px)] md:translate-x-0 md:text-left"
+               the headline above.
+
+               CENTRED ON THE SAME LINE AS THE HEADLINE. This was
+               top-[42%], a top-EDGE anchor, which holds the first line at
+               a fixed height and lets the block grow downwards — so the
+               two sides only looked level at whatever length the copy
+               happened to be. At 1440 the paragraph's centre sat at 603
+               against the headline's 450.
+
+               NOT BY -translate-y-1/2, though, which is how the headline
+               does it. GSAP animates this element's y, and on first touch
+               it flattens the independent `translate` property into its
+               own inline `transform` — so a centring that lives in
+               `translate` survives only if GSAP happens to read it before
+               it writes. Measured, it does not do so reliably here: the
+               same build centred correctly at 1280 and left the block a
+               full half-height low at 1440, 1600 and 1920, with the
+               inline transform showing the -50% simply missing.
+
+               inset-y-0 + h-fit + my-auto centres it with no transform at
+               all — the two opposite offsets leave free space, fit-content
+               stops the box stretching to fill it, and auto margins split
+               what is left. GSAP then owns `transform` outright and there
+               is nothing for it to lose. The headline is left alone: it
+               declares translate-y-0 at base, so its variable is always
+               set, and it measures level at every width.
+
+               THE DESKTOP MEASURE AND SIZE ARE ONE DECISION, and both were
+               wrong on a wide screen. 18.8vw capped at 360px while 1.77vw
+               ran on to 34px, so the two clamps saturated at different
+               widths: past ~1360px the column stopped growing and the type
+               did not. At 1920 that is 360px of box holding 34px type —
+               about ten characters a line, fourteen lines, 676px tall, and
+               the last of it below the fold. It had stopped being a
+               paragraph and become a ticker tape.
+
+               So the type is capped at 24px and the box grows to 480px.
+               Nothing changes below 1356px, where 1.77vw is still under the
+               new ceiling — this only bites where it was broken. At 1920 it
+               is seven lines at 239px tall, and the box's left edge lands
+               at 1286, clear of the aircraft's outermost propeller tip at
+               ~1280; that clearance is what sets the 480px ceiling rather
+               than any round number. */
+            className="absolute bottom-[10%] left-1/2 w-[84vw] -translate-x-1/2 text-right text-[clamp(15px,1.77vw,24px)] leading-[1.42] md:inset-y-0 md:left-auto md:right-[8%] md:my-auto md:h-fit md:w-[clamp(230px,25vw,480px)] md:translate-x-0 md:text-left"
           >
             {product.statement.aside}
           </p>
@@ -2241,7 +2326,7 @@ export const FieldHero: React.FC<{
             ref={slideLabelRef}
             className="absolute left-[3.15%] top-[15%] font-display text-[min(3.6vh,32px)] uppercase tracking-[0.02em] text-[#bbac97] md:top-[calc(50%-9.5vw)]"
           >
-            So serviceable,
+            40% Smaller,
           </p>
 
           {/* Coda. Anchors from the oryzo frame at 1919x890: headline centred
@@ -2254,15 +2339,22 @@ export const FieldHero: React.FC<{
               moment the page speaks rather than labels. */}
           <h2
             ref={codaHeadRef}
-            /* Bigger on a phone only. The md values ARE the original ones —
-              6.8vw from 15% — because the wide frame was already right and
-              the complaint was never about it.
+            /* THE SIZE IS NO LONGER WRITTEN HERE — see CODA_SIZE, which
+              holds the steps, and `codaSize` on the product, which picks
+              one. A size hard-coded on the element assumed every page's
+              closing sentence was about the same length, and P10 Pro's is
+              two and a half times the one it was tuned against.
 
-              Under md, 6.8vw ran the line to 56% of the frame, which is a
-              headline sitting in a lot of space rather than one filling it.
-              9.5vw takes it to 78% (measured at 360, 390 and 767): eighteen
-              characters at 0.454em each — narrower than the 0.514 the
-              uppercase display lines use, because this one is normal-case.
+              `lg` is that original pair, unchanged, so a page that names no
+              step renders exactly as it did. What follows is why those
+              numbers are what they are, and it still applies to `lg`:
+
+              Bigger on a phone only. Under md, 6.8vw ran the line to 56% of
+              the frame, which is a headline sitting in a lot of space
+              rather than one filling it. 9.5vw takes it to 78% (measured at
+              360, 390 and 767): eighteen characters at 0.454em each —
+              narrower than the 0.514 the uppercase display lines use,
+              because this one is normal-case.
 
               15% -> 13% for the same reason, and only under md: the taller
               line grows downward from its anchor, so raising it is what pays
@@ -2272,7 +2364,7 @@ export const FieldHero: React.FC<{
               72.9px at the 767px breakpoint — and is kept only so the
               declaration still reads as bounded. The 28px floor does bind,
               below 295px. */
-            className="absolute left-1/2 top-[13%] w-[92vw] -translate-x-1/2 text-center font-display text-[clamp(28px,9.5vw,170px)] normal-case leading-[0.95] tracking-[-0.03em] sm:w-auto sm:whitespace-nowrap md:top-[15%] md:text-[clamp(24px,6.8vw,132px)]"
+            className={`absolute left-1/2 top-[13%] w-[92vw] -translate-x-1/2 text-center font-display normal-case leading-[0.95] tracking-[-0.03em] sm:w-auto sm:whitespace-nowrap md:top-[15%] ${CODA_SIZE[product.codaSize ?? 'lg']}`}
           >
             {product.coda}
             <sup className="align-super text-[0.42em] tracking-normal">*</sup>

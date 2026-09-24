@@ -774,7 +774,23 @@
   top: 72%;
 
   margin: 0 auto;
-  max-width: 30ch;
+  /* TWO LINES, EVENLY SPLIT — and the pair of properties does that
+     together rather than the measure alone.
+
+     At 30ch the sentence broke three ways, the last line barely half
+     full. 42ch is the narrowest measure that fits it in two, and it
+     happens to split them almost equally (measured 383/379 at 1280,
+     546/542 at 1920) — but only because the break lands where it does
+     at exactly that width. Leaving it there makes the layout hostage to
+     the copy: a word longer and it is three lines again.
+
+     So the box is 4ch roomier than it needs to be and `balance` is what
+     picks the break. Chrome balances 46ch to the identical 383/379 —
+     the even split, now chosen by the browser instead of by a measure
+     tuned to one sentence. Where `balance` is unsupported the wrap is
+     simply ragged (426/336) and still two lines, which is the ask. */
+  max-width: 46ch;
+  text-wrap: balance;
   text-align: center;
   font-family: var(--font-body, 'Satoshi', Arial, sans-serif);
   font-size: clamp(14px, 1.05vw, 20px);
@@ -871,6 +887,13 @@
 
   .intro {
     max-width: 24ch;
+    /* AND THE BALANCE COMES BACK OFF. Two lines is a wide-viewport
+       shape; at this measure the sentence runs to four whatever we do,
+       and balancing four lines here makes them worse rather than
+       better — it shortens the second (measured 206/160/173/216) and
+       leaves the LAST line the longest, so the block reads as broken
+       mid-thought. The normal wrap tapers instead: 206/216/193/139. */
+    text-wrap: wrap;
   }
 
   .nav {

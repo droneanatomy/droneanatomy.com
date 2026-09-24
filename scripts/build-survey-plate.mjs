@@ -25,8 +25,7 @@
  * masked out of the transfer, feathered so the edge does not step.
  *
  * THE SOURCE IS THE ORIGINAL RENDER, scripts/source/survey-plain.orig.webp,
- * never the shipped plate — so running this twice does not regrade twice,
- * and build-thermal-panel.mjs keeps the tan-versus-olive hue it keys on.
+ * never the shipped plate — so running this twice does not regrade twice.
  */
 
 import { createRequire } from 'node:module';

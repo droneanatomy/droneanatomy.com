@@ -47,6 +47,7 @@
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { useChromeTone } from '@/components/Chrome/useChromeTone';
+import { PrimaryButton } from '@/components/ui/PrimaryButton';
 
 export interface FieldNavProps {
   /* Tone of the CLOSED bar.
@@ -772,15 +773,25 @@ export const FieldNav: React.FC<FieldNavProps> = ({ tone = 'light' }) => {
             ))}
           </nav>
 
-          <a
+          {/* THE SITE'S PRIMARY BUTTON, not a pill of its own any more.
+
+              It was a rounded-full chip at weight 400 and 0.08em — near
+              enough to the closing acts' call to action to look like a
+              relative, different enough to look like an accident. What it
+              keeps is the inversion, which is load-bearing rather than
+              cosmetic: `onLight` is true over the homepage hero's cream
+              sheet, and a cream button there would be invisible.
+
+              compact holds the bar's geometry — this button is what sets
+              the chrome's 42px height. */}
+          <PrimaryButton
             href="/contact"
-            className={
-              'shrink-0 rounded-full px-[clamp(12px,1.2vw,22px)] py-[9px] font-display text-[clamp(10px,0.78vw,14px)] uppercase tracking-[0.08em] transition-colors ' +
-              (onLight ? 'bg-[#10140b] text-[#f2ecd9]' : 'bg-[#f2ecd9] text-[#10140b]')
-            }
+            tone={onLight ? 'ink' : 'cream'}
+            size="compact"
+            className="shrink-0"
           >
             Contact
-          </a>
+          </PrimaryButton>
 
           {/* ---- the dropdown ----------------------------------------
 

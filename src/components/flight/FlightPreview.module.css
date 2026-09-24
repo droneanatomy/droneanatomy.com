@@ -12,8 +12,8 @@
   --ink: #10140b;
 
   /* THE COPY PAINTS WHITE — by request, and it is the one value in this
-     block that carries every word in the section: the kicker, the title,
-     the body and the rail all resolve to --copy.
+     block that carries every word in the section: the kicker, the title
+     and the body all resolve to --copy.
 
      WHAT IT WAS AND WHY. This was ink. The copy had been cream when the
      sky was a mid-tone and the land was darker; once the skies ran
@@ -197,7 +197,11 @@
   position: absolute;
   left: var(--pad-x);
   bottom: calc(var(--pad-y) + clamp(38px, 5vh, 62px));
-  max-width: min(46ch, 62vw);
+  /* 46ch/62vw -> 52ch/66vw, widened WITH the type size below rather than
+     instead of it. Two of the four titles carry an authored break, and a
+     measure that cannot hold one of those authored lines turns a two-line
+     headline into a three-line one — which is what was happening. */
+  max-width: min(52ch, 66vw);
   transition: opacity 260ms ease;
   color: var(--copy);
 
@@ -232,7 +236,14 @@
 .title {
   margin: 0 0 clamp(10px, 1.4vh, 20px);
   font-family: var(--font-display, 'Satoshi Display', Arial, sans-serif);
-  font-size: clamp(30px, 4.4vw, 76px);
+  /* 4.4vw/76px -> 3.6vw/60px. THE SCENES WENT TO THREE LINES on a wide
+     screen — measured at 1920, "Cruise to the / work area" and "One
+     controller, / every airframe" both did, and at 1600 the first still
+     did. The deck holds four headlines of different lengths in one fixed
+     corner, so the size has to suit the LONGEST of them; 76px suited the
+     shortest. At 3.6vw capped to 60, with the wider measure above, all
+     four set in two lines or fewer at every width from 900 to 2560. */
+  font-size: clamp(30px, 3.6vw, 60px);
   font-weight: 700;
   line-height: 1.02;
   letter-spacing: -0.025em;
@@ -255,37 +266,6 @@
   text-transform: none;
   opacity: 0.86;
   max-width: 42ch;
-}
-
-.rail {
-  position: absolute;
-  left: var(--pad-x);
-  right: var(--pad-x);
-  bottom: var(--pad-y);
-  z-index: 2;
-  display: flex;
-  font-size: clamp(11px, 0.85vw, 14px);
-  color: var(--copy);
-  opacity: 0.7;
-  pointer-events: none;
-  text-shadow: var(--halo);
-}
-
-.cue {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5em;
-}
-
-.cue::before {
-  content: '';
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  /* Orange, not flare yellow. Yellow on ground this pale is a dot you
-     have to be told is there; it was chosen when the sky was darker. */
-  background: #ff6a00;
-  box-shadow: 0 0 0 4px rgba(255, 106, 0, 0.18);
 }
 
 @keyframes leadMarch {
@@ -317,10 +297,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .cue::before {
-    box-shadow: none;
-  }
-
   /* The stagger and the pulse both go; the read-out simply is or is not.
      The numbers stop ticking too — that half is handled in the component,
      which checks the same query before starting its interval. */

@@ -31,6 +31,25 @@ const SOCIAL = [
   { label: 'YouTube', href: 'https://youtube.com/@droneanatomy' },
 ];
 
+/* The middle column, in the room the address used to take.
+
+   ROUTES THAT EXIST, all five checked against src/app — a footer is where
+   people go when they have given up finding something in the nav, so a
+   dead link here is worse than no link. The labels are the header's own
+   (Systems / Mission / Careers / Updates / Contact) rather than new
+   wording, because two different names for one destination is how a site
+   starts feeling larger than it is.
+
+   Privacy is deliberately NOT here. It already sits in the bottom rule,
+   and listing it twice makes the shorter list look like an oversight. */
+const QUICK = [
+  { label: 'Systems', href: '/products' },
+  { label: 'Mission', href: '/about' },
+  { label: 'Updates', href: '/updates' },
+  { label: 'Careers', href: '/careers' },
+  { label: 'Contact', href: '/contact' },
+];
+
 export const SiteFooter: React.FC = () => (
   <footer
       className="relative z-20 overflow-hidden bg-[#050705] [&_a]:text-inherit [&_address]:text-inherit [&_h2]:text-inherit [&_input]:text-inherit [&_p]:text-inherit [&_span]:text-inherit"
@@ -46,27 +65,28 @@ export const SiteFooter: React.FC = () => (
     >
     <div className="mx-auto w-full max-w-[1600px] px-[var(--pad-x,5vw)] pb-0 pt-[clamp(72px,11vw,180px)]">
       <div className="grid grid-cols-1 gap-[clamp(40px,5vw,88px)] md:grid-cols-3">
-        {/* Where we are */}
-        <address className="not-italic text-[clamp(15px,1.15vw,21px)] leading-[1.55] opacity-80">
-          DroneAnatomy
-          <br />
-          C-40, Durga Industrial Park
-          <br />
-          Sahibabad, Ghaziabad 201005
-          <br />
-          Uttar Pradesh, India
-        </address>
+        {/* Who to reach, and how. FIRST COLUMN NOW — the postal address that
+            stood here is gone. Nothing arrives by post and the four lines it
+            took were the largest block in the footer, which put the heaviest
+            thing in the quietest corner.
 
-        {/* Who to reach, and how */}
+            TOUCH TARGETS, on phones only. These links sat ~27px apart and
+            "X" was 9px wide — measured on a 390px screen, the smallest was
+            9 x 19 against Apple's 44 x 44. Invisible padding cannot fix a
+            stacked list that tight: neighbouring tap areas would overlap
+            and a tap between two links would go to whichever painted last.
+            So below md each link becomes a real 44px row (and at least
+            44px wide), which makes the list taller on a phone. Desktop,
+            where a pointer is precise, keeps the tight rhythm. */}
         <div className="text-[clamp(15px,1.15vw,21px)] leading-[1.55]">
-          <ul className="space-y-1">
+          <ul className="space-y-1 max-md:space-y-0">
             {SOCIAL.map((s) => (
               <li key={s.label}>
                 <a
                   href={s.href}
                   target="_blank"
                   rel="noreferrer"
-                  className="opacity-80 transition-opacity hover:opacity-100"
+                  className="opacity-80 transition-opacity hover:opacity-100 max-md:inline-flex max-md:min-h-[44px] max-md:min-w-[44px] max-md:items-center"
                 >
                   {s.label}
                 </a>
@@ -82,18 +102,67 @@ export const SiteFooter: React.FC = () => (
               behind them keeps. */}
           <div className="mt-[clamp(28px,3.4vw,56px)] space-y-1">
             <p className="opacity-55">Enquiries</p>
-            <a href="mailto:info@droneanatomy.com" className="transition-opacity hover:opacity-70">
+            <a
+              href="mailto:info@droneanatomy.com"
+              className="transition-opacity hover:opacity-70 max-md:inline-flex max-md:min-h-[44px] max-md:items-center"
+            >
               info@droneanatomy.com
             </a>
           </div>
         </div>
 
+        {/* QUICK LINKS — labelled, and ranged centre from md up.
+
+            The label is the same small, dimmed line the Enquiries block
+            uses, and space-y-1 sets it off the list by the same 4px, so the
+            two labelled groups in this footer are built the same way rather
+            than each inventing a rhythm.
+
+            It costs a row: the left column still opens straight onto
+            LinkedIn, so this column's first LINK now sits one line lower
+            than its neighbour's. That is what a heading does, and the
+            alternative — inventing a label for the socials so the tops line
+            up — adds a word to a footer whose argument is how few it has.
+
+            RANGED LEFT, like every other block here. It was briefly centred
+            from md up; reverted. */}
+        <nav
+          aria-label="Quick links"
+          className="space-y-1 text-[clamp(15px,1.15vw,21px)] leading-[1.55]"
+        >
+          <p className="opacity-55">Quick links</p>
+          <ul className="space-y-1 max-md:space-y-0">
+            {QUICK.map((q) => (
+              <li key={q.label}>
+                <Link
+                  href={q.href}
+                  className="opacity-80 transition-opacity hover:opacity-100 max-md:inline-flex max-md:min-h-[44px] max-md:min-w-[44px] max-md:items-center"
+                >
+                  {q.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
+
         {/* The one thing this page is asking for */}
         <div>
-          <h2 className="font-display text-[clamp(30px,3.4vw,64px)] normal-case leading-[1.02] tracking-[-0.02em]">
-            Field notes,
-            <br />
-            once a season
+          {/* 64px -> 52px, and ONLY the ceiling moved.
+
+              Past 1600 this heading went to three lines. The container is
+              capped at max-w-[1600px] while its padding and the grid's gap
+              are both 5vw and keep growing, so beyond that width the COLUMN
+              gets narrower as the screen gets wider — 427px at 1600, 411 at
+              1920, 389 at 2560, 360 at 3440 — while 3.4vw ran on to its
+              64px ceiling. Widest screen, biggest type, smallest column.
+
+              52px is the largest size that still sets two lines in the
+              narrowest of those columns (measured: 3440 needs <=52, 2560
+              <=57, 1920 <=60). It engages only above ~1529px, so every
+              width that was already right is untouched. */}
+          <h2 className="font-display text-[clamp(30px,3.4vw,52px)] normal-case leading-[1.02] tracking-[-0.02em]">
+            See what we&apos;re 
+            building next.
           </h2>
 
           {/* A ruled line, not a filled box.
@@ -137,7 +206,9 @@ export const SiteFooter: React.FC = () => (
             <button
               type="submit"
               aria-label="Subscribe"
-              className="shrink-0 text-[clamp(18px,1.4vw,26px)] leading-none transition-transform hover:translate-x-1"
+              /* 44 x 44 on phones, with the arrow held at the right edge of
+                 that box so it does not move — it was a 16 x 18 target. */
+              className="shrink-0 text-[clamp(18px,1.4vw,26px)] leading-none transition-transform hover:translate-x-1 max-md:inline-flex max-md:min-h-[44px] max-md:min-w-[44px] max-md:items-center max-md:justify-end"
             >
               &rarr;
             </button>
@@ -150,10 +221,13 @@ export const SiteFooter: React.FC = () => (
           having fallen off. */}
       <div className="mt-[clamp(56px,7vw,120px)] flex flex-wrap items-baseline justify-between gap-x-8 gap-y-3 border-t border-[#f2ecd9]/12 pt-6 font-display text-[clamp(10px,0.78vw,14px)] uppercase tracking-[0.08em] opacity-55">
         <span>&copy; {new Date().getFullYear()} DroneAnatomy</span>
-        <Link href="/privacy" className="transition-opacity hover:opacity-100">
+        <Link
+          href="/privacy"
+          className="transition-opacity hover:opacity-100 max-md:inline-flex max-md:min-h-[44px] max-md:items-center"
+        >
           Privacy
         </Link>
-        <span>Designed and assembled in India</span>
+        <span>Designed and built in India</span>
       </div>
     </div>
 

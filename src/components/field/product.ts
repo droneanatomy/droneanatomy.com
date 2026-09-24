@@ -122,6 +122,9 @@ export type ProductViewer = {
   hotspots: ViewerHotspot[];
 };
 
+/** The coda's size steps. See `codaSize`. */
+export type CodaSize = 'lg' | 'md' | 'sm';
+
 export type ProductPage = {
   /** Which acts this page has, and in what order. Omit one and its beats
    *  never run and its DOM never mounts — see deriveActs in beats.ts.
@@ -161,6 +164,23 @@ export type ProductPage = {
   codaNote?: readonly string[];
   /** Act one's coda, and the line that becomes act two's lockup. */
   coda: string;
+  /** How big the coda line is set — a step, not a number.
+   *
+   *  The size belongs to the SENTENCE rather than to the page: the line runs
+   *  nowrap from 640px up, so one written long enough simply walks off both
+   *  edges of the screen at the default step. "Ultra-compact Agruculture
+   *  Drone" measures 14.99em, which at `lg`'s 6.8vw is 102% of the viewport
+   *  — clipped at both ends on a 1920 screen before this existed.
+   *
+   *  Roughly what each step holds, filling ~85% of the frame:
+   *
+   *    lg   up to ~12.5em   the default, and every existing page's value
+   *    md   up to ~15em     P10 Pro's thirty-one characters
+   *    sm   up to ~18.5em
+   *
+   *  Measure rather than count characters: em width is what matters, and the
+   *  display face runs about 0.454em a character in normal case. */
+  codaSize?: CodaSize;
   slide: string;
 
   /* OPTIONAL, and the three below with it, because `acts` already made
@@ -262,21 +282,23 @@ export const P10_PRO: ProductPage = {
   },
 
   statement: {
-    head: ['Isn’t just', 'a drone.'],
+    head: ['P10 pro', 'Overview'],
     body:
-      'Built to fly, fold, and be fixed where it lands. Fifty-two minutes on ' +
-      'station, four minutes to service, no tools on the bench.',
+      'Built for Indian conditions.',
     /* Moved out of FieldHero's JSX, where it was a literal and therefore
        rendered on every product's hero regardless of the product. */
     aside:
-      'The P10 isn’t just a drone. It’s the airframe every sensor, ' +
-      'payload and mission answers to.',
-  },
+      'an ultra-compact agricultural drone, one of India\'s first built specifically for Indian farming across steep terrain and tough rural environments.' +
+      'Its rugged build, optimized flight dynamics, and resilient architecture deliver dependable performance in the harshest agricultural conditions.',
+        },
 
   /* Also moved out of the JSX. Three lines, and the breaks are the
      choreography rather than the wrapping. */
-  codaNote: ['Eleven parts come off.', 'Ninety seconds each.', 'One driver.'],
-  coda: 'Built to be opened',
+  // codaNote: ['Eleven parts come off.', 'Ninety seconds each.', 'One driver.'],
+  coda: 'Ultra-compact Agruculture Drone',
+  /* Thirty-one characters — 14.99em — where the default step assumes about
+     twelve and a half. See CodaSize. */
+  codaSize: 'md',
   slide: 'it’s compact',
 
   /* The values that were hardcoded in FieldHero, moved to the one page they
@@ -289,7 +311,7 @@ export const P10_PRO: ProductPage = {
     { src: '/images/portable1.jpg', alt: 'Packed down beside the pilot' },
     { src: '/images/drone-comparison-mob.jpg', alt: 'P10 Pro on station over a field' },
     { src: '/images/p10pro-spray-m.png', alt: 'P10 Pro folded down, carried by one person' },
-    { src: '/images/p10pro-night.png', alt: 'Night flight, navigation lights on' },
+    { src: '/images/p10pro-night-m.png', alt: 'Night flight, navigation lights on' },
   ],
 
   bench: {
@@ -317,47 +339,42 @@ export const P10_PRO: ProductPage = {
       {
         key: 'endurance',
         icon: '◇',
-        kicker: 'Flies the day',
+        kicker: 'Night Flying Capability',
         desc: [
-          'Eighteen minutes loaded, four packs deep.',
-          'Hot-swapped on the headland while the',
-          'next tank is mixing.',
+          'Enhanced Visibility and Safety during nighttime operations. ' +
+          'Equipped with bright LED lights.',
         ],
-        title: ['Eighteen minutes,', 'four packs'],
+        title: ['Max Flight Time,', '30 minutes'],
       },
       {
         key: 'service',
         icon: '↧',
-        kicker: 'Opens in the field',
+        kicker: 'Ultra-Compact Size',
         desc: [
-          'Eleven parts come off with one driver.',
-          'No jig, no bench vice, no service centre.',
-          'The airframe was drawn around the repair,',
-          'not the other way round.',
+          'Light enough to carry anywhere, saves transportation costs. ' +
+          'Made for Indian conditions. Ultra Fast battery charging.',
         ],
-        title: ['Eleven parts,', 'one driver'],
+        title: ['Payload Capacity,', '10kg',]
       },
       {
         key: 'payload',
         icon: '◈',
-        kicker: 'Carries the load',
+        kicker: 'Max Flow Rate',
         desc: [
-          'Ten litres over six metres of swath.',
-          'The tank comes off the same way the arms do,',
-          'so a refill is a swap, not a queue.',
+          'Delivering up to 5 L/min across a 4–6 m spray width, it maintains precise, even coverage over steep slopes and uneven fields.',
         ],
-        title: ['Ten litres,', 'six metres'],
+        title: ['1 Acre,', '5 Minutes'],
       },
     ],
     footnote: { label: 'Swap time per module', value: 't ≈ 90s' },
   },
 
   closing: {
-    kicker: 'Ready for the season',
+    kicker: '',
     headline: 'Bring it to your field',
     body:
-      'Eleven parts off with one driver. Ten litres over six metres. ' +
-      'Eighteen minutes a pack, hot-swapped on the headland.',
+      'Have questions about our drones or need support? We\'re here to help. ' +
+      'Reach out through any of our channels below.',
     label: 'P10 Pro',
     cta: { label: 'Book a demo', href: 'mailto:info@droneanatomy.com' },
   },

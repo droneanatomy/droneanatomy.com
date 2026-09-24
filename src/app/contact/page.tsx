@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import styles from './contact.module.css';
+import { PrimaryButton } from '@/components/ui/PrimaryButton';
 
 
 export default function ContactPage() {
@@ -133,9 +134,13 @@ export default function ContactPage() {
                                 />
                             </div>
 
-                            <button
+                            {/* The site's primary button, rather than this
+                                page's own near-white block with its own
+                                invert-on-hover. w-full is the one thing the
+                                form still decides. */}
+                            <PrimaryButton
                                 type="submit"
-                                className={styles.submitButton}
+                                className="w-full"
                                 disabled={status === 'submitting'}
                             >
                                 {status === 'submitting' ? (
@@ -155,7 +160,7 @@ export default function ContactPage() {
                                         Send Message
                                     </>
                                 )}
-                            </button>
+                            </PrimaryButton>
 
                             {/* Status Message */}
                             {message && (

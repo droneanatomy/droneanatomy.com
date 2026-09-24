@@ -27,6 +27,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { EnquiryDialog } from './EnquiryDialog';
+import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import styles from './Enquiry.module.css';
 
 const CONTACT_HREF = '/contact';
@@ -114,37 +115,22 @@ export const EnquirySection: React.FC = () => {
         <p className={styles.kicker}>Enquiries</p>
 
         <h2 id="enquiry-head" className={styles.head}>
-          <span className={styles.line}>You know the ground.</span>
+          <span className={styles.line}>Indigenous by design.</span>
           <span className={styles.line}>
-            We know what should{' '}
-            <span className={styles.mark}>
-              fly it
-              {/* Drawn, not a border. A straight rule under a word reads
-                  as a link; an uneven stroke reads as someone marking up
-                  a print, which is the note this section wants to end
-                  on. Inline so it inherits the reveal and costs nothing. */}
-              <svg className={styles.underline} viewBox="0 0 200 12" preserveAspectRatio="none" aria-hidden="true">
-                <path
-                  d="M3 8.4C34 4.2 74 2.4 116 3.2c22 .4 47 1.9 81 4.4"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="3.2"
-                  strokeLinecap="round"
-                />
-              </svg>
-            </span>
-            .
+            From systems to missions.
           </span>
         </h2>
 
         <p className={styles.sub}>
-          Bring us the site, the survey, or the problem. We&apos;ll tell you what
-          should fly it — and what it will actually take.
+          We design from failure -&gt; prevention -&gt; reliability.
         </p>
 
         <div className={styles.actions}>
-          <a
-            className={styles.cta}
+          {/* WAS A 999px MONO PILL of its own. Same button as the product
+              pages' now — the enquiry is the same kind of invitation, and
+              two shapes for it only ever said that two people wrote them.
+              The behaviour below is unchanged. */}
+          <PrimaryButton
             href={CONTACT_HREF}
             onClick={(e) => {
               /* Let the browser have the modified clicks. Hijacking a
@@ -156,7 +142,7 @@ export const EnquirySection: React.FC = () => {
             }}
           >
             Start an enquiry
-          </a>
+          </PrimaryButton>
 
           <p className={styles.direct}>
             or write to{' '}

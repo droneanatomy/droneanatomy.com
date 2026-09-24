@@ -366,22 +366,17 @@ export const FlightPreview: React.FC<FlightPreviewProps> = ({
   }, [videoFirst]);
 
   return (
-    /* data-chrome="ink", because this section is PALE.
+    /* NO data-chrome here, by decision: the header is black over the
+       homepage hero ONLY and white everywhere else, this section included.
 
-       It used to be absent, on the note that the sky was mid-tone and the
-       header's cream closed state read on it — with the warning that
-       lightening the sky would need this. That is exactly what happened:
-       the survey beat became an overhead plate of bleached, hazy ground,
-       and the four skies now run #bcc1b4 to #d1d6cd. Cream section labels
-       on that measure about 1.5:1, which is not a contrast so much as a
-       rumour; in ink they are near 10:1.
-
-       Only the bare labels were affected — the CONTACT pill carries its
-       own cream ground and stayed legible throughout, which is why this
-       was easy to miss. */
+       Know the cost before reversing it. This section's skies run #bcc1b4
+       to #d1d6cd, and cream header labels over them were measured at about
+       1.5:1 — which is why it once carried data-chrome="ink" (near 10:1).
+       The CONTACT pill brings its own cream ground and stays legible; the
+       bare labels are what suffer. If they need rescuing, give the header
+       a dark halo over pale sections rather than turning it black. */
     <div
       ref={rootRef}
-      data-chrome="ink"
       className={styles.root}
       style={{ height: `${FLIGHT.totalVh}vh` }}
     >
@@ -511,10 +506,6 @@ export const FlightPreview: React.FC<FlightPreviewProps> = ({
           </article>
         ))}
       </div>
-
-        <div className={styles.rail}>
-          <span className={styles.cue}>Scroll to fly</span>
-        </div>
       </div>
     </div>
   );

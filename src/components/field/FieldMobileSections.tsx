@@ -30,6 +30,7 @@
 import Image from 'next/image';
 import React, { useEffect, useRef } from 'react';
 import type { ProductPage } from './product';
+import { PrimaryButton } from '@/components/ui/PrimaryButton';
 
 /* Each panel is one screen, minus a sliver so the next one peeks and the
    reader can see there is more. dvh rather than vh: this IS ordinary
@@ -229,12 +230,10 @@ export const FieldClosingMobile: React.FC<{
       <span className="rounded-[3px] border border-dashed border-[#f2ecd9]/40 px-5 py-3 font-display text-[clamp(10px,2.7vw,13px)] font-bold uppercase tracking-[0.12em]">
         {closing.label}
       </span>
-      <a
-        href={closing.cta.href}
-        className="rounded-[3px] bg-[#f2ecd9] px-5 py-3 font-display text-[clamp(10px,2.7vw,13px)] font-bold uppercase tracking-[0.12em] text-[#090b07]"
-      >
-        {closing.cta.label}
-      </a>
+      {/* Was a near-copy of the desktop closing CTA with its own padding
+          and its own type scale. One component now, which is also how it
+          picks up the 44px tap target it did not have. */}
+      <PrimaryButton href={closing.cta.href}>{closing.cta.label}</PrimaryButton>
     </div>
   </section>
 );

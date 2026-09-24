@@ -49,6 +49,7 @@
 
 import React, { useEffect, useRef } from 'react';
 import * as THREE from 'three';
+import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 import {
   FLIGHT, SCENES, TRANSITION_SEC, advanceClock, advancePhase, sceneAt, clamp01, easeInOutCubic, lerp,
   type Look,
@@ -139,6 +140,12 @@ const V = (a: readonly number[], b: readonly number[], t: number, out: THREE.Vec
    silhouettes and threw away the one thing a formation shot can say
    without a caption, which is that these are different machines. */
 const LEAD_SPAN = 11;
+
+/* On a portrait screen, how much of the WIDTH the lead aircraft's full
+   span may take before the lens widens to keep it in frame — and the most
+   it may widen, so a very close shot never turns into a fisheye. */
+const PORTRAIT_FILL = 0.8;
+const PORTRAIT_FOV_MAX = 70;
 
 const FLEET: {
   label: string;
@@ -325,6 +332,60 @@ export const FlightScene: React.FC<FlightSceneProps> = ({
       o.traverse((c) => c.layers.enable(CRAFT_LAYER));
     };
 
+    /* SOMETHING FOR THE AIRFRAME TO REFLECT — the reason it rendered black.
+
+       The Cyclops is carbon fibre under clearcoat, white plastic, and bare
+       metal. Its reference renders are lit by an environment, and the
+       silver sheen of the weave in them IS that environment, reflected.
+       Here it had none: a clearcoat with nothing to reflect adds nothing,
+       and a metal with nothing to reflect is black, so the whole aircraft
+       read as a silhouette however hard the key and fill above were driven.
+
+       The studio box the product viewer (MiniViewer) already uses,
+       generated in code so it costs no download, and at that viewer's
+       0.55 so the aircraft looks the same on its product page as here —
+       see the note there on why pushing it past unity turns dark parts
+       chalky. Set per MATERIAL rather than as scene.environment, so it
+       reaches the aircraft alone: the terrain's lighting was tuned to a
+       knife-edge and a studio environment across it would bleach it. */
+    const pmrem = new THREE.PMREMGenerator(renderer);
+    const craftEnv = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+    pmrem.dispose();
+    const CRAFT_ENV_INTENSITY = 0.55;
+    const reflectStudio = (o: THREE.Object3D) => {
+      o.traverse((c) => {
+        const mesh = c as THREE.Mesh;
+        if (!mesh.isMesh) return;
+        const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+        for (const m of mats) {
+          const std = m as THREE.MeshStandardMaterial;
+          if (!std.isMeshStandardMaterial) continue;
+          std.envMap = craftEnv;
+          std.envMapIntensity = CRAFT_ENV_INTENSITY;
+
+          /* NO TRANSMISSION ON THE AIRFRAME.
+
+             The nose pod's WHITE PLASTIC is exported 71% transmissive —
+             in the source renderer that is milky, slightly translucent
+             plastic. three.js treats transmission as glass: only the
+             remaining 29% of the white shows, and the rest is a refracted
+             sample of the scene behind, which came back black. The pod
+             rendered as a flat black blob where the reference has it
+             white. Turned off, it is the solid white part it is meant to
+             be. The LENS goes too: it is a few pixels across at any
+             distance this scene flies, the studio reflection above already
+             gives it a glint, and while ANY transmissive material is in
+             view three renders the whole scene a second time, every frame,
+             to feed it. That pass costs far more than a lens is worth,
+             most of all on a phone. */
+          const phys = std as THREE.MeshPhysicalMaterial;
+          if (phys.isMeshPhysicalMaterial && phys.transmission > 0) phys.transmission = 0;
+
+          std.needsUpdate = true;
+        }
+      });
+    };
+
     /* Before the terrain's texture is configured, which happens when its
        plates land. */
     setTerrainAnisotropy(renderer.capabilities.getMaxAnisotropy());
@@ -375,6 +436,10 @@ export const FlightScene: React.FC<FlightSceneProps> = ({
        Draco GLB takes a moment and a blank sky in the meantime would read
        as a broken page rather than a loading one. */
     let vtol: Craft = buildVtol();
+    /* The lead airframe's visual centre in its own frame; zero until the
+       real model loads. Set in the load callback below. */
+    const vtolCentre = new THREE.Vector3();
+    const vtolCentreWorld = new THREE.Vector3();
     litByCraftLights(vtol);
     scene.add(vtol);
 
@@ -433,7 +498,16 @@ export const FlightScene: React.FC<FlightSceneProps> = ({
       scene.remove(vtol);
       vtol = real;
       litByCraftLights(vtol);
+      reflectStudio(vtol);
       scene.add(vtol);
+
+      /* Where the airframe ACTUALLY is, in its own frame. loadCraft's
+         normalise() re-centres in unscaled units and then scales, which
+         leaves the drawn model several units off its own origin (see the
+         portrait framing below). Measured once here, while the holder is
+         still at identity, so the frame loop can aim at the real body. */
+      vtol.updateMatrixWorld(true);
+      vtolCentre.copy(vtol.worldToLocal(new THREE.Box3().setFromObject(vtol).getCenter(new THREE.Vector3())));
       if (process.env.NODE_ENV !== 'production') {
         const d = describe(real);
         // eslint-disable-next-line no-console
@@ -806,7 +880,26 @@ export const FlightScene: React.FC<FlightSceneProps> = ({
       tmp.set(ox, camPos.y, oz);
       const breathe = 1 + (Math.sin(phase * 0.51) * push) / Math.max(1, tmp.length());
       camera.position.copy(craftPos).addScaledVector(tmp, breathe);
-      camera.lookAt(tmp.copy(craftPos).add(aimPos));
+
+      /* ON A PHONE, AIM AT THE AIRFRAME, NOT AT ITS ORIGIN.
+
+         normalise() in loadCraft leaves the drawn Cyclops several units
+         to the side of the point the holder sits at — it subtracts the
+         bounding-box centre in unscaled units and then scales by ~3.8.
+         Every shot here was framed by eye on a wide screen with that
+         offset already in it, so on desktop it is simply part of the
+         composition. On a phone's narrow frame it pushed the aircraft
+         off the left edge, and widening the lens alone could not bring
+         it back. So in portrait the look target moves onto the real body.
+
+         Fixed here rather than in normalise(): correcting it there moves
+         every product viewer's hotspot anchors, which were tuned against
+         the offset. */
+      vtol.updateMatrixWorld();
+      vtol.localToWorld(vtolCentreWorld.copy(vtolCentre));
+      tmp.copy(craftPos).add(aimPos);
+      if (portrait) tmp.add(vtolCentreWorld).sub(craftPos);
+      camera.lookAt(tmp);
 
       /* THEIR LENS IS 20 DEGREES, ours 34 to 52. Read straight off their
          projection matrix, and it is not a detail — a 20mm-equivalent
@@ -815,8 +908,28 @@ export const FlightScene: React.FC<FlightSceneProps> = ({
          reconnaissance footage rather than as a game camera. A wide lens
          puts the viewer inside the landscape; a long one puts them a mile
          above it with a spotting scope. */
-      const fov =
+      let fov =
         (photoreal ? USAV_FOV : lerp(a.fov, b.fov, blend)) * (portrait ? 1.34 : 1);
+
+      /* ON A PHONE, FIT THE AIRCRAFT, not just a wider lens.
+
+         The flat 1.34 was not enough for the close shots. A phone is about
+         0.46 wide-to-tall, so 22.9 degrees of vertical lens times 1.34
+         leaves roughly 14 degrees across — while the 11-unit wingspan at
+         the approach standoff of ~34 units spans about 18. The wing
+         simply could not fit, and the opening shot showed a wing tip and
+         a tail. So: from the camera's real distance, work out the lens
+         that puts the whole span across PORTRAIT_FILL of the width, and
+         take whichever is wider. Shots where the aircraft is small and far
+         already need less than the 1.34 and are left exactly as they
+         were; recomputed every frame from distance, so it moves smoothly
+         between scenes instead of snapping. Desktop is not touched. */
+      if (portrait) {
+        const dist = Math.max(1, camera.position.distanceTo(vtolCentreWorld));
+        const across = (2 * Math.atan(LEAD_SPAN / 2 / dist)) / PORTRAIT_FILL;
+        const need = (2 * Math.atan(Math.tan(across / 2) / camera.aspect) * 180) / Math.PI;
+        fov = Math.max(fov, Math.min(need, PORTRAIT_FOV_MAX));
+      }
       if (Math.abs(camera.fov - fov) > 0.01) {
         camera.fov = fov;
         camera.updateProjectionMatrix();
@@ -927,6 +1040,7 @@ export const FlightScene: React.FC<FlightSceneProps> = ({
           else if (mat && !mat.userData.shared) mat.dispose();
         }
       });
+      craftEnv.dispose();
       renderer.dispose();
     };
     /* `photoreal` IS IN HERE, and it belongs. The effect reads it when it

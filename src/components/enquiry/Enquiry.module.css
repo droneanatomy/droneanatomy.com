@@ -159,7 +159,14 @@
      the breakpoint range. */
   font-size: clamp(28px, 4.4vw, 66px);
   font-weight: 700;
-  line-height: 0.98;
+  /* 0.98 -> 1.06. THE TWO LINES WERE TOUCHING, not merely tight: this face
+     at 700 has long descenders, and "Indigenous by design." sets a g, a y
+     and another g directly over the F, the t and the dotted i of "From
+     systems to missions." At 0.98 the y of "by" met the t of "systems".
+     1.02 was not enough — it only moved the contact, it did not clear it.
+     1.06 leaves daylight between every pair, and costs ten pixels of block
+     height at 1440 (124 -> 134), which nothing below it notices. */
+  line-height: 1.06;
   letter-spacing: -0.032em;
   text-transform: none;
   color: var(--paper);
@@ -208,30 +215,12 @@
   margin-top: clamp(26px, 4vh, 46px);
 }
 
-.root .cta {
-  display: inline-flex;
-  align-items: center;
-  /* Down from 17px 34px, with the 1:2 vertical-to-horizontal ratio kept so
-     the pill keeps its shape rather than becoming a rounder, squatter one. */
-  padding: 14px 28px;
-  border-radius: 999px;
-  border: 0;
-  background: var(--paper);
-  color: var(--ground);
-  font-family: var(--font-mono, monospace);
-  /* Down from clamp(11px, 0.82vw, 13px). The floor moves least: this is
-     tracked uppercase mono at 0.14em, and below about 10px that letter
-     spacing stops reading as deliberate and starts reading as broken. */
-  font-size: clamp(10px, 0.72vw, 12px);
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  text-decoration: none;
-  cursor: pointer;
-  transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1), background-color 320ms ease;
-}
+/* THE PILL THAT WAS HERE IS GONE. This section's call to action is the
+   site's PrimaryButton now (src/components/ui/PrimaryButton.tsx), so its
+   fill, radius, type and hover all come from there. It was a 999px mono
+   pill — one of the three different primary buttons a reader used to meet
+   while crossing this site. */
 
-.root .cta:hover { transform: translateY(-2px); }
-.root .cta:focus-visible { outline: 2px solid var(--flare); outline-offset: 4px; }
 
 .root .direct {
   margin: 0;
@@ -749,5 +738,21 @@
 @media (max-width: 520px) {
   .dialog { width: 100vw; max-height: 100dvh; }
   .card { max-height: 100dvh; border-radius: 0; border-left: 0; border-right: 0; }
-  .actions { gap: 14px; }
+  /* BUTTON, THEN THE ADDRESS UNDER IT — stacked on purpose on a phone.
+     This used to rely on flex-wrap, which only dropped the address below
+     when the two happened not to fit: on a 390px phone it wrapped, on a
+     430px one it could sit beside the button. Stated outright now. */
+  .actions {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  /* A 44px tap target for the address, which measured 142 x 16. Padding
+     grows the hit area; the equal negative margin gives the height back,
+     so the line sits exactly where it did. */
+  .root .direct .link {
+    display: inline-block;
+    padding-block: 16px;
+    margin-block: -16px;
+  }
 }
