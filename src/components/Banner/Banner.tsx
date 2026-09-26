@@ -4,6 +4,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import { CustomButton } from '../CustomButton';
 import Image from 'next/image';
 import styles from './Banner.module.css';
+import { useNewsletter } from '@/components/ui/useNewsletter';
 
 export type ContentPosition =
     | 'top-left'
@@ -95,8 +96,13 @@ export const Banner: React.FC<BannerProps> = ({
     const [isInView, setIsInView] = useState(false);
     // Once true, never goes back to false — prevents src toggling which causes flicker
     const [hasBeenInView, setHasBeenInView] = useState(false);
-    const [email, setEmail] = useState('');
-    const [submitted, setSubmitted] = useState(false);
+    /* The subscribe logic moved to useNewsletter, which is now the one
+       copy on the site — the footer, the nav panel and FieldMenu all had
+       the same field and none of them sent anything. Behaviour here is
+       unchanged apart from the wording of the two outcome messages. */
+    const { email, setEmail, status, message, submit: handleEmailSubmit } = useNewsletter();
+    const submitted = status === 'done';
+    const isSubmitting = status === 'submitting';
 
     // Check if mobile on mount and resize
     useEffect(() => {
@@ -168,55 +174,6 @@ export const Banner: React.FC<BannerProps> = ({
             top: window.innerHeight,
             behavior: 'smooth',
         });
-    };
-
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [message, setMessage] = useState('');
-
-    const handleEmailSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!email) return;
-
-        setIsSubmitting(true);
-        setMessage('');
-
-        const endpoint = process.env.NEXT_PUBLIC_NEWSLETTER_ENDPOINT;
-
-        if (!endpoint) {
-            setMessage('Newsletter service is not configured.');
-            setIsSubmitting(false);
-            return;
-        }
-
-        const body = new URLSearchParams();
-        body.append('email', email);
-        body.append('userGroup', 'Newsletter');
-
-        try {
-            const response = await fetch(endpoint, {
-                method: 'POST',
-                body: body,
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                }
-            });
-
-            if (response.ok) {
-                setSubmitted(true);
-                setEmail('');
-                setMessage('Successfully subscribed!');
-                setTimeout(() => setSubmitted(false), 3000);
-            } else {
-                const errorText = await response.text();
-                console.error('Newsletter subscription failed:', response.status, errorText || response.statusText);
-                setMessage('Failed to subscribe. Please try again.');
-            }
-        } catch (error) {
-            console.error('Newsletter subscription error:', error);
-            setMessage('An error occurred. Please try again.');
-        } finally {
-            setIsSubmitting(false);
-        }
     };
 
     const positionClass = positionClassMap[contentPosition];

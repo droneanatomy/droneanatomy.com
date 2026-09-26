@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { useNewsletter } from '@/components/ui/useNewsletter';
 
 /* ============================================================
    SiteFooter — the ground floor.
@@ -50,7 +51,13 @@ const QUICK = [
   { label: 'Contact', href: '/contact' },
 ];
 
-export const SiteFooter: React.FC = () => (
+export const SiteFooter: React.FC = () => {
+  /* See useNewsletter: the same endpoint and the same form POST Banner
+     uses. This field rendered an arrow and swallowed the submit until
+     now. */
+  const { email, setEmail, status, message, submit } = useNewsletter();
+
+  return (
   <footer
       className="relative z-20 overflow-hidden bg-[#050705] [&_a]:text-inherit [&_address]:text-inherit [&_h2]:text-inherit [&_input]:text-inherit [&_p]:text-inherit [&_span]:text-inherit"
       /* Stated inline, and the children forced to inherit it above.
@@ -189,7 +196,7 @@ export const SiteFooter: React.FC = () => (
               border is neither a background nor an outline. */}
           <form
             className="mt-[clamp(24px,2.6vw,44px)] flex items-center gap-3 border-b border-[#f2ecd9]/20 pb-[clamp(10px,0.9vw,16px)] transition-colors focus-within:border-[#f2ecd9]/45"
-            onSubmit={(e) => e.preventDefault()}
+            onSubmit={submit}
           >
             <label htmlFor="footer-email" className="sr-only">
               Your email
@@ -199,9 +206,12 @@ export const SiteFooter: React.FC = () => (
               type="email"
               required
               placeholder="Your email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              disabled={status === 'submitting'}
               /* Type matched to the other two columns rather than kept a
                  size of its own — 1.15vw, not 1.1vw. */
-              className="min-w-0 flex-1 appearance-none border-0 bg-transparent p-0 text-[clamp(15px,1.15vw,21px)] leading-[1.55] outline-none placeholder:text-[#f2ecd9]/45"
+              className="min-w-0 flex-1 appearance-none border-0 bg-transparent p-0 text-[clamp(15px,1.15vw,21px)] leading-[1.55] outline-none placeholder:text-[#f2ecd9]/45 disabled:opacity-60"
             />
             <button
               type="submit"
@@ -213,6 +223,26 @@ export const SiteFooter: React.FC = () => (
               &rarr;
             </button>
           </form>
+
+          {/* ONE LINE, AND IT HOLDS THE SPACE. min-h rather than rendering
+              only on a message: without it the footer's bottom rule jumps
+              up the moment anyone subscribes. aria-live so a screen reader
+              is told the outcome it cannot see. */}
+          <p
+            aria-live="polite"
+            className={
+              'mt-[clamp(8px,0.8vw,14px)] min-h-[1.5em] text-[clamp(13px,0.95vw,16px)] leading-[1.5] ' +
+              (status === 'error' ? '' : 'opacity-60')
+            }
+            /* INLINE, because the footer root forces [&_p]:text-inherit on
+               every paragraph under it — see the note on the colour at the
+               top — and an arbitrary-value class loses to it. A failure
+               that reports itself in the same cream as a success is not
+               reporting anything. */
+            style={status === 'error' ? { color: '#ff9b6a' } : undefined}
+          >
+            {message}
+          </p>
         </div>
       </div>
 
@@ -270,6 +300,7 @@ export const SiteFooter: React.FC = () => (
       <p className="mt-[clamp(24px,3vw,56px)] -mb-[0.14em] whitespace-nowrap font-display text-[11.1vw] uppercase leading-[0.78] tracking-[-0.035em]">
         DroneAnatomy
       </p>
-    </div>
-  </footer>
-);
+      </div>
+    </footer>
+  );
+};
