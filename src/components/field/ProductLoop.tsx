@@ -253,7 +253,17 @@ export function ProductLoop({
             className="absolute bottom-[10%] left-1/2 w-[84vw] -translate-x-1/2 text-right text-[clamp(15px,1.77vw,34px)] leading-[1.42] text-[#f2ecd9] md:bottom-auto md:left-auto md:right-[8%] md:top-[42%] md:w-[clamp(230px,18.8vw,360px)] md:translate-x-0 md:text-left"
             style={{ textShadow: HALO }}
           >
-            {loop.body}
+            {/* One block per entry, so each claim owns a line however narrow
+                the column gets. Blocks rather than newlines: SplitText
+                rewrites this element's DOM, and a structural break survives
+                that where collapsed whitespace would not. */}
+            {Array.isArray(loop.body)
+              ? loop.body.map((line) => (
+                  <span key={line} className="block">
+                    {line}
+                  </span>
+                ))
+              : loop.body}
           </p>
         )}
       </div>

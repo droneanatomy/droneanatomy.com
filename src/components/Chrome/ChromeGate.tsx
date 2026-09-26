@@ -42,9 +42,6 @@ const OWN_NAV_ROUTES = [
   '/products/mini',
   '/products/noxr-1',
   '/products/cyclops',
-  /* Not a product page: the hidden flight game, which covers the whole
-     viewport and has its own HUD. */
-  '/fly',
   '/preview/field',
 ];
 

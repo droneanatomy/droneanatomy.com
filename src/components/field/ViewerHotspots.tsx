@@ -231,8 +231,14 @@ export const ViewerHotspots = forwardRef<HotspotsHandle, Props>(function ViewerH
             aria-hidden
             className={
               'absolute left-1/2 top-1/2 block size-[7px] -translate-x-1/2 -translate-y-1/2 ' +
-              'rounded-full bg-[var(--color-flare)]'
+              'rounded-full bg-white'
             }
+            /* The same problem the label has, and the same answer. A 7px
+               white dot on Noxr's yellow canopy is a smudge; the ring of
+               dark around it is what makes it read as a mark placed ON the
+               aircraft rather than a blemish in the paint. box-shadow
+               rather than a border so the dot keeps its size. */
+            style={{ boxShadow: '0 0 0 1px rgba(9,11,7,0.55), 0 0 6px 2px rgba(9,11,7,0.8)' }}
           />
 
           {/* A ZERO-SIZE ORIGIN AT THE ANCHOR. Everything that hangs off the
@@ -244,18 +250,28 @@ export const ViewerHotspots = forwardRef<HotspotsHandle, Props>(function ViewerH
           <span aria-hidden className="absolute left-1/2 top-1/2 block size-0">
             {/* THE LEADER. overflow-visible because the path is drawn out of
                 the top-left in negative coordinates. */}
-            <svg className="absolute left-0 top-0 h-px w-px overflow-visible" viewBox="0 0 1 1">
+            <svg
+              className="absolute left-0 top-0 h-px w-px overflow-visible"
+              viewBox="0 0 1 1"
+              /* A 1px white hairline over a bright canopy disappears, and a
+                 stroke cannot carry a text-shadow — so the darkening goes on
+                 the element as a drop-shadow filter, which follows the path
+                 whatever DIAG and RUN are tuned to. */
+              style={{ filter: 'drop-shadow(0 0 2px rgba(9,11,7,0.9)) drop-shadow(0 0 5px rgba(9,11,7,0.7))' }}
+            >
             <path
               ref={(el) => {
                 leaders.current[i] = el;
               }}
               d={`M 0 0 L ${-DIAG} ${-DIAG} L ${-(DIAG + RUN)} ${-DIAG}`}
               fill="none"
-              stroke="var(--color-flare)"
+              stroke="#ffffff"
               /* Dimmer than the dot and the label so the hierarchy is
                  read in the right order: the point, then what it says,
-                 then the line that joins them. */
-              strokeOpacity={0.75}
+                 then the line that joins them. Lifted from 0.75 with the
+                 colour change: flare yellow at 0.75 sat well clear of a
+                 dark stage, and white at the same value went grey. */
+              strokeOpacity={0.85}
               strokeWidth={1}
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -277,7 +293,37 @@ export const ViewerHotspots = forwardRef<HotspotsHandle, Props>(function ViewerH
               ref={(el) => {
                 labels.current[i] = el;
               }}
-              style={{ left: -(DIAG + RUN), bottom: DIAG + LABEL_GAP, opacity: 0 }}
+              /* WHITE NEEDS A GROUND, and here it has none. The label floats
+                 over whatever the model happens to be: on the Cyclops that
+                 is a near-black stage and white is fine, but Noxr's canopy
+                 is a bright powder-coat yellow and the marker sits on it —
+                 white on that is not low contrast, it is no contrast.
+
+                 So the label carries its own ground: a tight shadow for the
+                 glyph edge and a wide soft one to darken the pixels behind
+                 it. The same halo the film section uses over its grass, for
+                 the same reason. It costs nothing when the stage is already
+                 black, which is why it is unconditional rather than keyed
+                 to the product. */
+              style={{
+                left: -(DIAG + RUN),
+                bottom: DIAG + LABEL_GAP,
+                opacity: 0,
+                /* STACKED, because one soft shadow was not enough. Measured
+                   over Noxr's canopy, white with a single 16px halo came to
+                   2.42:1 — an improvement on the flare yellow it replaced
+                   (2.21:1) and still under the 3:1 floor for bold text this
+                   size. Shadows composite, so repeating a tight one builds
+                   real opacity against a bright ground while the wide one
+                   keeps the edge from looking cut out. */
+                textShadow: [
+                  '0 1px 2px rgba(9,11,7,0.95)',
+                  '0 0 3px rgba(9,11,7,0.95)',
+                  '0 0 6px rgba(9,11,7,0.95)',
+                  '0 0 10px rgba(9,11,7,0.9)',
+                  '0 0 18px rgba(9,11,7,0.85)',
+                ].join(', '),
+              }}
               className={
                 /* CLAMPED RATHER THAN FIXED, because the panel is sized in
                    vh now. A flat 10px was set against a frame capped at
@@ -287,7 +333,7 @@ export const ViewerHotspots = forwardRef<HotspotsHandle, Props>(function ViewerH
                    at every window, which is the thing that was actually
                    being judged. */
                 'absolute whitespace-nowrap font-display text-[clamp(13px,1.15vw,18px)] ' +
-                'font-bold uppercase tracking-[0.14em] text-[var(--color-flare)] ' +
+                'font-bold uppercase tracking-[0.14em] text-white ' +
                 'transition-opacity duration-[260ms] delay-[420ms] ease-out ' +
                 'motion-reduce:transition-none motion-reduce:delay-0'
               }

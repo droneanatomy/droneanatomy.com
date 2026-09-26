@@ -12,6 +12,12 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    /* STATIC ASSETS, NOT SOURCE. public/ is served verbatim; nothing in it
+       is compiled or imported, so linting it only ever reports on other
+       people's code. It was reporting nine errors from the vendored Draco
+       decoder — a require() shim, an assignment to `module`, and four
+       aliases of `this` — none of which we can or should change. */
+    "public/**",
   ]),
 ]);
 

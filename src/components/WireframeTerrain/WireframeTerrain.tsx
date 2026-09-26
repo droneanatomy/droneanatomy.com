@@ -70,6 +70,10 @@ export const WireframeTerrain: React.FC<WireframeTerrainProps> = ({
         try {
             renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
         } catch {
+            /* eslint-disable-next-line react-hooks/set-state-in-effect --
+               The failure path. A canvas is needed before WebGL can be
+               asked for at all, so this cannot be known before the effect,
+               and deferring it would only delay the fallback. */
             setWebGLFailed(true);
             return;
         }

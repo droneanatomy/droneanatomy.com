@@ -1,7 +1,8 @@
 /* Where the Cyclops's propellers are, as measured off the model rather
-   than guessed. Exported so FlightScene, FlyGame and the test all use the
-   same predicate — three copies of a rule about geometry is three chances
-   to disagree with the aircraft.
+   than guessed. Exported so FlightScene and the test use the same
+   predicate — two copies of a rule about geometry is two chances to
+   disagree with the aircraft. It was three: the flight game read it too,
+   before that page was removed.
 
    Model coordinates, which is what loadCraft hands a pick: the nose is -X,
    the pusher sits on the centreline at the tail (+X, z about 0) and the

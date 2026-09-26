@@ -181,6 +181,22 @@ export type ProductPage = {
    *  Measure rather than count characters: em width is what matters, and the
    *  display face runs about 0.454em a character in normal case. */
   codaSize?: CodaSize;
+  /** The small line ABOVE the travelling one, and the other half of the
+   *  same lockup: "40% Smaller," over "it's compact".
+   *
+   *  DECLARED, NOT TYPED IN — the third literal of its kind found in
+   *  FieldHero's JSX, after the statement's aside and the coda note. It
+   *  only ever rendered on P10 Pro, because that is the one page whose
+   *  `acts` include the slide, so unlike those two it never leaked. It
+   *  would have, the first time a second product declared the act.
+   *
+   *  REQUIRED rather than optional, unlike `codaNote` and `statement.aside`
+   *  which a page may simply omit. This one is load-bearing: measureLockup
+   *  measures the label to work out where the big line flies TO, and it
+   *  returns early without one, so a slide act with no label is an act
+   *  whose animation has no target. If you declare the act, bring the
+   *  label. */
+  slideLabel: string;
   slide: string;
 
   /* OPTIONAL, and the three below with it, because `acts` already made
@@ -238,7 +254,15 @@ export type ProductPage = {
      *  hero's void statement. Either may be omitted and simply does not
      *  render. */
     head?: [string, string];
-    body?: string;
+    /** Prose, OR a list — and the list is not a formatting convenience.
+     *
+     *  A string flows and wraps wherever the measure runs out, which is
+     *  right for a sentence. A spec line is not a sentence: it is a set of
+     *  independent claims, and wrapping one of them across two lines
+     *  ("[150+ / km] range") makes the reader reassemble it. Give an array
+     *  and each entry gets its own line, whatever the column is doing —
+     *  the same reason codaNote is an array rather than a string. */
+    body?: string | readonly string[];
   };
 
   /** The hero's bottom-right media card, and the lightbox behind it.
@@ -295,10 +319,11 @@ export const P10_PRO: ProductPage = {
   /* Also moved out of the JSX. Three lines, and the breaks are the
      choreography rather than the wrapping. */
   // codaNote: ['Eleven parts come off.', 'Ninety seconds each.', 'One driver.'],
-  coda: 'Ultra-compact Agruculture Drone',
+  coda: 'Ultra-compact Agriculture Drone',
   /* Thirty-one characters — 14.99em — where the default step assumes about
      twelve and a half. See CodaSize. */
   codaSize: 'md',
+  slideLabel: '40% Smaller,',
   slide: 'it’s compact',
 
   /* The values that were hardcoded in FieldHero, moved to the one page they
@@ -487,11 +512,13 @@ export const MINI: ProductPage = {
   statement: {
     head: ['Packs down.', 'Flies far.'],
     body:
-      'Folds into a case that goes where the crew goes, and comes out flying ' +
-      'the same stack as every other airframe on the fleet.',
+      'UNDER 250G. BUILT FOR DENIED ENVIRONMENTS.'
   },
   coda: 'Built to travel light',
-  slide: 'it packs down',
+  /* Unwritten: this page declares the hero act only, so the lockup never
+     renders. Write it with the act. */
+  slideLabel: 'EW-Resilient',
+  slide: 'Sub-250 g • Day & Night • GPS-Denied ',
 
   /* COMPOSED IN THE BROWSER, NOT CALCULATED.
 
@@ -633,11 +660,13 @@ export const NOXR: ProductPage = {
   /* Ten characters a line is what act one's headline size is solved
      against — see the note on the h2 in FieldHero. Two SHORT lines. */
   statement: {
-    head: ['PLACEHOLDER', 'TWO LINES'],
-    body: 'PLACEHOLDER — the paragraph that sits beside the statement.',
+    head: ['UnFold. Deploy.', 'Dominate.'],
+    body: 'Enterprise Intelligence. Unmatched Autonomy.',
   },
-  coda: 'PLACEHOLDER — the closing line',
-  slide: 'placeholder',
+  coda: 'The Closest Thing to Limitless.',
+  /* Unwritten — see Mini. */
+  slideLabel: 'MISSION-READY',
+  slide: 'GPS-DENIED. EW-RESILIENT. MISSION-READY.',
 
   /* MEASURED OFF THIS RENDER, none of it carried over from the Mini.
 
@@ -728,14 +757,14 @@ export const NOXR: ProductPage = {
 
     hotspots: [
       {
-        label: 'PLACEHOLDER 01',
+        label: 'DAY/NIGHT EO/IR + LRF',
         /* The LENS meshes' centroid, pushed onto the front face. */
         anchor: [0.043, 0.182, 0.6],
         normal: [0, 0, 1],
         pose: { azimuth: 0.2, polar: 1.45, radius: 0.45 },
       },
       {
-        label: 'PLACEHOLDER 02',
+        label: 'FREQUENCY HOPPING',
         /* The top face of the node literally called Battery: centre
            [-0.006, 0.089, -0.382] with a half-height of 0.204. */
         anchor: [-0.006, 0.293, -0.382],
@@ -743,18 +772,29 @@ export const NOXR: ProductPage = {
         pose: { azimuth: 3.0, polar: 0.8, radius: 0.5 },
       },
       {
-        label: 'PLACEHOLDER 03',
+        label: '60 MIN FLIGHT',
         /* The top of the front-right motor housing (Body5.007). */
         anchor: [0.885, 0.37, 0.907],
         normal: [0, 1, 0],
         pose: { azimuth: 0.8, polar: 0.85, radius: 0.55 },
       },
       {
-        label: 'PLACEHOLDER 04',
-        /* The outboard face of 'back Holder', one of a symmetric pair. */
-        anchor: [0.286, -0.023, -0.416],
+        label: 'GPS-DENIED',
+        /* MOVED IN TO THE BODY. It was the outboard face of 'back Holder',
+           one of a symmetric pair out at the rear — a mounting bracket,
+           which is a thin thing to hang a navigation claim on and sat far
+           enough aft that the leader crossed most of the airframe.
+
+           Picked off the surface instead (see pickAnchor): the +x flank of
+           Canopy001, the central shell, at 0.183 out and 0.085 up. The
+           model is centred on its own bounding box, so that is about as
+           close to the middle of the aircraft as a visible face gets. */
+        anchor: [0.183, 0.085, -0.037],
         normal: [1, 0, 0],
-        pose: { azimuth: 1.6, polar: 1.3, radius: 0.5 },
+        /* Azimuth unchanged: the normal is still +x and 1.6 is already
+           looking down it. The radius opens from 0.5 so a marker this far
+           inboard is read against the whole aircraft rather than a crop. */
+        pose: { azimuth: 1.6, polar: 1.3, radius: 0.6 },
       },
     ],
   },
@@ -772,9 +812,15 @@ export const NOXR: ProductPage = {
 /* CYCLOPS — the VTOL airframe, and the first page to run THREE steps: the
    sequence, a looping film, then the model.
 
-   Same scaffold discipline as NOXR. The assets and every number derived
-   from them are measured off this product's own files; the words are
-   PLACEHOLDER and say so on the page. */
+   Same scaffold discipline as NOXR for the assets: every number derived
+   from them is measured off this product's own files.
+
+   THE WORDS ARE WRITTEN NOW, and they are written against the four claims
+   the hotspots already make — GPS-denied, EW capable, six hours, ten kilos
+   — plus the 150km on the slide label. Nothing in the copy asserts a
+   figure that is not already stated somewhere on this page; where a
+   sentence wants a number it borrows one of those rather than inventing a
+   fifth. */
 export const CYCLOPS: ProductPage = {
   acts: [{ kind: 'hero', vh: ACT_ONE_VH }],
 
@@ -784,19 +830,20 @@ export const CYCLOPS: ProductPage = {
      headline reads undersized. */
   name: 'Cyclops',
 
-  kicker: 'PLACEHOLDER — one line, sets the product up',
+  kicker: 'Vertical launch. Fixed-wing range.',
   tabLabel: '• Cyclops Model',
   lede:
-    'PLACEHOLDER — the opening paragraph, three or four lines. The Mini’s ' +
-    'runs to about forty words and is sized against that length, so this ' +
-    'wants to be in the same range.',
+    'The Cyclops leaves the ground on rotors and crosses it on a wing. Six ' +
+    'hours up, a hundred and fifty kilometres out, ten kilos underneath — ' +
+    'and no runway, launcher or catapult anywhere in the sortie.',
 
   statement: {
-    head: ['PLACEHOLDER', 'TWO LINES'],
-    body: 'PLACEHOLDER — the paragraph that sits beside the statement.',
+    head: ['No Runway', 'No Limits'],
+    body: 'Goes where others turn back.',
   },
-  coda: 'PLACEHOLDER — the closing line',
-  slide: 'placeholder',
+  coda: 'Launch from anywhere.',
+  slideLabel: '150km Range',
+  slide: 'high endurance.',
 
   /* 140 frames at 2560x1440 from "04 SEQ S", through build-sequence.mjs at
      q96: 86.6 MB of PNG became 14.1 MB at 2K and 5.7 MB at 1K. There is no
@@ -820,8 +867,23 @@ export const CYCLOPS: ProductPage = {
     mp4: '/video/cyclops.mp4',
     webm: '/video/cyclops.webm',
     poster: '/video/cyclops-poster.jpg',
-    head: ['PLACEHOLDER', 'TWO LINES'],
-    body: 'PLACEHOLDER — the paragraph that sits beside the headline on the film.',
+    /* THE HOMEPAGE'S REGISTER, because the homepage's second section is
+       this aircraft: a short declarative over a spec line with the figures
+       in brackets. See flightBeats' SCENES — 'Goes where others turn back.'
+       over '[6hr] endurance · [150+ km] range · …'.
+
+       The head is built like 'Three aircraft, / one command.' and does not
+       reuse this page's statement or coda, which already take the two VTOL
+       lines from that section. Every figure below is one the page already
+       states — four from the hotspots, the range from the slide label. */
+    head: ['MAX CAPABILITY', 'MIN FOOTPRINT.'],
+    body: [
+      '6hr endurance',
+      '150+ km range',
+      '10 kg payload',
+      'GPS-denied',
+      'EW capable',
+    ],
   },
 
   /* THE ANCHORS ARE MEASURED, THE FRAMINGS ARE NOT.
@@ -862,28 +924,37 @@ export const CYCLOPS: ProductPage = {
 
     hotspots: [
       {
-        label: 'PLACEHOLDER 01',
-        /* The nose, at the bbox's -x extreme (-0.902 in the file). */
-        anchor: [-0.958, 0.0, 0.005],
-        normal: [-1, 0, 0],
-        pose: { azimuth: -1.45, polar: 1.35, radius: 0.5 },
-      },
-      {
-        label: 'PLACEHOLDER 02',
-        /* A forward lift rotor: blade centroid (-0.620, -0.067, 0.500). */
-        anchor: [-0.754, -0.146, 0.367],
+        label: 'GPS-DENIED',
+        /* PICKED OFF THE SURFACE, not derived from the bounding box. The
+           two anchors below it were arithmetic aimed at the bbox extremes
+           and both missed the aircraft: this one sat at the -x tip, which
+           is past the nose, so the leader ended in open space under the
+           wing. Shift-clicked with the dev picker instead — the top of the
+           WHITE PLASTIC pod, dead on the centreline and the highest point
+           of the fuselage, which is where a nav antenna would sit. */
+        anchor: [-0.002, 0.258, 0.026],
         normal: [0, 1, 0],
-        pose: { azimuth: -0.9, polar: 0.75, radius: 0.5 },
+        pose: { azimuth: -0.55, polar: 1.15, radius: 0.72 },
       },
       {
-        label: 'PLACEHOLDER 03',
+        label: 'EW capable',
+        /* Also picked, and also moved onto the aircraft: this was aimed at
+           a forward lift rotor's blade centroid and landed below the boom
+           in empty space. Now the fuselage flank, low on the +z side, far
+           enough from the pod above that the two markers do not overlap. */
+        anchor: [-0.215, 0.089, 0.076],
+        normal: [0, 0, 1],
+        pose: { azimuth: 0.25, polar: 1.28, radius: 0.72 },
+      },
+      {
+        label: '6 hours endurance',
         /* The wingtip propeller on +z: centroid (0.245, 0.040, 1.495). */
         anchor: [-0.127, -0.068, 1.089],
         normal: [0, 0, 1],
         pose: { azimuth: 0.2, polar: 1.3, radius: 0.5 },
       },
       {
-        label: 'PLACEHOLDER 04',
+        label: '10kg payload',
         /* The pusher on the centreline: hub (0.703, 0.100, 0.000). */
         anchor: [0.205, -0.025, 0.005],
         normal: [1, 0, 0],

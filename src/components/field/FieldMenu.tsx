@@ -100,6 +100,12 @@ export const FieldMenu: React.FC<Props> = ({ nav, productName }) => {
     { scope: rootRef }
   );
 
+  /* eslint-disable-next-line react-hooks/refs -- The rule's own wording is
+     that passing a ref to a function MAY read its value during render. It
+     does not here: this closure is only ever CALLED from the effect below,
+     after mount, and tlRef.current is read at call time. Creating it inside
+     that effect would satisfy the rule and cost an eighty-line timeline
+     being rebuilt on every toggle, for no behavioural gain. */
   const build = contextSafe((isOpen: boolean) => {
     const tl = tlRef.current;
     if (!tl) return;

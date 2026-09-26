@@ -382,6 +382,11 @@ export const FieldHero: React.FC<{
      mid-scroll and jerk the timeline out from under the reader. */
   const [heroVh, setHeroVh] = useState<number | null>(null);
   useEffect(() => {
+    /* eslint-disable-next-line react-hooks/set-state-in-effect -- This is
+       the point of the effect, and the comment above says why: the value
+       needs window.innerHeight, so solving it during render produced
+       markup that differed from the static build. After mount is the only
+       place it can be measured without a hydration mismatch. */
     setHeroVh(scrubVhForFrames(product.sequence.heroFrames, window.innerHeight));
   }, [product.sequence.heroFrames]);
 
@@ -390,6 +395,8 @@ export const FieldHero: React.FC<{
      windows inside it are computed rather than declared. */
   const [endSeqVh, setEndSeqVh] = useState<number | null>(null);
   useEffect(() => {
+    /* eslint-disable-next-line react-hooks/set-state-in-effect -- Same
+       measurement, same reason as heroVh above. */
     setEndSeqVh(scrubVhForFrames(product.sequence.endFrames, window.innerHeight));
   }, [product.sequence.endFrames]);
 
@@ -2326,7 +2333,7 @@ export const FieldHero: React.FC<{
             ref={slideLabelRef}
             className="absolute left-[3.15%] top-[15%] font-display text-[min(3.6vh,32px)] uppercase tracking-[0.02em] text-[#bbac97] md:top-[calc(50%-9.5vw)]"
           >
-            40% Smaller,
+            {product.slideLabel}
           </p>
 
           {/* Coda. Anchors from the oryzo frame at 1919x890: headline centred

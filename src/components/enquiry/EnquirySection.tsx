@@ -44,7 +44,12 @@ export const EnquirySection: React.FC = () => {
   useEffect(() => {
     const el = rootRef.current;
     if (!el) return;
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) { setShown(true); return; }
+    /* NO REDUCED-MOTION BRANCH HERE any more. It set shown immediately and
+       returned, which was belt-and-braces: Enquiry.module.css already has a
+       prefers-reduced-motion block that paints the kicker, head, sub and
+       actions at full opacity with no transform or transition, and it wins
+       on source order against the same specificity. One less way for the
+       two to disagree. */
     const io = new IntersectionObserver(
       (entries) => { if (entries[0].isIntersecting) { setShown(true); io.disconnect(); } },
       { threshold: 0.25 }

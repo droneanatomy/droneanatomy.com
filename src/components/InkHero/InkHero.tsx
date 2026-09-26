@@ -14,7 +14,6 @@
    ============================================================ */
 
 import React, { useId } from 'react';
-import { HoldToFly } from './HoldToFly';
 import { InkReveal } from './InkReveal';
 import styles from './InkHero.module.css';
 
@@ -129,11 +128,6 @@ export const InkHero: React.FC<InkHeroProps> = ({
         paper={s.paper}
         ink={s.ink}
       />
-
-      {/* The way into /fly, for whoever holds still long enough to find
-          it. A sibling of the canvas and the type, and a direct child of
-          the section on purpose — it reads the hero off its own parent. */}
-      <HoldToFly />
 
       <div className={styles.layer}>
         {/* No top bar here any more — the global header (FieldNav) is

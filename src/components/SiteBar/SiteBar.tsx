@@ -68,8 +68,18 @@ export const SiteBar: React.FC<SiteBarProps> = ({
   /* Re-seed on navigation. The observer settles a frame later, and
      without this the bar would carry the previous route's tone across
      the transition — most visibly going from the homepage to a dark
-     page, where ink type would flash invisible. */
-  useEffect(() => setTone(initialTone), [initialTone, pathname]);
+     page, where ink type would flash invisible.
+
+     DURING RENDER, not in an effect, which is React's own pattern for
+     "reset state when a prop changes" and is better here than the effect
+     it replaces: an effect runs AFTER paint, so the stale tone was being
+     shown for a frame — exactly the flash this is meant to prevent. React
+     re-runs this component immediately, before touching the DOM. */
+  const [seed, setSeed] = useState({ initialTone, pathname });
+  if (seed.initialTone !== initialTone || seed.pathname !== pathname) {
+    setSeed({ initialTone, pathname });
+    setTone(initialTone);
+  }
 
   useEffect(() => {
     const bar = barRef.current;

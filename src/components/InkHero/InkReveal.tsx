@@ -11,10 +11,6 @@
    cursor to follow: see the frame loop. A finger still takes it over
    while pressed.
 
-   A HOLD DOES, but not in this file: HoldToFly sits alongside this as a
-   sibling in the hero and takes a held pointer into the flight sim. It
-   never touches the shader, and this stays a pure reveal.
-
    Everything is one fullscreen fragment shader on a single quad.
    The hidden layer is a plain texture, so the whole effect costs one
    pass — no render targets, no particle system, no second scene.

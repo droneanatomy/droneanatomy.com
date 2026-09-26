@@ -64,15 +64,19 @@ export type LoadOptions = {
     /* World axis the hub turns about: 'y' for a lift rotor lying flat,
        'x' for a tractor or pusher facing down the fuselage. */
     axis?: 'x' | 'y';
-    /* NAMED GROUPS, for an aircraft whose propellers do different jobs.
-       The Cyclops has four lift rotors and a pusher, and /fly drives them
-       at different rates through a transition — the lift rotors spooling
-       down as the pusher spools up. Each entry is picked and binned
-       exactly as the flat form above is.
+    /* NAMED GROUPS, for an aircraft whose propellers do different jobs —
+       lift rotors spooling down as a pusher spools up, say. Each entry is
+       picked and binned exactly as the flat form above is.
 
-       ADDITIVE. With no `groups`, this behaves precisely as it did, which
-       is what FlightScene depends on: the homepage spins the pusher only
-       and must go on doing that. */
+       CURRENTLY UNUSED. It was built for the free-flight page, which drove
+       the Cyclops's lift rotors and its pusher at different rates through
+       a transition; that page is gone. Nothing passes `groups` today, so
+       `userData.rotorGroups` is never populated.
+
+       ADDITIVE, which is why it is still here rather than deleted: with no
+       `groups` this behaves precisely as it did, and FlightScene depends
+       on that — the homepage spins the pusher only and must go on doing
+       that. Safe to strip if nothing claims it. */
     groups?: Record<string, { pick?: (centre: THREE.Vector3) => boolean; single?: boolean; axis?: 'x' | 'y' }>;
   };
 };

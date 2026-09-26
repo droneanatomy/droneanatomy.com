@@ -106,6 +106,12 @@ export const EnquiryDialog: React.FC<EnquiryDialogProps> = ({ open, onClose }) =
      though it never sent at all. */
   useEffect(() => {
     if (!open) return;
+    /* eslint-disable-next-line react-hooks/set-state-in-effect -- Resetting
+       the form as the dialog opens is the whole job of this effect, and it
+       has to be synchronous: the panel is already on screen by the time an
+       async reset would land, so the reader would watch last session's
+       step and countdown blink away. The ref below rules out clearing a
+       half-written enquiry — see the comment above. */
     setStep(0);
     setStatus('idle');
     setLeft(AUTO_CLOSE_SEC);

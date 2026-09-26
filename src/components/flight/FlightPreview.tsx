@@ -37,25 +37,12 @@ export interface FlightPreviewProps {
   videoFirst?: boolean;
 }
 
-/* The still's own pixel size, and where the sensor lock is drawn — all as
-   fractions of THAT image, not of the stage.
-
-   THE PLATE IS survey-base.webp, 1672x941: the Mini low on the left looking
-   up a stream valley at a small settlement at its head. Anchors read off a
-   20px grid laid over that image, not eyeballed:
-
-     DRONE     the white dome on top of the Mini, at (377, 642) — the lines
-               leave from the sensor, not from the middle of the airframe.
-     LOCK_BOX  the settlement's buildings sit at 870-935 x 330-355 with the
-               red roof at (920, 335). The box is 755-1055 x 240-426: a
-               LANDSCAPE rectangle, 300 x 186, at the thermal image's own
-               1.61:1, centred where the sketched square was centred. It was
-               that near-square 795-1015 x 225-440 first, which cropped the
-               sides off the thermal view to fill it.
+/* Anchors are fractions of THE PLATE, not of the stage — see the Plate type
+   below, which now carries a set per picture.
 
    THE THERMAL VIEW COMES UP INSIDE THE BOX, not in a separate panel: once
-   the frame has drawn, the settlement seen through the sensor fills it,
-   cover-fitted and centred. */
+   the frame has drawn, what the sensor sees fills it, cover-fitted and
+   centred. */
 
 /* How long the camera takes to reach the survey station — read from the
    beat rather than written down again.
@@ -66,10 +53,123 @@ export interface FlightPreviewProps {
    the cover automatically. */
 const COVER_SEC = SCENES.find((sc) => sc.id === 'survey')?.enterSec ?? TRANSITION_SEC;
 
-const SHOT_W = 1672;
-const SHOT_H = 941;
-const DRONE: [number, number] = [377 / 1672, 642 / 941];
-const LOCK_BOX = { x0: 755 / 1672, y0: 240 / 941, x1: 1055 / 1672, y1: 426 / 941 };
+/* TWO PLATES, because one composition cannot serve both stages.
+
+   The stills box is the whole viewport, so its shape is the window's: 1.78
+   on a laptop, 0.46 on a phone. Cover-fitting the 1.78 landscape plate onto
+   a 0.46 stage throws away three quarters of its width, and what it throws
+   away first is the sides — where this composition keeps its aircraft.
+
+   Each plate therefore carries its own pixel size AND its own anchors,
+   because the anchors are measurements of a particular picture and mean
+   nothing applied to another one. */
+type Plate = {
+  src: string;
+  /* The still's own pixel size, which the cover maths is undone against. */
+  w: number;
+  h: number;
+  /* Where cover's horizontal overflow is taken from. 'center' splits it,
+     which is the browser default and right for a plate whose subject is
+     inboard. 'left' pins the left edge, for one whose subject is ON it. */
+  originX: 'center' | 'left';
+  /* THE SENSOR OVERLAY, AND IT IS OPTIONAL — because the lines have to
+     leave from an aircraft, and a plate without one has nowhere to start
+     them. Absent means the whole overlay stays dark: no lines, no frame,
+     no thermal view. Present, and all three anchors are fractions of THIS
+     plate, which is the only space they mean anything in. */
+  sensor?: {
+    /* The sensor on top of the Mini — the lines leave from the sensor, not
+       from the middle of the airframe. */
+    drone: [number, number];
+    /* What the sensor frames. A LANDSCAPE rectangle at the thermal image's
+       own 1.61:1, so the view inside it crops nothing. */
+    lock: { x0: number; y0: number; x1: number; y1: number };
+    /* Whether the thermal view comes up inside the frame. */
+    thermal: boolean;
+  };
+};
+
+/* THE WIDE PLATE, survey-base.webp, 1672x941: the Mini low on the left
+   looking up a stream valley at a small settlement at its head. Anchors
+   read off a 20px grid laid over that image, not eyeballed:
+
+     drone  the white dome on top of the Mini, at (377, 642).
+     lock   the settlement's buildings sit at 870-935 x 330-355 with the red
+            roof at (920, 335). The box is 755-1055 x 240-426: 300 x 186 at
+            1.61:1, centred where the sketched square was centred. It was
+            that near-square 795-1015 x 225-440 first, which cropped the
+            sides off the thermal view to fill it. */
+const PLATE_WIDE: Plate = {
+  src: '/images/survey-base.webp',
+  w: 1672,
+  h: 941,
+  originX: 'center',
+  sensor: {
+    drone: [377 / 1672, 642 / 941],
+    lock: { x0: 755 / 1672, y0: 240 / 941, x1: 1055 / 1672, y1: 426 / 941 },
+    thermal: true,
+  },
+};
+
+/* THE TALL PLATE, survey-base-mob.webp, 1440x2960: the site's own terrain,
+   not a Blender render.
+
+   Every plate before this was rendered elsewhere and had to be colour-
+   matched to the live ground it dissolves in over — that is what
+   scripts/build-survey-plate.mjs exists to do. This one was captured from
+   the live three.js scene with the camera flattened to 30 degrees below
+   horizontal (the survey look's own is 45) and the Mini placed in the
+   near corner, so it IS the ground it hands over from and there is
+   nothing to match. Master: scripts/source/survey-mob-plate.png.
+
+   SHIPPED AT ITS NATIVE SIZE, deliberately. 0.486 is within a few percent
+   of a phone's own 0.462, so cover crops about 5% off one side rather
+   than the 19% the earlier 0.75 plates lost — and at 2960 tall it still
+   has real pixels at 3x. 148KB, against the desktop plate's 275.
+
+   Anchors read off a 100px grid laid over that image:
+
+     drone  the dome on the airframe's top plate spans 100-128 x 2437-2465,
+            so its centre is (114, 2451).
+     lock   the valley floor, where two watercourses meet: the stream runs
+            from about (700, 1010) through (860, 1080) to (1030, 1180),
+            with the braided channel below it. The box is 740-1160 x
+            1000-1261 — 420 x 261, the same 1.61:1 the wide plate's is —
+            which holds the confluence.
+
+            It sits well above the copy: at 390 the box lands at y 285-359
+            of 844, and the survey card's text starts around 600. The card
+            is ranged right on this beat while the aircraft is bottom
+            LEFT, so the two do not fight either. */
+const PLATE_TALL: Plate = {
+  src: '/images/survey-base-mob.webp',
+  w: 1440,
+  h: 2960,
+  /* The aircraft is in the leftmost 8% of the picture, so the 5% cover
+     takes off the right, where there is only hillside. */
+  originX: 'left',
+  sensor: {
+    drone: [114 / 1440, 2451 / 2960],
+    lock: { x0: 740 / 1440, y0: 1000 / 2960, x1: 1160 / 1440, y1: 1261 / 2960 },
+    /* THE DESKTOP'S OWN THERMAL VIEW, by request — survey-thermal.webp,
+       the same render the wide plate puts inside its frame. */
+    thermal: true,
+  },
+};
+
+/* WHICH STAGE SHAPE THE TALL PLATE IS FOR — an aspect query, not a width
+   one, because the crop is decided by shape and nothing else.
+
+   This was (max-width: 860px). Measured, that handed the tall plate to a
+   768x1024 tablet, whose stage is 0.75 against the plate's 0.486: cover
+   then takes the difference off the TOP AND BOTTOM, and the aircraft —
+   which lives in the bottom eighth — resolved to y 1030 in a 1024 stage.
+   Off the screen, with the sensor lines leaving from nowhere.
+
+   3/5 sits between a phone's 0.462 and that tablet's 0.75. A phone held
+   sideways is 2.16 and also falls through to the wide plate, which is the
+   right answer for it as well. */
+const TALL_PLATE_MQ = '(max-aspect-ratio: 3/5)';
 
 export const FlightPreview: React.FC<FlightPreviewProps> = ({
   photoreal = false,
@@ -90,6 +190,16 @@ export const FlightPreview: React.FC<FlightPreviewProps> = ({
      Reading it off scroll made the words swap mid-move, which read as the
      text being early rather than as a cut. */
   const [scene, setScene] = useState(0);
+
+  /* WHICH PLATE THE SURVEY BEAT USES. State, because the <img> src is
+     rendered; a ref beside it, because the anchor maths runs in the rAF
+     below and must not wait for a render to agree with what is on screen.
+
+     Starts WIDE on both server and client, so hydration matches, and
+     swaps in the effect. The plate is not on screen until deep into the
+     section, so nothing is visible during that one frame. */
+  const [plate, setPlate] = useState<Plate>(PLATE_WIDE);
+  const plateRef = useRef<Plate>(PLATE_WIDE);
 
   /* ITS OWN LOOP, not the scroll handler's.
 
@@ -194,14 +304,26 @@ export const FlightPreview: React.FC<FlightPreviewProps> = ({
     const frame = lockBoxRef.current;
     const stillsBox = stillsBoxRef.current;
     if (stillsBox && lineA && lineB && frame) {
+      const pl = plateRef.current;
+      /* NOTHING TO DRAW FROM. One opacity covers the lines, the frame and
+         the thermal view together, because they are all children of the
+         one SVG — so a plate with no aircraft simply never lights it. */
+      if (!pl.sensor) {
+        if (beamRef.current) beamRef.current.style.opacity = '0';
+        return;
+      }
+      const sen = pl.sensor;
       const w = stillsBox.clientWidth, h = stillsBox.clientHeight;
-      const k = Math.max(w / SHOT_W, h / SHOT_H);
-      const dw = SHOT_W * k, dh = SHOT_H * k;
-      const ox = (w - dw) / 2, oy = (h - dh) / 2;
+      const k = Math.max(w / pl.w, h / pl.h);
+      const dw = pl.w * k, dh = pl.h * k;
+      /* Must match the stylesheet's object-position for this plate, or the
+         maths undoes a crop the browser did not perform. */
+      const ox = pl.originX === 'left' ? 0 : (w - dw) / 2;
+      const oy = (h - dh) / 2;
       const map = (fx: number, fy: number): [number, number] => [ox + fx * dw, oy + fy * dh];
-      const [sx, sy] = map(DRONE[0], DRONE[1]);
-      const [bx0, by0] = map(LOCK_BOX.x0, LOCK_BOX.y0);
-      const [bx1, by1] = map(LOCK_BOX.x1, LOCK_BOX.y1);
+      const [sx, sy] = map(sen.drone[0], sen.drone[1]);
+      const [bx0, by0] = map(sen.lock.x0, sen.lock.y0);
+      const [bx1, by1] = map(sen.lock.x1, sen.lock.y1);
 
       /* Top-left and bottom-right: seen from low on the left, those two
          corners are the silhouette of the view cone, so the pair reads as
@@ -238,10 +360,29 @@ export const FlightPreview: React.FC<FlightPreviewProps> = ({
         img.setAttribute('y', String(by0));
         img.setAttribute('width', String(Math.max(0, bx1 - bx0)));
         img.setAttribute('height', String(Math.max(0, by1 - by0)));
-        img.style.opacity = String(thermal);
+        img.style.opacity = sen.thermal ? String(thermal) : '0';
       }
     }
   };
+
+  useEffect(() => {
+    const mq = window.matchMedia(TALL_PLATE_MQ);
+    /* BOTH, together. The <img> renders from state; the anchor maths in the
+       rAF above reads the ref, because it must not wait for a render to
+       agree with what is on screen. Writing the ref HERE rather than during
+       render keeps them in step without touching a ref while React is
+       rendering, which it is entitled to do twice. */
+    const apply = () => {
+      const next = mq.matches ? PLATE_TALL : PLATE_WIDE;
+      plateRef.current = next;
+      setPlate(next);
+    };
+    apply();
+    /* A phone rotated landscape crosses this, so it listens rather than
+       reading once. */
+    mq.addEventListener('change', apply);
+    return () => mq.removeEventListener('change', apply);
+  }, []);
 
   useEffect(() => {
     let raf = 0;
@@ -414,8 +555,11 @@ export const FlightPreview: React.FC<FlightPreviewProps> = ({
           <img
             ref={plainRef}
             className={styles.still}
-            style={{ opacity: 0 }}
-            src="/images/survey-base.webp"
+            /* object-position travels with the plate rather than living in
+               the stylesheet, because the anchor maths above reads the same
+               value off the descriptor. Two places, one source. */
+            style={{ opacity: 0, objectPosition: plate.originX === 'left' ? 'left center' : 'center' }}
+            src={plate.src}
             alt=""
             aria-hidden="true"
             decoding="async"

@@ -187,6 +187,64 @@ const MATERIAL_FIX: Record<string, (m: THREE.MeshPhysicalMaterial) => void> = {
     m.clearcoat = Math.min(m.clearcoat, 0.4);
     m.clearcoatRoughness = Math.max(m.clearcoatRoughness, 0.25);
   },
+
+  /* ---- vtol.glb, the Cyclops ------------------------------------------
+
+     THE SAME EXPORT BUG AS THE MINI'S, and worse: four materials omit
+     metallicFactor and inherit glTF's 1.0, and between them they are 65.7%
+     of the airframe's 825,529 triangles — CAST ENGINE 26.2, BLACK ALUM
+     22.4, SCREWS 15.9, gaps 1.2. Two thirds of this aircraft was a mirror,
+     which against the viewer's near-black stage read as bare silver rather
+     than as the dark composite the homepage shows.
+
+     The tell is the same one the note above gives: every material anyone
+     authored deliberately writes metalness — WIRES, BLADE and all three
+     carbons write 0, MOTOR MATTE writes 0.68. Only the CAD-named parts
+     inherit. None of this airframe is bare metal. */
+  'CAST ENGINE': (m) => {
+    m.metalness = 0;
+  },
+  /* Named aluminium, and anodised alu is genuinely metallic — but it is
+     exported black, and a black metal is only its reflection. As a
+     dielectric at this roughness it is a dark satin part that still takes a
+     highlight, which is what the homepage render shows. */
+  'BLACK ALUM': (m) => {
+    m.metalness = 0;
+    m.roughness = Math.max(m.roughness, 0.5);
+  },
+  SCREWS: (m) => {
+    m.metalness = 0;
+  },
+  gaps: (m) => {
+    m.metalness = 0;
+  },
+  /* THE NOSE POD. Exported 71% transmissive, which in the source renderer
+     is milky plastic; three treats transmission as glass, so only 29% of
+     the white survives and the rest is a refracted sample of a black stage.
+     It rendered as a dark blob where the reference has it white. This is
+     the same correction FlightScene makes for the homepage — see the
+     NO TRANSMISSION ON THE AIRFRAME note there.
+
+     The LENS is left alone: it is real glass, it is only 0.2% of the model,
+     and unlike the flying scene this viewer is built to afford the second
+     render pass transmission costs (see transmissionResolutionScale). */
+  'WHITE PLASTIC': (m) => {
+    m.transmission = 0;
+  },
+  /* Clearcoat at full strength is the other half of the blowout, exactly as
+     for the Mini's carbon. These three carry clearcoat 1. */
+  'CARBON FIBRE WINGS': (m) => {
+    m.clearcoat = Math.min(m.clearcoat, 0.4);
+    m.clearcoatRoughness = Math.max(m.clearcoatRoughness, 0.25);
+  },
+  'CARBON FIBRE RODS': (m) => {
+    m.clearcoat = Math.min(m.clearcoat, 0.4);
+    m.clearcoatRoughness = Math.max(m.clearcoatRoughness, 0.25);
+  },
+  WIRES: (m) => {
+    m.clearcoat = Math.min(m.clearcoat, 0.4);
+    m.clearcoatRoughness = Math.max(m.clearcoatRoughness, 0.25);
+  },
 };
 
 function correctMaterials(root: THREE.Object3D) {

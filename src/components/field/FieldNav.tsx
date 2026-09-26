@@ -46,6 +46,7 @@
 
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { useChromeTone } from '@/components/Chrome/useChromeTone';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 
@@ -121,12 +122,21 @@ const SECTIONS: NavSection[] = [
      No new type was needed for that. A group already carries a name and a
      list of items, which is exactly a submenu; only the rendering changed.
 
-     The categories below are a FIRST PASS assembled out of items that were
-     already in this file, so nothing was invented and nothing was lost:
-     the aircraft come from what used to be Drones, the pods and tanks from
-     its payload column, and Ground systems and Integration are the old
-     Systems section rebalanced. Names and membership are the part most
-     likely to be wrong — they are one edit each, here. */
+     FOUR GROUPS: Agri, VTOL, Defence, Compact. It was seven — Observation,
+     Ground systems and Integration have been removed, and NOXR-1 moved out
+     of Observation into Defence before it went.
+
+     NOTHING IN HERE POINTS AT '#' ANY MORE. Every remaining row is a page
+     that exists, which is why each group holds exactly one: the four
+     product pages this site actually has. Gone with the groups above, and
+     then from the groups that stayed: Ground systems' three rows,
+     Integration's three, Observation's AI detection pod, Spray tank,
+     Defence platforms, Grenade release and 'Under 250g'.
+
+     The cost of the rule is worth stating. A menu that only lists what
+     exists cannot advertise what is coming — so anything to be named
+     before it has a page needs somewhere real to land, even a section of
+     an existing page, rather than a '#'. */
   {
     label: 'Systems',
     groups: [
@@ -134,7 +144,6 @@ const SECTIONS: NavSection[] = [
         kicker: 'Agri',
         items: [
           { label: 'P10 Pro', desc: 'Ten litres over six metres of swath', href: '/products/p10-pro' },
-          { label: 'Spray tank', desc: 'Quick-release, ninety seconds', href: '#' },
         ],
       },
       {
@@ -144,45 +153,18 @@ const SECTIONS: NavSection[] = [
         ],
       },
       {
-        kicker: 'Observation',
-        items: [
-          { label: 'NOXR-1', desc: 'Multirole observation platform', href: '/products/noxr-1' },
-          { label: 'AI detection pod', desc: 'Onboard object detection', href: '#' },
-        ],
-      },
-      {
+        /* NOXR-1 SITS HERE NOW, and it leads the group: it is the only
+           item in it with a page behind it, and a rail whose first row is
+           a '#' reads as a menu of things that do not exist yet. */
         kicker: 'Defence',
         items: [
-          { label: 'Defence platforms', desc: 'Built for the field, serviced in it', href: '#' },
-          { label: 'Grenade release', desc: 'Precision drop system', href: '#' },
+          { label: 'NOXR-1', desc: 'Multirole observation platform', href: '/products/noxr-1' },
         ],
       },
       {
         kicker: 'Compact',
         items: [
           { label: 'Mini', desc: 'The smallest complete airframe', href: '/products/mini' },
-          /* LEFT ALONE, and deliberately not merged into Mini above.
-             'Under 250g' names a REGULATORY CLASS, not a product, and
-             nothing in MINI's data says it is in that class — folding the
-             two together would be inventing a compliance claim out of a
-             layout convenience. */
-          { label: 'Under 250g', desc: 'Sub-250g class', href: '#' },
-        ],
-      },
-      {
-        kicker: 'Ground systems',
-        items: [
-          { label: 'Controller', desc: 'One radio, every airframe', href: '#' },
-          { label: 'Transmission system', desc: 'Long-range video and telemetry', href: '#' },
-          { label: 'Thruststand', desc: 'Motor and propeller characterisation', href: '#' },
-        ],
-      },
-      {
-        kicker: 'Integration',
-        items: [
-          { label: 'Payload mounts', desc: 'Custom mounts and wiring', href: '#' },
-          { label: 'Airframe integration', desc: 'Your sensor, our aircraft', href: '#' },
-          { label: 'Cargo hook', desc: 'Payload carrying and delivery', href: '#' },
         ],
       },
     ],
@@ -302,6 +284,66 @@ const SHEET_SHADOW =
    add to PLAIN_LINKS, and it comes straight back. */
 const DROPDOWN_LABEL = 'Systems';
 
+/* HOISTED OUT OF FieldNav, both of them.
+
+   Signup was declared inside the component, so React saw a BRAND NEW
+   component type on every render and remounted the form each time —
+   which threw away whatever the reader had typed in the email field the
+   moment any nav state changed. Lint caught it as static-components;
+   the bug was real either way. It closed over nothing but the kicker
+   class, so it lifts out whole, and that class lifts with it.
+   ============================================================ */
+
+const KICKER_CLS =
+'font-display text-[clamp(10px,0.78vw,14px)] uppercase tracking-[0.08em] text-[#10140b]/55';
+
+/* The footer's field, restated on the panel.
+
+   border-0 and appearance-none are carried across because they are
+   load-bearing, not decoration: this project's preflight resets borders on
+   div but NOT on input, so without them the field paints the UA default —
+   2px inset grey, all four sides — on the cream. bg-transparent and
+   outline-none do not touch a border.
+
+   The ink is stated explicitly for the same reason the rest of this file
+   states it: globals.css colours `input` as an element, which outranks a
+   colour inherited from the panel. */
+const Signup: React.FC<{
+  data: NonNullable<NavSection['newsletter']>;
+  idSuffix: string;
+  className?: string;
+  style?: React.CSSProperties;
+}> = ({ data, idSuffix, className = '', style }) => (
+  <form onSubmit={(e) => e.preventDefault()} className={className} style={style}>
+    <p className={KICKER_CLS}>{data.kicker}</p>
+    <p className="mt-[clamp(8px,0.9vw,16px)] font-display text-[clamp(18px,1.7vw,30px)] normal-case leading-[1.02] tracking-[-0.02em] text-[#10140b]">
+      {data.title}
+    </p>
+    <p className="mt-[6px] text-[clamp(12px,0.95vw,17px)] leading-[1.45] text-[#10140b]/55">
+      {data.blurb}
+    </p>
+    <label htmlFor={`nav-email-${idSuffix}`} className="sr-only">
+      Your email
+    </label>
+    <div className="mt-[clamp(12px,1.4vw,22px)] flex items-center gap-3 border-b border-[#10140b]/25 pb-[clamp(7px,0.7vw,12px)] transition-colors focus-within:border-[#10140b]/60">
+      <input
+        id={`nav-email-${idSuffix}`}
+        type="email"
+        required
+        placeholder="Your email"
+        className="min-w-0 flex-1 appearance-none border-0 bg-transparent p-0 text-[clamp(15px,1.15vw,21px)] leading-[1.55] text-[#10140b] outline-none placeholder:text-[#10140b]/45"
+      />
+      <button
+        type="submit"
+        aria-label="Subscribe"
+        className="shrink-0 text-[clamp(15px,1.1vw,20px)] leading-none text-[#10140b] transition-transform hover:translate-x-1"
+      >
+        &rarr;
+      </button>
+    </div>
+  </form>
+);
+
 /* Every item in the bar wears this: the dropdown's trigger, which is a
    button, and the three plain links, which are anchors. Shared so the two
    element types cannot drift apart — they sit side by side and any
@@ -316,12 +358,12 @@ const PLAIN_LINKS: { label: string; href: string }[] = [
 ];
 
 export const FieldNav: React.FC<FieldNavProps> = ({ tone = 'light' }) => {
-  const auto = useChromeTone('light');
+  const { tone: autoTone, ref: chromeRef } = useChromeTone('light');
   /* onLight === "the ground behind the closed bar is pale", so every cream
      element in the bar has to become ink. It is exactly the same swap the
      bar already performs when the sheet opens, which is why it feeds the
      same booleans below rather than introducing a parallel set. */
-  const onLight = tone === 'ink' || (tone === 'auto' && auto.tone === 'ink');
+  const onLight = tone === 'ink' || (tone === 'auto' && autoTone === 'ink');
 
   const [active, setActive] = useState<string | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -371,12 +413,12 @@ export const FieldNav: React.FC<FieldNavProps> = ({ tone = 'light' }) => {
     ? ' text-[#10140b]/70 hover:text-[#10140b]'
     : ' text-[#f2ecd9] hover:text-[#f2ecd9]/70';
 
-  const clearTimers = () => {
+  const clearTimers = useCallback(() => {
     if (openTimer.current) window.clearTimeout(openTimer.current);
     if (closeTimer.current) window.clearTimeout(closeTimer.current);
     openTimer.current = null;
     closeTimer.current = null;
-  };
+  }, []);
   const openLater = (label: string) => {
     clearTimers();
     openTimer.current = window.setTimeout(() => setActive(label), OPEN_MS);
@@ -391,7 +433,7 @@ export const FieldNav: React.FC<FieldNavProps> = ({ tone = 'light' }) => {
   const closeNow = useCallback(() => {
     clearTimers();
     setActive(null);
-  }, []);
+  }, [clearTimers]);
 
   useEffect(() => () => clearTimers(), []);
 
@@ -403,6 +445,11 @@ export const FieldNav: React.FC<FieldNavProps> = ({ tone = 'light' }) => {
      would keep whatever height the FIRST submenu measured — taller ones
      clipped, shorter ones leaving a gap. */
   useLayoutEffect(() => {
+    /* eslint-disable-next-line react-hooks/set-state-in-effect -- A
+       measurement of laid-out DOM, which cannot exist before layout and
+       must be applied before paint: this is what useLayoutEffect is for.
+       Deferring it would show the panel at the previous submenu's height
+       for a frame, which is the clipping this effect exists to stop. */
     setPanelH(section && innerRef.current ? innerRef.current.offsetHeight : 0);
   }, [section, group]);
 
@@ -481,56 +528,6 @@ export const FieldNav: React.FC<FieldNavProps> = ({ tone = 'light' }) => {
        weight   the footer never bolds its uppercase type; hierarchy is
                 carried by opacity (80 for live text, 55 for labels), so the
                 font-bold on every kicker and chip comes off */
-  const kickerCls =
-    'font-display text-[clamp(10px,0.78vw,14px)] uppercase tracking-[0.08em] text-[#10140b]/55';
-
-  /* The footer's field, restated on the panel.
-
-     border-0 and appearance-none are carried across because they are
-     load-bearing, not decoration: this project's preflight resets borders on
-     div but NOT on input, so without them the field paints the UA default —
-     2px inset grey, all four sides — on the cream. bg-transparent and
-     outline-none do not touch a border.
-
-     The ink is stated explicitly for the same reason the rest of this file
-     states it: globals.css colours `input` as an element, which outranks a
-     colour inherited from the panel. */
-  const Signup: React.FC<{
-    data: NonNullable<NavSection['newsletter']>;
-    idSuffix: string;
-    className?: string;
-    style?: React.CSSProperties;
-  }> = ({ data, idSuffix, className = '', style }) => (
-    <form onSubmit={(e) => e.preventDefault()} className={className} style={style}>
-      <p className={kickerCls}>{data.kicker}</p>
-      <p className="mt-[clamp(8px,0.9vw,16px)] font-display text-[clamp(18px,1.7vw,30px)] normal-case leading-[1.02] tracking-[-0.02em] text-[#10140b]">
-        {data.title}
-      </p>
-      <p className="mt-[6px] text-[clamp(12px,0.95vw,17px)] leading-[1.45] text-[#10140b]/55">
-        {data.blurb}
-      </p>
-      <label htmlFor={`nav-email-${idSuffix}`} className="sr-only">
-        Your email
-      </label>
-      <div className="mt-[clamp(12px,1.4vw,22px)] flex items-center gap-3 border-b border-[#10140b]/25 pb-[clamp(7px,0.7vw,12px)] transition-colors focus-within:border-[#10140b]/60">
-        <input
-          id={`nav-email-${idSuffix}`}
-          type="email"
-          required
-          placeholder="Your email"
-          className="min-w-0 flex-1 appearance-none border-0 bg-transparent p-0 text-[clamp(15px,1.15vw,21px)] leading-[1.55] text-[#10140b] outline-none placeholder:text-[#10140b]/45"
-        />
-        <button
-          type="submit"
-          aria-label="Subscribe"
-          className="shrink-0 text-[clamp(15px,1.1vw,20px)] leading-none text-[#10140b] transition-transform hover:translate-x-1"
-        >
-          &rarr;
-        </button>
-      </div>
-    </form>
-  );
-
   /* Title over description, and nothing else.
 
      There was a hairline square tile in front of each row holding a
@@ -703,9 +700,9 @@ export const FieldNav: React.FC<FieldNavProps> = ({ tone = 'light' }) => {
         onMouseEnter={clearTimers}
       >
         <div
-          ref={auto.ref as React.RefObject<HTMLDivElement>}
+          ref={chromeRef as React.RefObject<HTMLDivElement>}
           className="pointer-events-none relative flex h-[var(--chrome-h,2.75rem)] items-center justify-between px-[var(--sheet-inset-x)]">
-          <a href="/" aria-label="DroneAnatomy — home" className="pointer-events-auto flex h-full items-center">
+          <Link href="/" aria-label="DroneAnatomy — home" className="pointer-events-auto flex h-full items-center">
             {/* brightness(0) rather than a second asset. The mark is white
                 line art on transparent, so it disappears on the cream sheet;
                 brightness(0) drives every opaque pixel to black and leaves
@@ -720,7 +717,7 @@ export const FieldNav: React.FC<FieldNavProps> = ({ tone = 'light' }) => {
               className="h-[clamp(24px,2.8vw,36px)] w-auto transition-[filter] duration-200"
               style={{ filter: lit ? 'brightness(0)' : 'none' }}
             />
-          </a>
+          </Link>
 
           {/* Sections ride with the CTA on the right rather than floating
               in the centre. They were absolutely positioned at left-1/2 so
@@ -1004,7 +1001,7 @@ export const FieldNav: React.FC<FieldNavProps> = ({ tone = 'light' }) => {
                 </button>
                 {drill?.groups.map((g) => (
                   <div key={g.kicker} className="px-3 pb-2 pt-3">
-                    <p className={kickerCls}>{g.kicker}</p>
+                    <p className={KICKER_CLS}>{g.kicker}</p>
                     <ul className="mt-1">
                       {g.items.map((it) => (
                         <Row key={it.label} item={it} />

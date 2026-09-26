@@ -13,6 +13,7 @@
    ============================================================ */
 
 import React from 'react';
+import Link from 'next/link';
 import { ThermalTerrain } from './ThermalTerrain';
 import styles from './HeroCluster.module.css';
 
@@ -38,9 +39,9 @@ export const HeroCluster: React.FC<HeroClusterProps> = ({
     <section className={`${styles.hero} ${className}`}>
       {/* Top chrome */}
       <div className={styles.top}>
-        <a href="/" className={styles.mark}>
+        <Link href="/" className={styles.mark}>
           {wordmark}
-        </a>
+        </Link>
         <p className={styles.tagline}>{tagline}</p>
         <nav className={styles.nav} aria-label="Primary">
           <button className={styles.pillIcon} aria-label="Collapse">

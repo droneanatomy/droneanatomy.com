@@ -10,7 +10,7 @@
    WHAT REPLACED WHAT. This route used to be a ComingSoonBanner with a
    newsletter block and four icon cards — a placeholder for a product with
    no render and no model. It has both now. The path is unchanged on
-   purpose: the overlay menu, FieldNav's Observation group and the products
+   purpose: the overlay menu, FieldNav's Defence group and the products
    listing all already point here, and moving the URL to match a shorter
    name would have broken three working links to fix a cosmetic one.
 
