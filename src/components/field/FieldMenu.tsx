@@ -368,66 +368,18 @@ export const FieldMenu: React.FC<Props> = ({ nav, productName }) => {
           </div>
         </div>
 
-        {/* Panel 2 — the accent one, carrying the newsletter.
+        {/* THE NEWSLETTER PANEL IS GONE. It was the middle one: a yellow
+            card carrying "<name> field notes / Once a season" and an email
+            field whose onSubmit was a bare preventDefault — it swallowed
+            every subscribe without a word. Removing the field alone would
+            have left a card advertising a newsletter with no way to join
+            it, so the card went with it.
 
-            Same field the footer uses, restated on yellow: a hairline rule
-            rather than a filled box, sitting flush on the panel's own left
-            edge. border-0 and appearance-none are copied across because
-            they are copied for a REASON — this project's preflight resets
-            borders on div but not on input, so without them the field
-            paints the UA default (2px inset grey) straight onto the
-            accent. bg-transparent and outline-none do not touch a border.
+            No timing to repair: the entrance and exit select [data-panel]
+            as a group with a stagger, with no count or index anywhere.
 
-            [&_input]:text-inherit joins the a/p/span overrides for the same
-            element-rule reason: globals.css colours input too, and the
-            typed address would come out light on yellow. */}
-        <div
-          data-panel
-          /* Inline transform, NOT a Tailwind translate utility: v4 compiles
-             those to the CSS `translate` property, which composes on top of
-             the `transform` GSAP animates. The panels then never arrive —
-             measured stuck off-frame with the entrance
-             reporting complete. GSAP owns `transform` from the first tween
-             onward; this is only the pre-JS state. */
-          style={{ transform: `translateX(${OFF_X})` }}
-          className={`relative z-[2] min-h-[clamp(150px,19vh,215px)] w-full max-w-[700px] rounded-[10px] border-2 border-[#8a8800] bg-[var(--color-flare,#fffc00)] px-[clamp(20px,4vw,40px)] py-[clamp(18px,2.4vw,28px)] text-[#10140b] [&_a]:text-inherit [&_input]:text-inherit [&_p]:text-inherit [&_span]:text-inherit ${gate}`}
-        >
-          <p
-            data-item
-            className="font-display text-[clamp(9px,0.9vw,12px)] font-bold uppercase tracking-[0.14em] opacity-60"
-          >
-            {productName} field notes
-          </p>
-          <p
-            data-item
-            className="mt-2 font-display text-[clamp(18px,2.4vw,30px)] normal-case leading-[1.05] tracking-[-0.02em]"
-          >
-            Once a season
-          </p>
-          <form
-            data-item
-            onSubmit={(e) => e.preventDefault()}
-            className="mt-[clamp(12px,2vw,22px)] flex items-center gap-3 border-b border-[#10140b]/25 pb-[clamp(8px,0.9vw,14px)] transition-colors focus-within:border-[#10140b]/60"
-          >
-            <label htmlFor="menu-email" className="sr-only">
-              Your email
-            </label>
-            <input
-              id="menu-email"
-              type="email"
-              required
-              placeholder="Your email"
-              className="min-w-0 flex-1 appearance-none border-0 bg-transparent p-0 text-[clamp(13px,1.15vw,17px)] leading-[1.5] outline-none placeholder:text-[#10140b]/50"
-            />
-            <button
-              type="submit"
-              aria-label="Subscribe"
-              className="shrink-0 text-[clamp(16px,1.4vw,24px)] leading-none transition-transform hover:translate-x-1"
-            >
-              &rarr;
-            </button>
-          </form>
-        </div>
+            It has never been on screen in any case. FieldMenu renders only
+            for menu="overlay" and all four product pages pass "mega". */}
 
         {/* Panel 3 — the dark one. */}
         <div

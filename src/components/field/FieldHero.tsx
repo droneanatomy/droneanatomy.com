@@ -404,7 +404,7 @@ export const FieldHero: React.FC<{
     setEndSeqVh(scrubVhForFrames(product.sequence.endFrames, window.innerHeight));
   }, [product.sequence.endFrames]);
 
-  const { spacerVh, clock, ret } = useMemo(() => {
+  const { spacerVh, clock, ret, declares } = useMemo(() => {
     const declared = product.acts ?? DEFAULT_ACTS;
     /* 316 is what the tuned 500vh act gave the sequence, so before the
        solve arrives the clock matches the declared act exactly and nothing
@@ -433,7 +433,17 @@ export const FieldHero: React.FC<{
     const kept = narrow
       ? acts.filter((a) => a.kind === 'hero' || a.kind === 'gallery')
       : acts;
-    return { ...deriveActs(kept), ret };
+    /* WHAT THE PRODUCT DECLARED, which is not what the clock ends up
+       holding. On a phone the line above drops the bench and the closing
+       from `kept` on purpose — they stop being scrubbed acts and become
+       ordinary sections further down — and that means clock.bench and
+       clock.closing do not exist there. Anything asking "does this page
+       have a bench?" has to ask the declaration, not the clock. */
+    const declares = {
+      bench: declared.some((a) => a.kind === 'bench'),
+      closing: declared.some((a) => a.kind === 'closing'),
+    };
+    return { ...deriveActs(kept), ret, declares };
   }, [product.acts, narrow, heroVh, endSeqVh]);
 
   const [tier] = useState(pickTier);
@@ -2642,18 +2652,21 @@ export const FieldHero: React.FC<{
           gallery is NOT here any more — it is scrubbed at every width, so
           this is the bench and the closing card only.
 
-          GATED ON THE ACTS, which it was not before. Every scrubbed act
-          checks its clock, but this branch checked only the width — so a
-          page that declared no bench and no closing act still rendered both
-          of them on any narrow viewport, in normal flow, below a timeline
-          that had never mentioned them. On a desktop it looked correct and
-          on a phone it was a different page. Nothing exercised it until a
-          hero-only product existed; now one does. */}
+          GATED ON WHAT THE PRODUCT DECLARES, and on `declares` rather than
+          on `clock`. This branch once checked only the width, so a page
+          with no bench and no closing act rendered both anyway. The fix for
+          that reached for clock.bench and clock.closing — and on a phone
+          those are exactly the two entries the act filter removes, because
+          they stop being scrubbed and become the ordinary sections below.
+          So the gate went from always true to never true, and the whole
+          bench and the closing card vanished on mobile: three panels, their
+          figures, the footnote and the Book a demo. Measured on P10 Pro,
+          thirteen strings on a desktop and none of them on a phone. */}
       {narrow &&
-        ((clock.bench && product.bench) || (clock.closing && product.closing)) && (
+        ((declares.bench && product.bench) || (declares.closing && product.closing)) && (
           <div className="relative z-20 bg-[#090b07]">
-            {clock.bench && product.bench && <FieldBenchMobile bench={product.bench} />}
-            {clock.closing && product.closing && (
+            {declares.bench && product.bench && <FieldBenchMobile bench={product.bench} />}
+            {declares.closing && product.closing && (
               <FieldClosingMobile closing={product.closing} />
             )}
           </div>

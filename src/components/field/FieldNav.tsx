@@ -70,7 +70,6 @@ type NavSection = {
   label: string;
   groups: NavGroup[];
   /** Optional sign-up block, filling the columns the groups do not use. */
-  newsletter?: { kicker: string; title: string; blurb: string };
 };
 
 const SECTIONS: NavSection[] = [
@@ -229,11 +228,6 @@ const SECTIONS: NavSection[] = [
         ],
       },
     ],
-    newsletter: {
-      kicker: 'Field notes',
-      title: 'Once a season',
-      blurb: 'What shipped, what broke, what we changed because of it.',
-    },
   },
 ];
 
@@ -284,65 +278,13 @@ const SHEET_SHADOW =
    add to PLAIN_LINKS, and it comes straight back. */
 const DROPDOWN_LABEL = 'Systems';
 
-/* HOISTED OUT OF FieldNav, both of them.
-
-   Signup was declared inside the component, so React saw a BRAND NEW
-   component type on every render and remounted the form each time —
-   which threw away whatever the reader had typed in the email field the
-   moment any nav state changed. Lint caught it as static-components;
-   the bug was real either way. It closed over nothing but the kicker
-   class, so it lifts out whole, and that class lifts with it.
-   ============================================================ */
-
+/* Hoisted out of FieldNav with the Signup form that used to share it. The
+   form is gone — it was gated on a section's `newsletter`, only Company
+   declared one, and the nav only ever surfaces Systems, so it never
+   reached a screen. This still labels the panel's groups. */
 const KICKER_CLS =
 'font-display text-[clamp(10px,0.78vw,14px)] uppercase tracking-[0.08em] text-[#10140b]/55';
 
-/* The footer's field, restated on the panel.
-
-   border-0 and appearance-none are carried across because they are
-   load-bearing, not decoration: this project's preflight resets borders on
-   div but NOT on input, so without them the field paints the UA default —
-   2px inset grey, all four sides — on the cream. bg-transparent and
-   outline-none do not touch a border.
-
-   The ink is stated explicitly for the same reason the rest of this file
-   states it: globals.css colours `input` as an element, which outranks a
-   colour inherited from the panel. */
-const Signup: React.FC<{
-  data: NonNullable<NavSection['newsletter']>;
-  idSuffix: string;
-  className?: string;
-  style?: React.CSSProperties;
-}> = ({ data, idSuffix, className = '', style }) => (
-  <form onSubmit={(e) => e.preventDefault()} className={className} style={style}>
-    <p className={KICKER_CLS}>{data.kicker}</p>
-    <p className="mt-[clamp(8px,0.9vw,16px)] font-display text-[clamp(18px,1.7vw,30px)] normal-case leading-[1.02] tracking-[-0.02em] text-[#10140b]">
-      {data.title}
-    </p>
-    <p className="mt-[6px] text-[clamp(12px,0.95vw,17px)] leading-[1.45] text-[#10140b]/55">
-      {data.blurb}
-    </p>
-    <label htmlFor={`nav-email-${idSuffix}`} className="sr-only">
-      Your email
-    </label>
-    <div className="mt-[clamp(12px,1.4vw,22px)] flex items-center gap-3 border-b border-[#10140b]/25 pb-[clamp(7px,0.7vw,12px)] transition-colors focus-within:border-[#10140b]/60">
-      <input
-        id={`nav-email-${idSuffix}`}
-        type="email"
-        required
-        placeholder="Your email"
-        className="min-w-0 flex-1 appearance-none border-0 bg-transparent p-0 text-[clamp(15px,1.15vw,21px)] leading-[1.55] text-[#10140b] outline-none placeholder:text-[#10140b]/45"
-      />
-      <button
-        type="submit"
-        aria-label="Subscribe"
-        className="shrink-0 text-[clamp(15px,1.1vw,20px)] leading-none text-[#10140b] transition-transform hover:translate-x-1"
-      >
-        &rarr;
-      </button>
-    </div>
-  </form>
-);
 
 /* Every item in the bar wears this: the dropdown's trigger, which is a
    button, and the three plain links, which are anchors. Shared so the two
@@ -1009,17 +951,6 @@ export const FieldNav: React.FC<FieldNavProps> = ({ tone = 'light' }) => {
                     </ul>
                   </div>
                 ))}
-                {/* A distinct id, because both panes can be in the DOM at
-                    once — the desktop panel is only height-collapsed, not
-                    unmounted — and two inputs sharing one id would break the
-                    label association for whichever came second. */}
-                {drill?.newsletter && (
-                  <Signup
-                    data={drill.newsletter}
-                    idSuffix="m"
-                    className="mt-1 border-t border-[#10140b]/12 px-3 pb-4 pt-4"
-                  />
-                )}
               </div>
             </div>
           </div>
