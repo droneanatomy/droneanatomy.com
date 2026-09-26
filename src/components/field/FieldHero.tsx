@@ -331,6 +331,25 @@ const NAV = [
   { label: 'Contact', href: '/contact' },
 ];
 
+/* The page's chrome geometry, as custom properties.
+
+   THESE LIVED ON <header> until FieldNav moved out of it. They are read by
+   the logo, the model tab and the nav's own sheet, all of which line up
+   with each other only because they resolve the SAME pad-x and pad-y — so
+   with two consumers in two places the values had to stop being written
+   inline. Two copies of `clamp(20px, 3.55vw, 68px)` is how the bar and the
+   panel drift apart by a few pixels and nobody can say why. */
+const CHROME_VARS = {
+  '--pad-x': 'clamp(20px, 3.55vw, 68px)',
+  '--pad-y': 'clamp(16px, 2.1vw, 40px)',
+  /* Height of the top chrome row. The logo and the menu toggle are anchored
+     to the same pad-y but are different heights, so without a shared box
+     their optical centres do not agree — measured 14px apart, which is
+     exactly half the difference between a 16px logo and the toggle's 44px
+     hit area. Both now fill this and centre their contents in it. */
+  '--chrome-h': '2.75rem',
+} as React.CSSProperties;
+
 export const FieldHero: React.FC<{
   /** Everything this page renders that is not choreography. */
   product: ProductPage;
@@ -1970,19 +1989,7 @@ export const FieldHero: React.FC<{
       <div className="pointer-events-none fixed inset-0 z-10">
         <header
           className="relative h-dvh [&_a]:pointer-events-auto"
-          style={
-            {
-              '--pad-x': 'clamp(20px, 3.55vw, 68px)',
-              '--pad-y': 'clamp(16px, 2.1vw, 40px)',
-              /* Height of the top chrome row. The logo and the menu toggle
-                 are anchored to the same pad-y but are different heights, so
-                 without a shared box their optical centres do not agree —
-                 measured 14px apart, which is exactly half the difference
-                 between a 16px logo and the toggle's 44px hit area. Both
-                 now fill this and centre their contents in it. */
-              '--chrome-h': '2.75rem',
-            } as React.CSSProperties
-          }
+          style={CHROME_VARS}
         >
           {/* Top-left logo. Was a 9px dot, and it is still the wordmark's
               LANDING MARK — see MORPH_WINDOW: the oversized P10 PRO shrinks
@@ -2492,7 +2499,6 @@ export const FieldHero: React.FC<{
           {menu === 'overlay' && (
             <FieldMenu nav={product.nav} productName={product.name} />
           )}
-          {menu === 'mega' && <FieldNav />}
 
           {/* Vertical model tab, flush to the top-right corner. Light panel,
               dark type — the one inverted element on the page.
@@ -2625,6 +2631,31 @@ export const FieldHero: React.FC<{
           )}
         </header>
       </div>
+
+      {/* THE NAV IS CHROME, NOT CONTENT, and it has to live outside the
+          layer above to prove it.
+
+          Inside <header> it was nested in `fixed inset-0 z-10`, and an
+          element with a z-index that is not `auto` opens a stacking context
+          — so every z-index inside it is resolved against its siblings in
+          there and nothing else. The bar asks for z-120, but the whole
+          layer was being compared to the page as a single object at 10.
+          The closing card sits at z-11 on purpose, to cover the content as
+          it arrives, and at 11 > 10 it covered the open mega menu with it:
+          the P10 headline painted straight across the panel, over the
+          product names. The 120 never entered the comparison.
+
+          Out here the bar's own 120 — and the backdrop's 114 — are measured
+          against the card's 11 and the footer's 20, which is what those
+          numbers were always chosen to beat.
+
+          It carries CHROME_VARS because it used to inherit them from
+          <header>, and the logo's pad-x is what the morph lands on. */}
+      {menu === 'mega' && (
+        <div style={CHROME_VARS}>
+          <FieldNav />
+        </div>
+      )}
 
       {/* Outside <header> on purpose. The hero's layers carry transforms,
           and a transformed ancestor becomes the containing block for a
