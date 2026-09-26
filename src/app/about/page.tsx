@@ -1,9 +1,12 @@
+import { pageMeta } from '@/app/site';
 import { Banner, StatsSection, CardGrid, Newsletter, OurTeam } from '@/components';
 
-export const metadata = {
-    title: 'About | DroneAnatomy',
-    description: 'Learn about DroneAnatomy - our mission, vision, and the team behind advanced aerial technology.',
-};
+export const metadata = pageMeta({
+  path: '/about',
+  title: 'About',
+  description:
+    'Learn about DroneAnatomy — our mission, vision, and the team behind advanced aerial technology.',
+});
 
 export default function AboutPage() {
     return (

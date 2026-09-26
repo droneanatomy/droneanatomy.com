@@ -168,7 +168,7 @@ export type ProductPage = {
    *
    *  The size belongs to the SENTENCE rather than to the page: the line runs
    *  nowrap from 640px up, so one written long enough simply walks off both
-   *  edges of the screen at the default step. "Ultra-compact Agruculture
+   *  edges of the screen at the default step. "Ultra-compact Agriculture
    *  Drone" measures 14.99em, which at `lg`'s 6.8vw is 102% of the viewport
    *  — clipped at both ends on a 1920 screen before this existed.
    *

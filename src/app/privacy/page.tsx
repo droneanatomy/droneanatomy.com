@@ -1,9 +1,12 @@
+import { pageMeta } from '@/app/site';
 import styles from './privacy.module.css';
 
-export const metadata = {
-    title: 'Privacy Policy | DroneAnatomy',
-    description: 'DroneAnatomy privacy policy. Learn how we collect, use, and protect your personal data.',
-};
+export const metadata = pageMeta({
+  path: '/privacy',
+  title: 'Privacy Policy',
+  description:
+    'DroneAnatomy privacy policy. Learn how we collect, use, and protect your personal data.',
+});
 
 const LAST_UPDATED = 'February 23, 2026';
 const COMPANY = 'DAstrionics Technologies Pvt. Ltd.';

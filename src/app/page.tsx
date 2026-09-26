@@ -1,13 +1,20 @@
+import { pageMeta } from '@/app/site';
 import { LazyInkHero } from '@/components/InkHero/LazyInkHero';
 import { LazyFlightPreview } from '@/components/flight/LazyFlightPreview';
 import { LazyTopoBlock } from '@/components/topo/LazyTopoBlock';
 import { EnquirySection } from '@/components/enquiry/EnquirySection';
 
-export const metadata = {
-  title: 'DroneAnatomy - Advanced Aerial Solutions',
+export const metadata = pageMeta({
+  path: '/',
+  /* Absolute: the homepage title already names the company, so the
+     "| DroneAnatomy" template would only repeat it. This also replaces
+     "Advanced Aerial Solutions", which said nothing the og:title beside
+     it did not say better, and disagreed with it in every crawl. */
+  absoluteTitle: true,
+  title: 'DroneAnatomy — autonomous systems for the next era of flight',
   description:
-    'DroneAnatomy provides cutting-edge drone technology for enterprise, commercial, and consumer applications.',
-};
+    'Autonomous aircraft designed and built in India. Agricultural spraying, VTOL endurance, observation and compact platforms.',
+});
 
 /* The light scheme is the hero. The dark one that sat above this for
    comparison is gone; InkHero still supports scheme="dark" if it is ever

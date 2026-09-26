@@ -1,3 +1,4 @@
+import { pageMeta } from '@/app/site';
 /* THE MINI PRODUCT PAGE — act one, then the model itself.
 
    Composed from the same FieldHero as /products/p10-pro, but MINI declares
@@ -27,11 +28,12 @@ import { FieldHero } from '@/components/field/FieldHero';
 import { MiniViewer } from '@/components/field/MiniViewer';
 import { MINI } from '@/components/field/product';
 
-export const metadata = {
-  title: 'Mini | DroneAnatomy',
+export const metadata = pageMeta({
+  path: '/products/mini',
+  title: 'Mini',
   description:
     'Mini — the smallest complete airframe we fly. Folds into a case that travels with the crew, and runs the same stack as every other aircraft on the fleet.',
-};
+});
 
 export default function MiniPage() {
   return (

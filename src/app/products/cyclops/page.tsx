@@ -1,3 +1,4 @@
+import { pageMeta } from '@/app/site';
 /* THE CYCLOPS PRODUCT PAGE — the sequence, a film, then the model.
 
    The Mini's arrangement with one step added between its two halves. The
@@ -24,13 +25,14 @@ import { MiniViewer } from '@/components/field/MiniViewer';
 import { ProductLoop } from '@/components/field/ProductLoop';
 import { CYCLOPS } from '@/components/field/product';
 
-export const metadata = {
-  /* Factual and short while the copy is placeholder, for the reason given
-     on the Noxr page: made-up claims here would be the one unwritten line
-     that escaped the page and reached search results. */
-  title: 'Cyclops | DroneAnatomy',
+/* Factual and short while the copy is placeholder, for the reason given on
+   the Noxr page: made-up claims here would be the one unwritten line that
+   escaped the page and reached search results. */
+export const metadata = pageMeta({
+  path: '/products/cyclops',
+  title: 'Cyclops',
   description: 'Cyclops — a VTOL airframe from DroneAnatomy.',
-};
+});
 
 export default function CyclopsPage() {
   return (

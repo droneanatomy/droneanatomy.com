@@ -1,3 +1,4 @@
+import { pageMeta } from '@/app/site';
 /* THE PRODUCT INDEX.
 
    READ THIS BEFORE ADDING ANYTHING ELSE HERE. The three entries below the
@@ -16,11 +17,12 @@
 
 import { Banner } from '@/components';
 
-export const metadata = {
-    title: 'Products | DroneAnatomy',
-    description:
-        'Explore our range of advanced drone products — the P10 Pro agricultural platform, the compact Mini, and more.',
-};
+export const metadata = pageMeta({
+  path: '/products',
+  title: 'Products',
+  description:
+    'Explore our range of advanced drone products — the P10 Pro agricultural platform, the compact Mini, and more.',
+});
 
 export default function ProductsPage() {
     return (

@@ -1,9 +1,12 @@
+import { pageMeta } from '@/app/site';
 import { Banner, ContentGrid, ContentItem } from '@/components';
 
-export const metadata = {
-    title: 'Updates | DroneAnatomy',
-    description: 'Latest news and updates from DroneAnatomy. Product announcements, company news, and industry insights.',
-};
+export const metadata = pageMeta({
+  path: '/updates',
+  title: 'Updates',
+  description:
+    'Latest news and updates from DroneAnatomy. Product announcements, company news, and industry insights.',
+});
 
 // News articles data
 const newsArticles: ContentItem[] = [

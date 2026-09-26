@@ -1,3 +1,4 @@
+import { pageMeta } from '@/app/site';
 /* THE P10 PRO PRODUCT PAGE — the scroll-driven field hero, promoted.
 
    This route used to be the legacy composition: Banner / Slider / Banner /
@@ -34,11 +35,12 @@
 import { FieldHero } from '@/components/field/FieldHero';
 import { P10_PRO } from '@/components/field/product';
 
-export const metadata = {
-  title: 'P10 Pro | DroneAnatomy',
+export const metadata = pageMeta({
+  path: '/products/p10-pro',
+  title: 'P10 Pro',
   description:
     'P10 Pro — an ultra-compact agricultural drone engineered for Indian farming conditions. Ten litres over six metres of swath, eighteen minutes on four packs, eleven parts one driver.',
-};
+});
 
 export default function P10ProPage() {
   return <FieldHero product={P10_PRO} layout="centred" menu="mega" />;

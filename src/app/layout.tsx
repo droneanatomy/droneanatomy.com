@@ -3,6 +3,7 @@ import localFont from 'next/font/local';
 import { GoogleAnalytics } from '@next/third-parties/google';
 import { HeaderGate, FooterGate } from '@/components/Chrome/ChromeGate';
 import { BootCurtain } from '@/components/Chrome/BootCurtain';
+import { OG_IMAGE, SITE_NAME, SITE_URL } from './site';
 import './globals.css';
 
 const robotoMono = localFont({
@@ -11,11 +12,52 @@ const robotoMono = localFont({
   display: 'swap',
 });
 
+/* METADATABASE IS THE LOAD-BEARING ONE. Without it Next resolves every
+   relative url in this object — the canonical, the OG image, the twitter
+   image — against nothing, and emits them as paths. A crawler reading
+   `/images/og.jpg` as an OG url has no host to fetch it from, so the card
+   comes back blank. With it, every relative url below becomes absolute at
+   build time.
+
+   The title is a TEMPLATE, so the eleven pages that set their own get
+   "<theirs> | DroneAnatomy" without repeating the suffix, and the
+   homepage keeps a written default rather than a bare brand name. */
 export const metadata: Metadata = {
-  title: 'DroneAnatomy - Advanced Aerial Solutions',
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: 'DroneAnatomy — autonomous systems for the next era of flight',
+    template: `%s | ${SITE_NAME}`,
+  },
   description:
-    'DroneAnatomy provides cutting-edge drone technology for enterprise, commercial, and consumer applications. Explore our range of advanced aerial vehicles.',
-  keywords: ['drones', 'aerial', 'UAV', 'drone technology', 'enterprise drones'],
+    'DroneAnatomy designs and builds autonomous aircraft in India — agricultural spraying, VTOL endurance, observation and compact platforms, with the controller, the sensors and the autonomy stack built in.',
+  applicationName: SITE_NAME,
+  keywords: [
+    'drones',
+    'UAV',
+    'agricultural drone',
+    'VTOL',
+    'made in India drones',
+    'autonomous aircraft',
+  ],
+  alternates: { canonical: '/' },
+  openGraph: {
+    type: 'website',
+    siteName: SITE_NAME,
+    url: '/',
+    title: 'DroneAnatomy — autonomous systems for the next era of flight',
+    description:
+      'Autonomous aircraft designed and built in India. Agricultural spraying, VTOL endurance, observation and compact platforms.',
+    locale: 'en_IN',
+    images: [OG_IMAGE],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'DroneAnatomy — autonomous systems for the next era of flight',
+    description:
+      'Autonomous aircraft designed and built in India. Agricultural spraying, VTOL endurance, observation and compact platforms.',
+    images: [OG_IMAGE.url],
+  },
+  robots: { index: true, follow: true },
 };
 
 export default function RootLayout({

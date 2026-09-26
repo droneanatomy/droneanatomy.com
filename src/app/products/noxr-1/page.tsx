@@ -1,3 +1,4 @@
+import { pageMeta } from '@/app/site';
 /* THE NOXR PRODUCT PAGE — act one, then the model itself.
 
    The same arrangement as /products/mini, and that is the point of it being
@@ -27,13 +28,14 @@ import { FieldHero } from '@/components/field/FieldHero';
 import { MiniViewer } from '@/components/field/MiniViewer';
 import { NOXR } from '@/components/field/product';
 
-export const metadata = {
-  /* Deliberately factual and short while the page's copy is still
-     placeholder. A description that made claims here would be the one piece
-     of unwritten copy that escaped the page and reached search results. */
-  title: 'Noxr | DroneAnatomy',
+/* Deliberately factual and short while the page's copy is still
+   placeholder. A description that made claims here would be the one piece
+   of unwritten copy that escaped the page and reached search results. */
+export const metadata = pageMeta({
+  path: '/products/noxr-1',
+  title: 'Noxr',
   description: 'Noxr — an airframe from DroneAnatomy.',
-};
+});
 
 export default function NoxrPage() {
   return (

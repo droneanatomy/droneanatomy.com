@@ -2,6 +2,18 @@ import styles from './careers.module.css';
 import Image from 'next/image';
 
 
+import { pageMeta } from '@/app/site';
+
+/* No specific vacancies named: the page is a hero and nothing more right
+   now, and a description listing roles that are not on it is the same
+   mistake the Noxr and Cyclops descriptions avoid. */
+export const metadata = pageMeta({
+  path: '/careers',
+  title: 'Careers',
+  description:
+    'Careers at DroneAnatomy — build autonomous aircraft in India, from the airframe to the autonomy stack.',
+});
+
 export default function CareersPage() {
     return (
         <section className={styles.careersHero}>
