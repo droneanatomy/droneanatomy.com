@@ -42,7 +42,6 @@ const OWN_NAV_ROUTES = [
   '/products/mini',
   '/products/noxr-1',
   '/products/cyclops',
-  '/preview/field',
 ];
 
 export function HeaderGate() {

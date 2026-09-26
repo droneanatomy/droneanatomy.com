@@ -32,10 +32,13 @@ export default function ProductsPage() {
                 overlayStyle="dark"
             />
 
-            {/* FIRST, because it is the only entry on this page with a
-                finished product page behind it — see the note at the top.
-                An index whose working link is buried under three broken
-                ones is worse than one that leads with the real thing. */}
+            {/* FOUR REAL PRODUCTS, and every link on this page now resolves.
+                It listed Mini and then three inventions — Drone X1, Drone
+                Pro and Drone Lite, with borrowed marketing copy and CTAs
+                pointing at /products/drone-x1, -pro and -lite, none of
+                which have ever existed as routes. They are replaced by the
+                three other aircraft that do have pages, described from
+                their own product data. */}
             <Banner
                 title="Mini"
                 subtitle="The smallest complete airframe we fly. Folds into a case that travels with the crew, and runs the same stack as every other aircraft on the fleet."
@@ -46,31 +49,32 @@ export default function ProductsPage() {
             />
 
             <Banner
-                title="Drone X1"
-                subtitle="Our flagship autonomous drone featuring 8K imaging, 60-minute flight time, and AI-powered obstacle avoidance. Built for professionals who demand excellence."
-                ctaText="Learn More"
-                ctaLink="/products/drone-x1"
+                title="P10 Pro"
+                subtitle="An ultra-compact agricultural drone, built specifically for Indian farming across steep terrain and tough rural environments. Ten litres over six metres of swath."
+                ctaText="View the P10 Pro"
+                ctaLink="/products/p10-pro"
                 contentPosition="center-left"
                 overlayStyle="dark"
             />
 
             <Banner
-                title="Drone Pro"
-                subtitle="Professional-grade aerial photography and videography. 4K HDR video, advanced stabilization, and intelligent flight modes."
-                ctaText="Learn More"
-                ctaLink="/products/drone-pro"
+                title="Cyclops"
+                subtitle="Vertical launch, fixed-wing range. Six hours up, a hundred and fifty kilometres out, ten kilos underneath — and no runway, launcher or catapult anywhere in the sortie."
+                ctaText="View the Cyclops"
+                ctaLink="/products/cyclops"
                 contentPosition="center-left"
                 overlayStyle="dark"
             />
 
             <Banner
-                title="Drone Lite"
-                subtitle="Compact and portable without compromising on quality. Perfect for travel and everyday adventures."
-                ctaText="Learn More"
-                ctaLink="/products/drone-lite"
+                title="NOXR-1"
+                subtitle="Multirole observation platform. Day/night EO/IR with laser rangefinder, frequency hopping, and sixty minutes on station."
+                ctaText="View the NOXR-1"
+                ctaLink="/products/noxr-1"
                 contentPosition="center-left"
                 overlayStyle="dark"
             />
+
         </>
     );
 }

@@ -321,7 +321,11 @@ const CODA_SIZE: Record<CodaSize, string> = {
 };
 
 const NAV = [
-  { label: 'Intro', href: '/preview/field' },
+  /* Was /preview/field, which was the staging page these heroes were
+     judged on and is now deleted — a live 404 on every product page.
+     Home is the honest target: this row is site navigation, not a tour of
+     the page it sits on. */
+  { label: 'Intro', href: '/' },
   { label: 'Modules', href: '/products' },
   { label: 'Payload', href: '/products/p10-pro' },
   { label: 'Contact', href: '/contact' },
