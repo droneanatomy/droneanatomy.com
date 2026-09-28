@@ -402,24 +402,42 @@
   }
 
   /* ========================================
-     SCROLLBAR
+     SCROLLBAR — hidden, everywhere.
+
+     This was an 8px track with a translucent thumb. The product pages had
+     already opted out of it: Field.module.css hid the bar on .field-route
+     because a 620vh spacer makes the thumb report a document length that
+     means nothing, and because the gutter narrows the viewport, which
+     shifts every fixed layer's idea of where centre is. That second
+     reason was never specific to those pages — the homepage pins layers
+     against the viewport too.
+
+     So the exception becomes the rule and the route-scoped copy in
+     Field.module.css is gone, rather than leaving two places that hide
+     the same bar and can disagree.
+
+     WHAT THIS DOES AND DOES NOT TAKE AWAY. Scrolling is untouched —
+     wheel, trackpad, touch, keyboard, and the scrollbar's own
+     click-and-drag is the only interaction lost. What does go is the
+     position cue: nothing on screen says how far down the page you are
+     or how much is left. The pages carry their own cues (the field
+     route's scroll indicator, the sections' own rhythm), which is the
+     trade being made knowingly.
+
+     Firefox needs scrollbar-width on each scroll container — it is not
+     an inherited property — so the universal selector is doing real work
+     here rather than being shorthand for html.
      ======================================== */
 
+  *,
+  html,
+  body {
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* legacy Edge */
+  }
+
   ::-webkit-scrollbar {
-    width: 8px;
-  }
-
-  ::-webkit-scrollbar-track {
-    background: var(--color-bg);
-  }
-
-  ::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 4px;
-  }
-
-  ::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.3);
+    display: none; /* Chrome, Safari, modern Edge */
   }
 
   /* ========================================

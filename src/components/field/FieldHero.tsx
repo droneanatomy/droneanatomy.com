@@ -527,9 +527,19 @@ export const FieldHero: React.FC<{
 
 
 
-  /* Hide the scrollbar for as long as this route is mounted. Removing the
-     gutter widens the viewport, so ScrollTrigger has to re-measure — without
-     the refresh every trigger stays anchored to the narrower layout. */
+  /* Mark the route for as long as it is mounted.
+
+     This used to be about the scrollbar: the class hid it, removing the
+     gutter widened the viewport, and ScrollTrigger had to re-measure.
+     The bar is hidden site-wide now, so the gutter no longer comes and
+     goes here and that reason is gone.
+
+     The refresh stays, for the reason that was always underneath it. The
+     class also sets `section { content-visibility: visible }` on this
+     route, and that CHANGES MEASURED HEIGHTS — an off-screen section
+     reports the one-viewport placeholder until it is made visible. Every
+     trigger anchored before the swap is anchored to the wrong geometry,
+     which is the same failure, arrived at from the other direction. */
   useEffect(() => {
     document.documentElement.classList.add('field-route');
     ScrollTrigger.refresh();

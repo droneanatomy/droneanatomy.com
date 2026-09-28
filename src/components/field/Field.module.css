@@ -11,24 +11,10 @@
    type is lit from behind and never washed over.
    ============================================================ */
 
-/* No scrollbar on this route.
-
-   The 620vh spacer exists only to generate scroll distance for the timeline,
-   so the bar reports a document length that means nothing to the reader — and
-   its gutter narrows the viewport, which shifts every fixed layer's idea of
-   where centre is. The page carries its own affordance in the scroll cue.
-
-   Scoped to a class that FieldHero puts on <html> and removes on unmount,
-   rather than left in globals.css: a CSS module's :global rules stay in the
-   stylesheet once the chunk has loaded, so keying on the class is what keeps
-   this from following you to other routes. */
-:global(html.field-route) {
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* legacy Edge */
-}
-:global(html.field-route)::-webkit-scrollbar {
-  display: none; /* Chrome, Safari */
-}
+/* The scrollbar used to be hidden here, for this route only. It is hidden
+   for the whole site now — see the SCROLLBAR block in globals.css, which
+   carries the reasoning this comment used to. The .field-route class is
+   still doing the two jobs below. */
 
 /* Scroll snap, mobile only, and PROXIMITY rather than mandatory.
 
