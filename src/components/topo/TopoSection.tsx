@@ -25,6 +25,7 @@ import React, { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { buildMassif, heightAt, MASSIF_SIZE, PEAK_H } from './massif';
 import { buildClouds } from './clouds';
+import { setPixelRatioForDevice } from '../gpuBudget';
 
 const clamp01 = (v: number) => (v < 0 ? 0 : v > 1 ? 1 : v);
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
@@ -89,7 +90,7 @@ export const TopoSection: React.FC<TopoSectionProps> = ({ progressRef, onMarkers
     } catch {
       return;
     }
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.75));
+    setPixelRatioForDevice(renderer, 1.75);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
 
     const GROUND = new THREE.Color('#0a0908');

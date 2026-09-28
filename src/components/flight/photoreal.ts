@@ -179,17 +179,34 @@ export const USAV_LOOKS: Record<
    edge and about right for the soft one PCF gives. */
 const SHADOW = { size: 850, res: 2048, near: 150, far: 2400 };
 
-export function enableShadows(renderer: THREE.WebGLRenderer, sun: THREE.DirectionalLight) {
+/* QUALITY COMES FROM THE CALLER, not from a media query in here.
+
+   This module is pure — it touches no DOM and asks nothing about the
+   device — and the moment it imported a matchMedia helper it would stop
+   being testable and start being a second place that decides what a
+   phone is. FlightScene already knows; it passes the answer down. */
+export function enableShadows(
+  renderer: THREE.WebGLRenderer,
+  sun: THREE.DirectionalLight,
+  { res = SHADOW.res, soft = true }: { res?: number; soft?: boolean } = {}
+) {
   renderer.shadowMap.enabled = true;
   /* PCFSoft rather than PCF or VSM. The sun here is 22 degrees off the
      horizon, so shadows are long and their edges are the most visible
      thing about them; the extra taps are worth it. VSM would give softer
      edges still and light-bleeds through the canopy, which is exactly
-     where this scene would show it. */
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+     where this scene would show it.
+
+     `soft` is how a phone opts out of those extra taps. PCF samples once
+     where PCFSoft samples a neighbourhood per fragment, and every lit
+     fragment of a full-screen terrain pays it. The edges get harder;
+     against a frame that was dropping, that is the right trade. */
+  renderer.shadowMap.type = soft ? THREE.PCFSoftShadowMap : THREE.PCFShadowMap;
 
   sun.castShadow = true;
-  sun.shadow.mapSize.set(SHADOW.res, SHADOW.res);
+  /* The depth pass is res^2 texels of fill, redrawing the terrain, the
+     trees and the craft every frame. Halving res quarters that. */
+  sun.shadow.mapSize.set(res, res);
 
   const c = sun.shadow.camera;
   c.left = -SHADOW.size;

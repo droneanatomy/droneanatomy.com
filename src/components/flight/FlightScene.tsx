@@ -67,6 +67,7 @@ import {
   attachTerrainGrain,
 } from './terrain';
 import { buildTrees, type Forest } from './trees';
+import { isPhone, setPixelRatioForDevice } from '../gpuBudget';
 import {
   attachTerrainDetail,
   enableShadows,
@@ -210,7 +211,10 @@ export const FlightScene: React.FC<FlightSceneProps> = ({
     } catch {
       return; // no WebGL: the wrapper's flat sky colour stands in
     }
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.75));
+    /* One question, two answers below — the dpr here and the shadow
+       budget at enableShadows. Read once so they cannot disagree. */
+    const phone = isPhone();
+    setPixelRatioForDevice(renderer, 1.75);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     /* Was 1.05, then 1.35 to recover the level after the fill was cut to
@@ -281,7 +285,11 @@ export const FlightScene: React.FC<FlightSceneProps> = ({
        ground half was already a green and stays as it is. */
     scene.add(new THREE.HemisphereLight(0xd8dcd6, 0x3a4030, 0.45));
 
-    if (photoreal) enableShadows(renderer, sun);
+    /* On a phone: a 1024 map instead of 2048 — a quarter of the depth
+       pass — and the cheap PCF filter. Shadows stay; this scene is lit
+       from 22 degrees and without them the terrain reads flat. Turning
+       them off outright is the next lever if 1024 is still too much. */
+    if (photoreal) enableShadows(renderer, sun, phone ? { res: 1024, soft: false } : undefined);
 
     /* A KEY AND A FILL THAT BELONG TO THE AIRCRAFT ALONE.
 
