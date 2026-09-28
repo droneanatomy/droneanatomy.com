@@ -117,7 +117,7 @@ export default function AboutPage() {
                     { name: 'Mayank Sharma', role: 'Co-Founder & COO', image: '/images/team/mayank.jpg', },
                     { name: 'Dipanshu Purohit', role: 'Co-Founder & CMO', image: '/images/team/deepanshu.jpg', },
                     { name: 'Deepak Maheshwari', role: 'Advisor', image: '/images/team/deepak_maheshwari.jpg', },
-                    { name: 'G. S. Bedi', role: 'Advisor', image: '/images/team/gs-bedi.jpg', },
+                    { name: 'Air Marshal G. S. Bedi', role: 'Advisor', image: '/images/team/gs-bedi.jpg', },
                     { name: 'Jogesh Grover', role: 'Advisor', image: '/images/team/jogesh-grover.webp', },
                     { name: 'Aniket Gupta', role: 'Head of Software', image: '/images/team/aniket.jpg', },
                     { name: 'Suman Pal', role: 'Head of Design', image: '/images/team/suman-new.jpg', },
