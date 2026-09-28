@@ -205,15 +205,21 @@ export const FlightScene: React.FC<FlightSceneProps> = ({
     const wrap = wrapRef.current;
     if (!canvas || !wrap) return;
 
+    /* One question, three answers — MSAA here, the dpr below, and the
+       shadow budget at enableShadows. Read once so they cannot disagree. */
+    const phone = isPhone();
+
     let renderer: THREE.WebGLRenderer;
     try {
-      renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
+      /* antialias is MSAA, and a mobile GPU pays for it in bandwidth on
+         every sample of a full-screen terrain — the one thing a tiled
+         renderer is least able to absorb. InkReveal already ships with it
+         off for the same reason. The aliasing shows on the dashed flight
+         path more than anywhere; against frames, it is the right trade. */
+      renderer = new THREE.WebGLRenderer({ canvas, antialias: !phone, powerPreference: 'high-performance'  });
     } catch {
       return; // no WebGL: the wrapper's flat sky colour stands in
     }
-    /* One question, two answers below — the dpr here and the shadow
-       budget at enableShadows. Read once so they cannot disagree. */
-    const phone = isPhone();
     setPixelRatioForDevice(renderer, 1.75);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;

@@ -25,7 +25,7 @@ import React, { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { buildMassif, heightAt, MASSIF_SIZE, PEAK_H } from './massif';
 import { buildClouds } from './clouds';
-import { setPixelRatioForDevice } from '../gpuBudget';
+import { isPhone, setPixelRatioForDevice } from '../gpuBudget';
 
 const clamp01 = (v: number) => (v < 0 ? 0 : v > 1 ? 1 : v);
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
@@ -86,7 +86,8 @@ export const TopoSection: React.FC<TopoSectionProps> = ({ progressRef, onMarkers
 
     let renderer: THREE.WebGLRenderer;
     try {
-      renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
+      /* MSAA off on phones — see the note in FlightScene. */
+      renderer = new THREE.WebGLRenderer({ canvas, antialias: !isPhone(), powerPreference: 'high-performance'  });
     } catch {
       return;
     }
