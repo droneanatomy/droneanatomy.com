@@ -291,6 +291,28 @@
     right: var(--pad-x);
   }
 
+  /* SURVEY RANGES LEFT ON A PHONE, but it cannot simply be told to.
+
+     It keeps its corner — the rule above still anchors it right — and
+     only the setting changes. The catch is what that moves: ranged
+     right, the ink sits on the right of a full-width box; ranged left it
+     slides to the left edge, and on this beat the left edge is where the
+     aircraft is. PLATE_TALL puts the Mini's dome at x 114 of 1440, the
+     leftmost 8% of the picture, at y 2451 of 2960 — and the card's text
+     starts around y 600 of 844 at 390 wide, so the two share that band
+     vertically. Ranging left alone would lay the copy over the drone,
+     which is the exact collision the right-ranging was there to avoid.
+
+     So the box stops short of that corner instead. 70% anchored right
+     puts its left edge near 30% of the viewport, clear of the aircraft
+     and its rotors in the leftmost ~12%, and the lines range left inside
+     it. The copy reads left-aligned and still sits bottom right, which
+     is the arrangement being asked for rather than a contradiction. */
+  .card[data-scene='survey'] {
+    max-width: 70%;
+    text-align: left;
+  }
+
   .body {
     max-width: none;
   }

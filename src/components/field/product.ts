@@ -312,7 +312,7 @@ export const P10_PRO: ProductPage = {
     /* Moved out of FieldHero's JSX, where it was a literal and therefore
        rendered on every product's hero regardless of the product. */
     aside:
-      'an ultra-compact agricultural drone, one of India\'s first built specifically for Indian farming across steep terrain and tough rural environments.' +
+      'an ultra-compact agricultural drone, one of India\'s first built specifically for Indian farming across steep terrain and tough rural environments. ' +
       'Its rugged build, optimized flight dynamics, and resilient architecture deliver dependable performance in the harshest agricultural conditions.',
         },
 

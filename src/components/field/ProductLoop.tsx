@@ -250,7 +250,7 @@ export function ProductLoop({
         {loop.body && (
           <p
             ref={bodyRef}
-            className="absolute bottom-[10%] left-1/2 w-[84vw] -translate-x-1/2 text-right text-[clamp(15px,1.77vw,34px)] leading-[1.42] text-[#f2ecd9] md:bottom-auto md:left-auto md:right-[8%] md:top-[42%] md:w-[clamp(230px,18.8vw,360px)] md:translate-x-0 md:text-left"
+            className="absolute bottom-[10%] left-1/2 w-[84vw] -translate-x-1/2 text-left text-[clamp(15px,1.77vw,34px)] leading-[1.42] text-[#f2ecd9] md:bottom-auto md:left-auto md:right-[8%] md:top-[42%] md:w-[clamp(230px,18.8vw,360px)] md:translate-x-0"
             style={{ textShadow: HALO }}
           >
             {/* One block per entry, so each claim owns a line however narrow

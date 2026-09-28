@@ -2318,7 +2318,7 @@ export const FieldHero: React.FC<{
                at 1286, clear of the aircraft's outermost propeller tip at
                ~1280; that clearance is what sets the 480px ceiling rather
                than any round number. */
-            className="absolute bottom-[10%] left-1/2 w-[84vw] -translate-x-1/2 text-right text-[clamp(15px,1.77vw,24px)] leading-[1.42] md:inset-y-0 md:left-auto md:right-[8%] md:my-auto md:h-fit md:w-[clamp(230px,25vw,480px)] md:translate-x-0 md:text-left"
+            className="absolute bottom-[10%] left-1/2 w-[84vw] -translate-x-1/2 text-left text-[clamp(15px,1.77vw,24px)] leading-[1.42] md:inset-y-0 md:left-auto md:right-[8%] md:my-auto md:h-fit md:w-[clamp(230px,25vw,480px)] md:translate-x-0"
           >
             {product.statement.aside}
           </p>
@@ -2469,11 +2469,12 @@ export const FieldHero: React.FC<{
                wide frame and as a hole on a narrow one — 98px in from the
                edge of a 390px screen, which leaves the block stranded near
                the middle rather than anchored to a side. 8% is the same axis
-               the hero's statement paragraph hangs off: its mobile box is
-               w-[84vw] centred, so its right-aligned ink lands at 8vw from
-               the edge. Sharing that line is what makes the two read as the
-               same page. */
-            className="absolute right-[8%] top-[78%] text-right font-display text-[clamp(11px,1vw,19px)] uppercase leading-[1.5] tracking-[0.01em] md:right-[25%]"
+               the hero's statement paragraph hangs off. Both now range
+               LEFT on a phone, so what they share is the ragged edge on
+               the right rather than a flush one at 8vw; the block stays
+               anchored by its right edge either way. Desktop is unchanged
+               — it keeps the 25% inset and the right-ranged setting. */
+            className="absolute right-[8%] top-[78%] text-left font-display text-[clamp(11px,1vw,19px)] uppercase leading-[1.5] tracking-[0.01em] md:right-[25%] md:text-right"
           >
             {product.codaNote?.map((line, i) => (
               <React.Fragment key={line}>
