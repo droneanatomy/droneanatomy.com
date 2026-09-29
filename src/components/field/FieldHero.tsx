@@ -26,7 +26,7 @@
 
 import type { CodaSize, ProductPage } from './product';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
-import { FieldBenchMobile, FieldClosingMobile } from './FieldMobileSections';
+import { FieldBenchMobile } from './FieldMobileSections';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -443,14 +443,22 @@ export const FieldHero: React.FC<{
        the list is not a visual tweak — it shortens the spacer, so the page
        is no longer 2910vh of empty scroll with three fixed layers pinned
        over it, and the sections below can simply be as tall as they are. */
-    /* On a phone the hero AND the gallery stay scrubbed; only the bench
-       and the closing card become ordinary sections. The gallery used to be
+    /* On a phone the hero, the gallery AND the closing stay scrubbed; only
+       the bench becomes an ordinary section. The gallery used to be
        filtered out here too and replaced by a stacked list, which meant the
        page had two galleries with different behaviour. It is one component
        at every width now — see the note on the track transform in
-       FieldGallery. */
+       FieldGallery.
+
+       THE CLOSING IS BACK IN because the ending sequence hangs off it. The
+       return render is driven by this act's own clock — see ret.SEQ and the
+       endSeqRef block — so dropping the act did not merely flatten the card,
+       it meant a phone never saw the aircraft come back at all. The flat
+       version that stood in for it could not: a stacked section has no
+       scrub to scrub. It costs the spacer roughly ret.actVh, which is the
+       price of having the sequence at all. */
     const kept = narrow
-      ? acts.filter((a) => a.kind === 'hero' || a.kind === 'gallery')
+      ? acts.filter((a) => a.kind === 'hero' || a.kind === 'gallery' || a.kind === 'closing')
       : acts;
     /* WHAT THE PRODUCT DECLARED, which is not what the clock ends up
        holding. On a phone the line above drops the bench and the closing
@@ -2691,8 +2699,11 @@ export const FieldHero: React.FC<{
       <div id="field-spacer" style={{ height: `${spacerVh}vh` }} aria-hidden />
 
       {/* The mobile page, in normal flow under the scrubbed acts. The
-          gallery is NOT here any more — it is scrubbed at every width, so
-          this is the bench and the closing card only.
+          gallery is NOT here any more — it is scrubbed at every width, and
+          neither is the closing: it went back to being a scrubbed act on a
+          phone so the ending sequence it drives would play. This is the
+          bench, alone. FieldClosingMobile is unused by this file now and
+          left on disk, the way SiteBar was.
 
           GATED ON WHAT THE PRODUCT DECLARES, and on `declares` rather than
           on `clock`. This branch once checked only the width, so a page
@@ -2704,15 +2715,11 @@ export const FieldHero: React.FC<{
           bench and the closing card vanished on mobile: three panels, their
           figures, the footnote and the Book a demo. Measured on P10 Pro,
           thirteen strings on a desktop and none of them on a phone. */}
-      {narrow &&
-        ((declares.bench && product.bench) || (declares.closing && product.closing)) && (
-          <div className="relative z-20 bg-[#090b07]">
-            {declares.bench && product.bench && <FieldBenchMobile bench={product.bench} />}
-            {declares.closing && product.closing && (
-              <FieldClosingMobile closing={product.closing} />
-            )}
-          </div>
-        )}
+      {narrow && declares.bench && product.bench && (
+        <div className="relative z-20 bg-[#090b07]">
+          <FieldBenchMobile bench={product.bench} />
+        </div>
+      )}
 
       {/* The footer is NOT rendered here. It is the site's, mounted once in
           the root layout — see FooterGate. It used to live here, which is
