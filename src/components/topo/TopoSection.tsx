@@ -84,10 +84,12 @@ export const TopoSection: React.FC<TopoSectionProps> = ({ progressRef, onMarkers
     const wrap = wrapRef.current;
     if (!canvas || !wrap) return;
 
+    const phone = isPhone();
+
     let renderer: THREE.WebGLRenderer;
     try {
       /* MSAA off on phones — see the note in FlightScene. */
-      renderer = new THREE.WebGLRenderer({ canvas, antialias: !isPhone(), powerPreference: 'high-performance'  });
+      renderer = new THREE.WebGLRenderer({ canvas, antialias: !phone, powerPreference: 'high-performance' });
     } catch {
       return;
     }
@@ -99,10 +101,13 @@ export const TopoSection: React.FC<TopoSectionProps> = ({ progressRef, onMarkers
     scene.background = GROUND;
 
     const camera = new THREE.PerspectiveCamera(40, 1, 1, 4000);
-    const massif = buildMassif();
+    /* Same phone test the renderer above uses, read once. A quarter of
+       the triangles and half the noise — buildMassif and buildClouds each
+       say what their number is actually buying. */
+    const massif = buildMassif(phone ? 190 : 380);
     scene.add(massif);
 
-    const clouds = buildClouds();
+    const clouds = buildClouds({ octaves: phone ? 2 : 4 });
     scene.add(clouds.group);
 
     const mat = massif.material as THREE.ShaderMaterial;
@@ -200,11 +205,18 @@ export const TopoSection: React.FC<TopoSectionProps> = ({ progressRef, onMarkers
     const io = new IntersectionObserver((e) => { inView = e[0].isIntersecting; }, { threshold: 0 });
     io.observe(wrap);
 
+    /* Set by resize and read by the frame loop. Declared here because
+       resize() runs immediately below, before the loop exists. */
+    let needsDraw = true;
+
     const resize = () => {
       const w = wrap.clientWidth, h = wrap.clientHeight;
       renderer.setSize(w, h, false);
       camera.aspect = w / Math.max(1, h);
       camera.updateProjectionMatrix();
+      /* setSize clears the canvas, and the loop will now skip the redraw
+         unless it is told the picture is stale. */
+      needsDraw = true;
     };
     resize();
     window.addEventListener('resize', resize);
@@ -223,12 +235,51 @@ export const TopoSection: React.FC<TopoSectionProps> = ({ progressRef, onMarkers
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     let drift = 0;
 
+    /* DRAWING ONLY WHEN SOMETHING CHANGED, which it usually has not.
+
+       This loop drew every frame the section was on screen — 289,000
+       triangles and a full-screen noise shader, sixty times a second, for
+       a reader sitting still. Nothing about the picture was changing
+       between most of those frames: the camera is scrubbed, so it moves
+       only when the scroll position does.
+
+       The clouds are why the obvious fix is wrong. They drift on a clock
+       rather than on scroll — the note above says why — so "draw on
+       scroll" alone would freeze them. They simply do not need sixty
+       steps a second to drift: at the rates in LAYERS a bank crosses a
+       few pixels per second, and a phone ticking them at 24Hz shows the
+       same movement for well under half the draws.
+
+       needsDraw covers what neither test catches — the first frame, and a
+       resize, where the picture has to be redrawn at the same progress
+       and the same drift. */
+    const CLOUD_TICK = 1 / (phone ? 24 : 60);
+    let lastP = Number.NaN;
+    let sinceCloud = Infinity;
+
     const frame = () => {
       raf = requestAnimationFrame(frame);
       if (!inView) return;
+
       const dt = Math.min(0.1, clock.getDelta());
-      if (!reduced) drift += dt;
-      apply(progressRef.current);
+      if (!reduced) {
+        drift += dt;
+        sinceCloud += dt;
+      }
+
+      const p = progressRef.current;
+      const moved = p !== lastP;
+      /* reduced-motion holds the banks still, so there is nothing on a
+         clock to wait for and scroll is all that is left to draw for. */
+      const cloudDue = !reduced && sinceCloud >= CLOUD_TICK;
+
+      if (!moved && !cloudDue && !needsDraw) return;
+
+      if (cloudDue) sinceCloud = 0;
+      lastP = p;
+      needsDraw = false;
+
+      apply(p);
       clouds.update(drift, cloudFade);
       renderer.render(scene, camera);
     };

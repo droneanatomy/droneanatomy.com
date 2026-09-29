@@ -97,11 +97,18 @@ export function heightAt(x: number, z: number) {
   return (ridges * 0.62 + detail + crown) * dome * PEAK_H;
 }
 
-export function buildMassif(): THREE.Mesh {
-  /* 380 segments. The silhouette against black is the whole read at the
-     profile end, and an under-sampled ridge reads as a smooth lump
-     exactly where it should look sharp. */
-  const geo = new THREE.PlaneGeometry(MASSIF_SIZE, MASSIF_SIZE, 380, 380);
+/* 380 segments. The silhouette against black is the whole read at the
+   profile end, and an under-sampled ridge reads as a smooth lump exactly
+   where it should look sharp.
+
+   PHONES GET HALF OF IT, which is a quarter of the triangles — 380x380 is
+   289,000 of them, redrawn every frame. The number was chosen against a
+   ridge line a metre wide on a desktop display; on a 390px screen that
+   ridge is under a pixel either way, so what the extra sampling buys there
+   is nothing you can point at. The silhouette, which is the actual read,
+   survives 190 intact. */
+export function buildMassif(segments = 380): THREE.Mesh {
+  const geo = new THREE.PlaneGeometry(MASSIF_SIZE, MASSIF_SIZE, segments, segments);
   const pos = geo.attributes.position as THREE.BufferAttribute;
   /* Track the height actually REACHED, rather than trusting PEAK_H.
 

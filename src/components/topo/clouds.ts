@@ -40,7 +40,15 @@ const VERT = `
   }
 `;
 
-const FRAG = `
+/* OCTAVES IS COMPILED IN, not a uniform: a loop bound has to be a
+   constant for the shader to unroll, and a uniform bound would cost more
+   than the octave it saved. Two builds of the same shader instead.
+
+   Four octaves over a full-screen bank is the most expensive fill on this
+   screen, and it is the fourth that costs the most for the least — it adds
+   detail at a frequency a phone's pixel grid cannot resolve. Phones get
+   two, which is half the noise and reads the same at arm's length. */
+const FRAG = (octaves: number) => `
   precision highp float;
   varying vec2 vUv;
   uniform vec3 uColor;
@@ -60,7 +68,7 @@ const FRAG = `
 
   float fbm(vec2 p){
     float v = 0.0, a = 0.5;
-    for (int i = 0; i < 4; i++) { v += a * noise(p); p *= 2.03; a *= 0.5; }
+    for (int i = 0; i < ${octaves}; i++) { v += a * noise(p); p *= 2.03; a *= 0.5; }
     return v;
   }
 
@@ -115,7 +123,8 @@ const bell = (i: number) => {
   return Math.exp(-t * t * 1.7);
 };
 
-export function buildClouds(): CloudBank {
+export function buildClouds({ octaves = 4 }: { octaves?: number } = {}): CloudBank {
+  const frag = FRAG(octaves);
   const group = new THREE.Group();
   const mats: THREE.ShaderMaterial[] = [];
   const geos: THREE.PlaneGeometry[] = [];
@@ -142,7 +151,7 @@ export function buildClouds(): CloudBank {
         uSeed: { value: L.seed + i * 13.7 },
       },
       vertexShader: VERT,
-      fragmentShader: FRAG,
+      fragmentShader: frag,
       transparent: true,
       /* DoubleSide because the camera ends up above these, and depthWrite
          off so the banks blend through each other instead of the nearest
