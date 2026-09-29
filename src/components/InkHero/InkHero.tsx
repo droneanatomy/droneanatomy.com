@@ -14,20 +14,8 @@
    ============================================================ */
 
 import React, { useId } from 'react';
-import dynamic from 'next/dynamic';
-import { usePhone } from '../usePhone';
+import { InkReveal } from './InkReveal';
 import styles from './InkHero.module.css';
-
-/* DYNAMIC, and that is the only reason a phone escapes three.
-
-   InkReveal is the smallest of the three WebGL scenes on this page — no
-   models, no terrain, one shader over a photograph — but it imports the
-   same 560 KB three chunk the other two do. Gating those two while this
-   one still imported it statically would have saved the GLBs and the
-   terrain and none of the library, which is most of the parse cost on a
-   low-to-mid device. A chunk is fetched when the component renders, so
-   not rendering it is the whole mechanism. */
-const InkReveal = dynamic(() => import('./InkReveal').then((m) => m.InkReveal), { ssr: false });
 
 export interface InkHeroProps {
   className?: string;
@@ -105,7 +93,6 @@ export const InkHero: React.FC<InkHeroProps> = ({
   scheme = 'light',
 }) => {
   const s = SCHEMES[scheme];
-  const phone = usePhone();
   /* Generated, not literal. The id was hard-coded, which is fine for one
      hero and broken for two: duplicate ids are invalid, and both
      sections' aria-labelledby would resolve to whichever heading came
@@ -134,36 +121,13 @@ export const InkHero: React.FC<InkHeroProps> = ({
          state — so the attribute has to be absent, not merely ignored. */
       data-chrome={scheme === 'light' ? 'ink' : undefined}
     >
-      {/* THE STILL IS NOT A DEGRADED VERSION OF THE REVEAL, it is the
-          reveal at rest. The ink opens under the cursor; a phone has no
-          cursor to open it with, so what a phone would see is the
-          unbroken sheet — paper and its faint contour lines. This plate
-          is a capture of exactly that, taken from the running scene (see
-          scripts/build-scene-plates.mjs), and it is 6 KB.
-
-          It also stands in for the frame before usePhone answers, which
-          is why the test is `=== false` rather than `!phone`: on a desktop
-          the canvas arrives a moment later and lands on the same image it
-          is replacing, so the swap is invisible. */}
-      {phone === false ? (
-        <InkReveal
-          className={styles.canvas}
-          imageSrc={imageSrc}
-          inkDepth={inkDepth}
-          paper={s.paper}
-          ink={s.ink}
-        />
-      ) : (
-        <div
-          className={styles.canvas}
-          aria-hidden="true"
-          style={{
-            position: 'absolute',
-            inset: 0,
-            background: `${s.paper} url('/images/scenes/inkhero.webp') center / cover no-repeat`,
-          }}
-        />
-      )}
+      <InkReveal
+        className={styles.canvas}
+        imageSrc={imageSrc}
+        inkDepth={inkDepth}
+        paper={s.paper}
+        ink={s.ink}
+      />
 
       <div className={styles.layer}>
         {/* No top bar here any more — the global header (FieldNav) is
