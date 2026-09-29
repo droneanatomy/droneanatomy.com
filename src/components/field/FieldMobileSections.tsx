@@ -28,7 +28,7 @@
    ============================================================ */
 
 import Image from 'next/image';
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import type { ProductPage } from './product';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 
@@ -91,24 +91,57 @@ export const FieldBenchMobile: React.FC<{
 }> = ({
   bench,
 }) => {
-  /* NO VIDEO HERE, AND NO PLAYBACK MACHINERY EITHER.
+  const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
 
-     This component only ever renders below 768px — FieldHero drops the
-     bench from the scrubbed acts on a phone and it becomes an ordinary
-     section — so what this branch chooses is what every phone downloads.
-     It was choosing three clips: 16.73 MB against 2.01 MB of stills the
-     plates already carry, and 15.08 MB of that is p10-spray.mp4 alone.
+  /* Plays the panel you are looking at, pauses the rest.
 
-     The stills are not a fallback bolted on for this. BenchPlate.src is
-     required precisely because it doubles as the video's poster, so every
-     plate already had the picture; the video branch was simply loading a
-     film on top of a photograph the reader had already been shown.
+     Not `autoplay` on the element. That starts every clip the moment the
+     page loads — three 1080p streams decoding at once, on a phone, for
+     panels the reader is several screens away from — which is the same
+     payload mistake the tiered sequence builds exist to avoid. An observer
+     ties playback to attention instead: one stream at a time, and none at
+     all until the section is reached.
 
-     The observer that used to live here tied play() to attention so only
-     the panel on screen decoded. That was the right fix for the wrong
-     question — it rationed a cost that did not need paying on a phone at
-     all. Gone with the videos it drove; the desktop bench in FieldBench
-     keeps its own copy, where the timeline makes the motion worth it. */
+     PAUSED, never reset. Scrolling back to a panel resumes it where it was;
+     unloading or seeking to zero would make every reversal restart the clip,
+     which reads as the page forgetting itself.
+
+     The test is intersectionRatio, NOT isIntersecting.
+
+     They are not the same thing and the difference is the whole bug I shipped
+     first: `isIntersecting` is true when ANY part of the element overlaps the
+     viewport, whatever the threshold says. The threshold only decides when
+     the callback FIRES, never what it reports. So gating on isIntersecting
+     played every clip that had a single pixel on screen — measured as two
+     streams running at once, and all of them still running after scrolling
+     away entirely, because the last crossing had reported "intersecting" on
+     the way out.
+
+     Thresholds at both ends: without a 0 entry the observer never fires as
+     an element leaves completely, so the pause can be missed outright. */
+  useEffect(() => {
+    const vids = videoRefs.current.filter(Boolean) as HTMLVideoElement[];
+    if (!vids.length) return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          const v = e.target as HTMLVideoElement;
+          if (e.intersectionRatio >= 0.55) {
+            /* play() rejects if the autoplay policy is unhappy — a poster
+               is a fine outcome, so swallow it rather than throwing on
+               every scroll. */
+            void v.play().catch(() => {});
+          } else if (!v.paused) {
+            v.pause();
+          }
+        }
+      },
+      { threshold: [0, 0.55, 0.9] }
+    );
+    for (const v of vids) io.observe(v);
+    return () => io.disconnect();
+  }, []);
+
   return (
   <section aria-label="Detail" className="relative w-full">
     {bench.panels.map((panel, i) => {
@@ -119,10 +152,25 @@ export const FieldBenchMobile: React.FC<{
       return (
         <article key={panel.key} className={`${PANEL} relative flex flex-col`}>
           <div className="relative h-[52%] w-full overflow-hidden">
-            {plate ? (
-              /* lazy throughout: the first of these is already several
-                 screens below the hero, so there is nothing here worth
-                 fetching before the reader is on their way to it. */
+            {plate?.video ? (
+              <video
+                ref={(el) => {
+                  videoRefs.current[i] = el;
+                }}
+                src={plate.video}
+                poster={plate.src}
+                muted
+                loop
+                playsInline
+                /* metadata, not none: the observer calls play() the moment
+                   the panel is half on screen, and a clip that has not even
+                   read its header yet shows a poster for a beat first. This
+                   fetches enough to start without pulling the whole file. */
+                preload="metadata"
+                aria-label={plate.alt}
+                className="size-full object-cover"
+              />
+            ) : plate ? (
               <Image src={plate.src} alt={plate.alt} fill sizes="100vw" className="object-cover" loading="lazy" />
             ) : null}
           </div>
