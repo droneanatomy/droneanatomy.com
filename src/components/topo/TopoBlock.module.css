@@ -30,7 +30,28 @@
 .stage {
   position: sticky;
   top: 0;
-  height: 100svh;
+  /* dvh, NOT svh, and the difference is two bugs.
+
+     svh is the viewport with the browser's address bar SHOWN — the
+     smallest it ever gets. While this is pinned and the bar has scrolled
+     away, the visible area is lvh instead, 60-120px taller, and those
+     pixels sit below a stage that never grew into them: an unpainted
+     strip along the bottom edge. It shows worst on tall narrow phones,
+     where the bar is the largest fraction of the screen.
+
+     It also decided when this stopped being sticky. A sticky element
+     releases when its container's bottom reaches the element's own
+     height, so an svh-tall stage stayed pinned for lvh-svh px AFTER the
+     timeline had finished — scroll that moved the page and changed
+     nothing on it, which reads as the section refusing to let go.
+
+     dvh is the live viewport, so the stage is exactly as tall as what
+     the reader can see, whichever state the bar is in. It costs a resize
+     when the bar toggles — a renderer.setSize and a reflow — and that is
+     the right price for a seam and a dead scroll.
+     lvh would close the gap too, and would push the copy card, which is
+     anchored to this box's bottom edge, underneath the address bar. */
+  height: 100dvh;
   width: 100%;
   overflow: hidden;
   isolation: isolate;

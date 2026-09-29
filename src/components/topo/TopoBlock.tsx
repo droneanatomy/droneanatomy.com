@@ -41,6 +41,8 @@ const SCREENS = 4;
 
 export const TopoBlock: React.FC = () => {
   const rootRef = useRef<HTMLDivElement>(null);
+  /* Read by measure(), which divides progress by it — see the note there. */
+  const stageRef = useRef<HTMLDivElement>(null);
   const progressRef = useRef(0);
   const [markers, setMarkers] = useState<Marker[]>([]);
   const [p, setP] = useState(0);
@@ -146,7 +148,11 @@ export const TopoBlock: React.FC = () => {
     const measure = () => {
       raf = 0; queued = false;
       const r = root.getBoundingClientRect();
-      const travel = Math.max(1, r.height - window.innerHeight);
+      /* The stage's height, not the window's — see the note in
+         FlightPreview.measure(). It is what decides when sticky releases,
+         so it is what progress has to reach 1 against. */
+      const stageH = stageRef.current?.offsetHeight || window.innerHeight;
+      const travel = Math.max(1, r.height - stageH);
       const v = Math.min(1, Math.max(0, -r.top / travel));
       progressRef.current = v;
       setP((prev) => (Math.abs(prev - v) > 0.008 ? v : prev));
@@ -188,7 +194,7 @@ export const TopoBlock: React.FC = () => {
 
   return (
     <div ref={rootRef} className={styles.root} style={{ height: `${SCREENS * 100}vh` }}>
-      <div className={styles.stage}>
+      <div ref={stageRef} className={styles.stage}>
         <TopoSection progressRef={progressRef} onMarkers={onMarkers} className={styles.canvas} />
 
         {/* Takes the terrain down behind the paragraph. Between the canvas

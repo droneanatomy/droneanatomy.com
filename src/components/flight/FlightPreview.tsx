@@ -408,7 +408,20 @@ export const FlightPreview: React.FC<FlightPreviewProps> = ({
       /* Progress across the spacer, not the document: the page may carry
          chrome above and below and neither should steal scroll from the
          flight. */
-      const travel = Math.max(1, rect.height - window.innerHeight);
+      /* AGAINST THE STAGE'S HEIGHT, not window.innerHeight.
+
+         These are the same number while the stage is sized in dvh, and
+         they were not when it was svh — which is how the timeline came to
+         finish before the section unpinned. A sticky element releases when
+         its container's bottom edge reaches the element's own height, so
+         that height is what progress has to be measured against: divide by
+         it and progress reaches exactly 1 at the moment the stage lets go,
+         whatever unit anybody sizes it in later.
+
+         Falls back to innerHeight if the ref is not attached yet, which is
+         the value this used before and is right at first paint. */
+      const stageH = stageRef.current?.offsetHeight || window.innerHeight;
+      const travel = Math.max(1, rect.height - stageH);
       progressRef.current = clamp01(-rect.top / travel);
     };
 
