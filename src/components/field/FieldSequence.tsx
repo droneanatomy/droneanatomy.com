@@ -40,6 +40,23 @@ type Props = {
   /** File extension of the frames. 'png' ships the render untouched — see
    *  scripts/build-sequence.mjs. 'webp' is the compressed build. */
   ext?: 'webp' | 'png';
+  /** CANCELS A DRIFT BAKED INTO THE FRAMES, as a fraction of frame width
+   *  at the LAST frame. Negative means the subject ends left of centre.
+   *
+   *  The end sequence needs it. Measured off the frames with an
+   *  alpha-weighted centroid: frame 0 sits dead centre (-0.03%), and from
+   *  about frame 8 the aircraft slides left, monotonically, to -3.91% by
+   *  frame 39 — so the act ends with the aircraft visibly off to one side
+   *  under a headline that is centred. The same figure comes back off all
+   *  three tiers (-3.91 / -3.89 / -3.88%), which is what says it is in the
+   *  render rather than in the encode.
+   *
+   *  The correction ramps LINEARLY with the frame index rather than
+   *  following that curve exactly. It is a per-frame lookup table
+   *  otherwise, for a worst case of about 0.8% of width near frame 8 —
+   *  three pixels on a phone, against a real 3.91% at the end where the
+   *  reader actually stops. Fix the render and this goes back to 0. */
+  driftX?: number;
   /** 0..1 as the frames decode. */
   onProgress?: (f: number) => void;
   onReady?: () => void;
@@ -50,6 +67,7 @@ export const FieldSequence: React.FC<Props> = ({
   name = 'hero',
   frames = 66,
   ext = 'webp',
+  driftX = 0,
   onProgress,
   onReady,
 }) => {
@@ -95,7 +113,7 @@ export const FieldSequence: React.FC<Props> = ({
      Wide screens keep plain cover — the baseline only takes over when it is
      SMALLER, which is exactly the case where cover was cropping the
      aircraft. */
-  const paint = (ctx: CanvasRenderingContext2D, img: HTMLImageElement, cw: number, ch: number) => {
+  const paint = (ctx: CanvasRenderingContext2D, img: HTMLImageElement, cw: number, ch: number, t: number) => {
     /* The canvas is sized to innerWidth x dpr, so the frame is essentially
        never drawn at 1:1 — on a 2x display it is enlarged whatever the
        source width is. That makes the RESAMPLER part of the image quality,
@@ -112,7 +130,11 @@ export const FieldSequence: React.FC<Props> = ({
     const scale = Math.min(cover, baseline);
     const w = img.naturalWidth * scale;
     const h = img.naturalHeight * scale;
-    ctx.drawImage(img, (cw - w) / 2, (ch - h) / 2, w, h);
+    /* Centred, then pulled back by however far the frames have drifted by
+       this point. Scaled by `w`, not by `cw`: the offset was measured as a
+       fraction of the FRAME, so it has to travel with the frame's drawn
+       width or the correction would change every time the fit does. */
+    ctx.drawImage(img, (cw - w) / 2 - driftX * w * t, (ch - h) / 2, w, h);
   };
 
   /* One frame, no blending.
@@ -134,7 +156,7 @@ export const FieldSequence: React.FC<Props> = ({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    paint(ctx, img, canvas.width, canvas.height);
+    paint(ctx, img, canvas.width, canvas.height, frames > 1 ? i / (frames - 1) : 1);
     current.current = i;
   };
 

@@ -1945,7 +1945,16 @@ export const FieldHero: React.FC<{
               is the wrong trade. It streams in behind them. */}
           {clock.closing && (
             <div className="fixed inset-0 z-0" style={{ opacity: 'var(--end-stage, 0)' }}>
-              <FieldSequence ref={endSeqRef} name={END_NAME} frames={END_FRAMES} ext="webp" />
+              <FieldSequence
+                ref={endSeqRef}
+                name={END_NAME}
+                frames={END_FRAMES}
+                ext="webp"
+                /* The return render drifts left as it plays and lands at
+                   -3.91% of frame width, under a headline that is centred.
+                   See driftX in FieldSequence for how that was measured. */
+                driftX={-0.039}
+              />
             </div>
           )}
 
