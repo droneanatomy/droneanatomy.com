@@ -195,7 +195,7 @@ export function ProductLoop({
       /* z-20 and no background — see the header. The -100vh margin is the
          overlap that keeps the hero from showing between this and the
          viewer; it is not decoration and it is not optional. */
-      className="relative z-20 h-[300vh]"
+      className="relative z-20 h-[300vh] snap-start snap-always"
       style={{ marginBottom: '-100vh' }}
       aria-label={`${name} — in flight`}
     >

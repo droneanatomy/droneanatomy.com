@@ -839,7 +839,7 @@ export function MiniViewer({ name, viewer }: { name: string; viewer: ProductView
          is deliberately generous, because the sticky stage stops being
          pinned the moment this box runs out and the aircraft would be
          yanked away mid-drag. */
-      className="relative z-20 h-[240vh]"
+      className="relative z-20 h-[240vh] snap-start snap-always"
       aria-label={`${name} — interactive model`}
     >
       {/* The stage still fills the viewport and still carries the ground

@@ -416,7 +416,7 @@ export const FieldHero: React.FC<{
     setEndSeqVh(scrubVhForFrames(product.sequence.endFrames, vhInPx()));
   }, [product.sequence.endFrames]);
 
-  const { spacerVh, clock, ret } = useMemo(() => {
+  const { spacerVh, clock, ret, actList } = useMemo(() => {
     const declared = product.acts ?? DEFAULT_ACTS;
     /* 316 is what the tuned 500vh act gave the sequence, so before the
        solve arrives the clock matches the declared act exactly and nothing
@@ -455,7 +455,11 @@ export const FieldHero: React.FC<{
        reading order rather than two, and of an act behaving the same way
        wherever it is met. */
     const kept = acts;
-    return { ...deriveActs(kept), ret };
+    /* `kept` comes back out so the spacer can be built ACT BY ACT rather
+       than as one tall box — each act's own height becomes a scroll-snap
+       area, which is what gives a flick somewhere to stop. See the spacer
+       itself for why that is the granularity. */
+    return { ...deriveActs(kept), ret, actList: kept };
   }, [product.acts, heroVh, endSeqVh]);
 
   const [tier] = useState(pickTier);
@@ -2690,7 +2694,31 @@ export const FieldHero: React.FC<{
           disagree: beats.ts declares each act in viewport heights and this
           is their sum. Adding a section changes one number there and this
           follows, with every earlier act keeping its absolute length. */}
-      <div id="field-spacer" style={{ height: `${spacerVh}vh` }} aria-hidden />
+      {/* ONE CHILD PER ACT, and they are scroll-snap areas.
+
+          The spacer is still one box of exactly spacerVh — ScrollTrigger
+          measures it as `bottom bottom` and nothing about that changes —
+          but it is now divided at the act boundaries, and each division
+          carries snap-start. On a phone, where html.field-route sets
+          scroll-snap-type, that gives a fling somewhere to come to rest
+          instead of carrying through an act and out the other side.
+
+          PROXIMITY, NOT MANDATORY, and that is forced rather than chosen.
+          Mandatory would make resting anywhere except an act boundary
+          impossible, and act one is twenty-five screens on a phone — the
+          reader would be pulled off every frame they stopped on, which is
+          the scrub itself. Proximity settles a flick that already ended
+          near a boundary and leaves the middle of an act alone.
+
+          snap-always is what stops a fling PASSING a boundary it never
+          settled near. Chrome honours it under proximity; Safari is
+          weaker about it, so on iOS this reads as "usually stops" rather
+          than "always stops" until that changes. */}
+      <div id="field-spacer" style={{ height: `${spacerVh}vh` }} aria-hidden>
+        {actList.map((a) => (
+          <div key={a.kind} className="snap-start snap-always" style={{ height: `${a.vh}vh` }} />
+        ))}
+      </div>
 
       {/* The mobile flow sections are gone. They were a second rendering of
           the bench and the closing for phones, and they sat UNDER the pinned
