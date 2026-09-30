@@ -26,7 +26,6 @@
 
 import type { CodaSize, ProductPage } from './product';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
-import { FieldBenchMobile } from './FieldMobileSections';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -370,19 +369,12 @@ export const FieldHero: React.FC<{
      handle that rather than to fall back to zero — a missing act whose
      clock reads 0 would run its beats at the top of the page instead of not
      at all, which is a far harder failure to see. */
-  /* Below 768px the page stops being a timeline after the hero. Acts two,
-     three and four become ordinary sections in normal flow — see
-     FieldMobileSections. Tracked live so a rotation re-lays it out. */
+  /* There is no `narrow` here any more. It existed to drop acts from the
+     timeline below 768px and hand them to FieldMobileSections; the acts
+     are scrubbed at every width now, so nothing read it. The 768px line
+     still matters to this page — it is all over the markup as Tailwind
+     md: — it simply no longer changes which acts exist. */
   const [videoOpen, setVideoOpen] = useState(false);
-  const [narrow, setNarrow] = useState(
-    typeof window === 'undefined' ? false : window.matchMedia('(max-width: 767px)').matches
-  );
-  useEffect(() => {
-    const mq = window.matchMedia('(max-width: 767px)');
-    const on = () => setNarrow(mq.matches);
-    mq.addEventListener('change', on);
-    return () => mq.removeEventListener('change', on);
-  }, []);
 
   /* Act one's length is solved against the frame count so one scroll notch
      advances one frame — see scrubVhForFrames.
@@ -423,7 +415,7 @@ export const FieldHero: React.FC<{
     setEndSeqVh(scrubVhForFrames(product.sequence.endFrames, window.innerHeight));
   }, [product.sequence.endFrames]);
 
-  const { spacerVh, clock, ret, declares } = useMemo(() => {
+  const { spacerVh, clock, ret } = useMemo(() => {
     const declared = product.acts ?? DEFAULT_ACTS;
     /* 316 is what the tuned 500vh act gave the sequence, so before the
        solve arrives the clock matches the declared act exactly and nothing
@@ -443,35 +435,27 @@ export const FieldHero: React.FC<{
        the list is not a visual tweak — it shortens the spacer, so the page
        is no longer 2910vh of empty scroll with three fixed layers pinned
        over it, and the sections below can simply be as tall as they are. */
-    /* On a phone the hero, the gallery AND the closing stay scrubbed; only
-       the bench becomes an ordinary section. The gallery used to be
-       filtered out here too and replaced by a stacked list, which meant the
-       page had two galleries with different behaviour. It is one component
-       at every width now — see the note on the track transform in
-       FieldGallery.
+    /* EVERY ACT IS SCRUBBED, AT EVERY WIDTH, and this used to be a filter.
 
-       THE CLOSING IS BACK IN because the ending sequence hangs off it. The
-       return render is driven by this act's own clock — see ret.SEQ and the
-       endSeqRef block — so dropping the act did not merely flatten the card,
-       it meant a phone never saw the aircraft come back at all. The flat
-       version that stood in for it could not: a stacked section has no
-       scrub to scrub. It costs the spacer roughly ret.actVh, which is the
-       price of having the sequence at all. */
-    const kept = narrow
-      ? acts.filter((a) => a.kind === 'hero' || a.kind === 'gallery' || a.kind === 'closing')
-      : acts;
-    /* WHAT THE PRODUCT DECLARED, which is not what the clock ends up
-       holding. On a phone the line above drops the bench and the closing
-       from `kept` on purpose — they stop being scrubbed acts and become
-       ordinary sections further down — and that means clock.bench and
-       clock.closing do not exist there. Anything asking "does this page
-       have a bench?" has to ask the declaration, not the clock. */
-    const declares = {
-      bench: declared.some((a) => a.kind === 'bench'),
-      closing: declared.some((a) => a.kind === 'closing'),
-    };
-    return { ...deriveActs(kept), ret, declares };
-  }, [product.acts, narrow, heroVh, endSeqVh]);
+       A phone kept the hero and the gallery and took the bench and the
+       closing out of the timeline, rendering flat stacked versions of them
+       below it instead. That put them in the wrong ORDER: scrubbed acts
+       live in the pinned timeline, the flow sections sit underneath it, so
+       the closing played before a bench that was supposed to precede it.
+       Desktop reads hero, gallery, bench, closing; a phone read hero,
+       gallery, closing, bench.
+
+       It also cost the ending outright. The return render is driven by the
+       closing act's own clock — ret.SEQ, the endSeqRef block — so a flat
+       closing had no scrub to scrub and the aircraft never came back.
+
+       The price is scroll: the bench is 720vh and the closing about 316
+       once solved, and a phone now carries both. That is the price of one
+       reading order rather than two, and of an act behaving the same way
+       wherever it is met. */
+    const kept = acts;
+    return { ...deriveActs(kept), ret };
+  }, [product.acts, heroVh, endSeqVh]);
 
   const [tier] = useState(pickTier);
   const SEQUENCE_NAME = product.sequence.hero[tier];
@@ -2707,28 +2691,13 @@ export const FieldHero: React.FC<{
           follows, with every earlier act keeping its absolute length. */}
       <div id="field-spacer" style={{ height: `${spacerVh}vh` }} aria-hidden />
 
-      {/* The mobile page, in normal flow under the scrubbed acts. The
-          gallery is NOT here any more — it is scrubbed at every width, and
-          neither is the closing: it went back to being a scrubbed act on a
-          phone so the ending sequence it drives would play. This is the
-          bench, alone. FieldClosingMobile is unused by this file now and
-          left on disk, the way SiteBar was.
+      {/* The mobile flow sections are gone. They were a second rendering of
+          the bench and the closing for phones, and they sat UNDER the pinned
+          timeline, which put them after acts that were meant to come after
+          them. Both acts are scrubbed at every width now.
+          FieldMobileSections is left on disk, unimported, the way SiteBar
+          was. */}
 
-          GATED ON WHAT THE PRODUCT DECLARES, and on `declares` rather than
-          on `clock`. This branch once checked only the width, so a page
-          with no bench and no closing act rendered both anyway. The fix for
-          that reached for clock.bench and clock.closing — and on a phone
-          those are exactly the two entries the act filter removes, because
-          they stop being scrubbed and become the ordinary sections below.
-          So the gate went from always true to never true, and the whole
-          bench and the closing card vanished on mobile: three panels, their
-          figures, the footnote and the Book a demo. Measured on P10 Pro,
-          thirteen strings on a desktop and none of them on a phone. */}
-      {narrow && declares.bench && product.bench && (
-        <div className="relative z-20 bg-[#090b07]">
-          <FieldBenchMobile bench={product.bench} />
-        </div>
-      )}
 
       {/* The footer is NOT rendered here. It is the site's, mounted once in
           the root layout — see FooterGate. It used to live here, which is
