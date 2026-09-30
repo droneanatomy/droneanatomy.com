@@ -174,7 +174,12 @@ export const scrubVhForFrames = (
    here rather than copying its number into a product. */
 export const ACT_ONE_VH = 950; // grass, void, the rendered sequence, statement, coda, slide
 const ACT_TWO_VH = 620; // the aircraft leaves, the lockup lands, the gallery runs
-const ACT_THREE_VH = 720; // the bench
+/* 720 until the bench footnote went. That left 86vh between the last
+   panel leaving at 0.70 and the end card starting at 0.82 with nothing in
+   it — see the END_FROM note in FieldBench, which is where the 0.82 came
+   from and why it outlived its reason. Trimmed by exactly that; the
+   panels and the end card keep the absolute lengths they had. */
+const ACT_THREE_VH = 634; // the bench
 /* Act four: the aircraft returns, lands where it started, and the page
    makes its closing ask.
 

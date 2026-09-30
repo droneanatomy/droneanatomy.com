@@ -140,8 +140,14 @@ const WIPE_EDGE = 0.2;
    The last runs short of 1 so the section ends on the bench alone with the
    copy gone — oryzo does the same, and it is what gives the reader somewhere
    to arrive before the page moves on. */
-const PANEL_SPAN = 0.22;
-const PANEL_GAP = 0.02;
+/* RESCALED WHEN THE ACT WAS TRIMMED, not retuned. The act lost the 86vh
+   the footnote used to occupy, so every fraction of it is now a fraction
+   of a shorter whole — and left alone that would have sped the panels up
+   by 11%, which is not what was wrong with this section. 0.22 -> 0.25 and
+   0.02 -> 0.023 against 634vh holds the panels at the 505vh they ran at
+   before, to within a viewport height. */
+const PANEL_SPAN = 0.25;
+const PANEL_GAP = 0.023;
 
 /* HOW FAR THIS CLOCK ACTUALLY REACHES, which is not obvious and is what
    everything keyed late below depends on.
@@ -179,15 +185,23 @@ const PANEL_GAP = 0.02;
    320px of scroll holding the finished card, and the footer then rises over
    a composition that has already arrived.
 
-   END_FROM is 0.82 and not earlier because of the FOOTNOTE, which is the
-   real constraint on this whole window. It arrives over 0.70-0.76; start
-   the exit at 0.78 and it is at full strength for about 82px of scroll,
-   which is not a beat, it is a flash. 0.82 gives it 245px to be read in.
-   Every number after it is downstream of that one. */
-const END_FROM = 0.82;
-const END_TO = 0.90;
-const END_TYPE_FROM = 0.85;
-const END_TYPE_TO = 0.92;
+   END_FROM USED TO BE 0.82, AND THE FOOTNOTE IS WHY. It arrived over
+   0.70-0.76 and needed room to be read in, so the exit waited for it and
+   "every number after it is downstream of that one" — which was true, and
+   became a bug the moment the footnote was deleted. The window stayed
+   open for something that was no longer arriving: the last panel left at
+   0.70 and nothing happened until 0.82, 86vh of scroll with nothing in
+   it, right where the reader is already wondering if the section is over.
+
+   The exit now begins where the panels end. Everything downstream keeps
+   the LENGTH it had rather than the fraction — against the trimmed act
+   that is 57vh of ground, 50vh of type, and 58vh holding the finished
+   card while the footer rises over it, each within a viewport height of
+   what it was at 720vh. */
+const END_FROM = 0.796;
+const END_TO = 0.886;
+const END_TYPE_FROM = 0.829;
+const END_TYPE_TO = 0.908;
 
 
 
