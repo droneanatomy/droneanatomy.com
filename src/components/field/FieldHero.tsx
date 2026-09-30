@@ -44,6 +44,7 @@ import {
   DEFAULT_ACTS,
   deriveActs,
   scrubVhForFrames,
+  vhInPx,
   returnClock,
   BLACK_WINDOW,
   clamp01,
@@ -402,7 +403,7 @@ export const FieldHero: React.FC<{
        needs window.innerHeight, so solving it during render produced
        markup that differed from the static build. After mount is the only
        place it can be measured without a hydration mismatch. */
-    setHeroVh(scrubVhForFrames(product.sequence.heroFrames, window.innerHeight));
+    setHeroVh(scrubVhForFrames(product.sequence.heroFrames, vhInPx()));
   }, [product.sequence.heroFrames]);
 
   /* Act four's return sequence, solved the same way and for the same
@@ -412,7 +413,7 @@ export const FieldHero: React.FC<{
   useEffect(() => {
     /* eslint-disable-next-line react-hooks/set-state-in-effect -- Same
        measurement, same reason as heroVh above. */
-    setEndSeqVh(scrubVhForFrames(product.sequence.endFrames, window.innerHeight));
+    setEndSeqVh(scrubVhForFrames(product.sequence.endFrames, vhInPx()));
   }, [product.sequence.endFrames]);
 
   const { spacerVh, clock, ret } = useMemo(() => {

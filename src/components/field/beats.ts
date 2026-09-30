@@ -127,6 +127,38 @@ export const SCROLL_NOTCH_PX = 100;
    and does not re-solve on resize, because changing the spacer mid-scroll
    would jump the timeline under the reader — a worse fault than a slightly
    off ratio after a window drag. */
+/* WHAT ONE vh IS WORTH, IN PIXELS, measured rather than assumed.
+
+   scrubVhForFrames below turns a PIXEL target into a vh number, and that
+   number is then rendered as a vh height. The two have to be the same
+   idea of a viewport or the act comes out the wrong length — and on a
+   phone they are not. `vh` is the LARGE viewport, the one with the
+   address bar scrolled away; window.innerHeight is whatever the bar is
+   doing at the moment it is read, usually the small one on first load.
+   Solve against innerHeight and the spacer renders 15-25% longer than
+   the frames asked for: every notch advances less than a frame, the
+   whole act drags, and the tail is scroll nobody authored.
+
+   On a desktop the two agree exactly, which is why this was invisible —
+   measured on the Cyclops page, a 140-frame act solved to 13891px
+   against a 13900px target.
+
+   A probe rather than documentElement.clientHeight: clientHeight is the
+   layout viewport, which is close but is not what the vh unit is defined
+   against, and the whole point here is to ask the browser what it means
+   by vh rather than to model it. */
+export const vhInPx = (): number => {
+  if (typeof document === 'undefined') return 0;
+  const probe = document.createElement('div');
+  probe.style.cssText =
+    'position:absolute;top:0;left:0;width:0;height:100vh;visibility:hidden;pointer-events:none';
+  document.body.appendChild(probe);
+  const h = probe.getBoundingClientRect().height;
+  probe.remove();
+  /* innerHeight is the fallback, which is what this used to pass always. */
+  return h || window.innerHeight;
+};
+
 export const scrubVhForFrames = (
   frames: number,
   viewportPx: number,
