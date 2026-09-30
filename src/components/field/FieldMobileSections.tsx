@@ -198,12 +198,10 @@ export const FieldBenchMobile: React.FC<{
       );
     })}
 
-    <p className="flex items-baseline justify-between gap-4 px-[var(--pad-x,5vw)] pb-[clamp(28px,8vw,48px)] font-display">
-      <span className="text-[clamp(10px,2.7vw,13px)] font-bold uppercase tracking-[0.1em] opacity-70">
-        {bench.footnote.label}
-      </span>
-      <span className="text-[clamp(20px,5.6vw,30px)] leading-none">{bench.footnote.value}</span>
-    </p>
+    {/* The footnote that sat here is gone with the one on the desktop
+        bench — ProductPage.bench no longer carries the field. This file is
+        retired and unimported; it is kept compiling so that a type change
+        still tells the truth about it rather than rotting quietly. */}
   </section>
   );
 };

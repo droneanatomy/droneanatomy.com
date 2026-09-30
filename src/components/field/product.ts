@@ -217,7 +217,6 @@ export type ProductPage = {
   bench?: {
     plates: BenchPlate[];
     panels: BenchPanel[];
-    footnote: { label: string; value: string };
   };
 
   /** Act four's closing card. */
@@ -391,7 +390,6 @@ export const P10_PRO: ProductPage = {
         title: ['1 Acre,', '5 Minutes'],
       },
     ],
-    footnote: { label: 'Swap time per module', value: 't ≈ 90s' },
   },
 
   closing: {

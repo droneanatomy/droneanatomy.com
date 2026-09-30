@@ -143,22 +143,23 @@ const WIPE_EDGE = 0.2;
 const PANEL_SPAN = 0.22;
 const PANEL_GAP = 0.02;
 
-/* The footnote arrives as the last panel leaves, on the empty bench.
+/* HOW FAR THIS CLOCK ACTUALLY REACHES, which is not obvious and is what
+   everything keyed late below depends on.
 
-   This used to sit at 0.72 under a measured constraint that no longer
-   holds, and the correction is worth recording because it silently freed
-   the whole tail of the act. ScrollTrigger's scrub is asymptotic, and when
-   act three was the last thing in the document its clock could only reach 1
-   by coming to rest at maximum scroll — while actually scrolling, t never
-   arrived, so anything keyed past ~0.78 was never seen. Adding the footer
-   put 680px of ordinary page after the spacer. The timeline now ends 680px
-   BEFORE the document does, so t reaches 1 mid-scroll with room to spare
-   and the footer's height is holding room rather than a cliff.
+   ScrollTrigger's scrub is asymptotic. When act three was the last thing
+   in the document its clock could only reach 1 by coming to rest at
+   maximum scroll — while actually scrolling, t never arrived, so anything
+   keyed past ~0.78 was never seen. Adding the footer put 680px of ordinary
+   page after the spacer, so the timeline now ends 680px BEFORE the
+   document does: t reaches 1 mid-scroll with room to spare, and the
+   footer's height is holding room rather than a cliff.
 
-   Measured at 1920x889, dev build: t = 0.81 at 94% of the timeline, 0.90 at
-   97%, 0.999 at 100%. Re-measure if the footer's height changes — it is
-   what pays for everything keyed after 0.78 below. */
-const OUTRO = 0.70;
+   Measured at 1920x889, dev build: t = 0.81 at 94% of the timeline, 0.90
+   at 97%, 0.999 at 100%. Re-measure if the footer's height changes.
+
+   A footnote used to sit at 0.70 on the empty bench — "Swap time per
+   module, t ≈ 90s" — and this note was written for it. It is gone; the
+   measurement outlives it, because the end card is keyed later still. */
 
 /* ---- The end card ------------------------------------------------------
    The section signs off. The bench turns over to the flat ground the page
@@ -459,8 +460,8 @@ export const FieldBench: React.FC<{
     }
 
     /* Act three's own clock, published. Nothing reads it in the page — it
-       is here so the reachable tail can be MEASURED rather than guessed at,
-       which is what the OUTRO comment above had to do. */
+       is here so the reachable tail can be MEASURED rather than guessed
+       at, which is what the note at the top of this file did with it. */
     root.style.setProperty('--t', t.toFixed(4));
 
     /* The end card, and the exit that clears the way for it. */
@@ -478,12 +479,6 @@ export const FieldBench: React.FC<{
        would still be blurring the ground behind it right up to the moment
        it was hidden, and the blur reads through. */
     root.style.setProperty('--wash', (copyIn * (1 - end)).toFixed(3));
-    /* The footnote arrives once the panels are done, and leaves with the
-       rest of the copy. */
-    root.style.setProperty(
-      '--outro',
-      (smoothstep(OUTRO, OUTRO + 0.06, t) * copyIn * (1 - end)).toFixed(3)
-    );
   };
 
   useImperativeHandle(ref, () => ({
@@ -538,7 +533,7 @@ export const FieldBench: React.FC<{
          overflow:hidden on it is the crop that turns that growth into a
          frame opening rather than an object inflating. */
       className="pointer-events-none invisible fixed z-[9] overflow-hidden"
-      style={{ '--outro': '0', '--wash': '0', '--end': '0', '--end-type': '0' } as Vars}
+      style={{ '--wash': '0', '--end': '0', '--end-type': '0' } as Vars}
     >
       {/* The stage. Always laid out at full viewport size regardless of the
           clip box around it, and scaled to cover it. Everything below is
@@ -722,20 +717,6 @@ export const FieldBench: React.FC<{
           </div>
         ))}
       </div>
-
-      {/* Footnote and its equation, bottom right — oryzo's "Constant lift
-          via geometry / Δh ≈ t". Arrives last, on the empty bench. */}
-      <div
-        className="absolute bottom-[7%] right-[3.15%] flex items-end gap-[clamp(14px,1.6vw,32px)]"
-        style={{ opacity: 'var(--outro, 0)' }}
-      >
-        <span className="pb-[0.35em] font-display text-[clamp(10px,0.78vw,15px)] font-bold uppercase tracking-[0.1em] opacity-70">
-          Swap time per module
-        </span>
-        <span className="font-display text-[clamp(24px,2.2vw,42px)] leading-none tracking-[-0.01em]">
-          t&nbsp;&asymp;&nbsp;90s
-        </span>
-        </div>
 
       {/* The end card's ground. Last in the stage, so it paints over the
           plates, the wash and the copy without needing a z-index of its
