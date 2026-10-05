@@ -36,15 +36,22 @@ const SOCIAL = [
 
    ROUTES THAT EXIST, all five checked against src/app — a footer is where
    people go when they have given up finding something in the nav, so a
-   dead link here is worse than no link. The labels are the header's own
-   (Systems / Mission / Careers / Updates / Contact) rather than new
-   wording, because two different names for one destination is how a site
-   starts feeling larger than it is.
+   dead link here is worse than no link.
+
+   FOUR OF THE FIVE LABELS ARE THE HEADER'S OWN (Mission / Updates /
+   Careers / Contact), because two different names for one destination is
+   how a site starts feeling larger than it is.
+
+   The first is not, and that is the point of it: the header's Systems
+   opens a menu of airframes, and this goes straight to the one the
+   company actually sells today. It is a different destination, so it
+   takes a different name rather than wearing Systems' name to somewhere
+   Systems does not go.
 
    Privacy is deliberately NOT here. It already sits in the bottom rule,
    and listing it twice makes the shorter list look like an oversight. */
 const QUICK = [
-  { label: 'Systems', href: '/products' },
+  { label: 'P10 Pro', href: '/products/p10-pro' },
   { label: 'Mission', href: '/about' },
   { label: 'Updates', href: '/updates' },
   { label: 'Careers', href: '/careers' },
