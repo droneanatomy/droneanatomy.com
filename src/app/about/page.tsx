@@ -122,6 +122,7 @@ export default function AboutPage() {
                     { name: 'Aniket Gupta', role: 'Head of Software', image: '/images/team/aniket.jpg', },
                     { name: 'Suman Pal', role: 'Head of Design', image: '/images/team/suman-new.jpg', },
                     { name: 'Harsh Kumar', role: 'UAV Pilot', image: '/images/team/harsh.jpg', },
+                    { name: 'Eid MD', role: 'Global Business Officer', image: '/images/team/Eid.jpg', },
                     { name: 'Vikram Chaudhary', role: 'R&D', image: '/images/team/vikram-chaudhary.jpg', },
                     { name: 'Ramesh Patil', role: 'Project Manager', image: '/images/team/ramesh.jpg', },
                     { name: 'Yakshat', role: 'Media Manager', image: '/images/team/yakshat.jpg', },
