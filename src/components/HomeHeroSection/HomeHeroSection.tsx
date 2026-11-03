@@ -20,11 +20,11 @@ export interface HomeHeroSectionProps {
 
 export const HomeHeroSection: React.FC<HomeHeroSectionProps> = ({
     title = 'Making Autonomous Flight Inevitable',
-    subtitle = 'Drone Anatomy exists to build the fundamental systems that will define the next era of autonomous aviation',
+    subtitle = 'DroneAnatomy exists to build the fundamental systems that will define the next era of autonomous aviation',
     ctaText = 'Explore',
     ctaLink = '/about',
     heroImage = '/images/dronehero_mob.jpg',
-    heroImageAlt = 'Drone Anatomy',
+    heroImageAlt = 'DroneAnatomy',
     heroVideo,
     heroVideoMobile,
     fadeBottomColor = 'transparent',

@@ -10,7 +10,7 @@ export const metadata = pageMeta({
 
 const LAST_UPDATED = 'February 23, 2026';
 const COMPANY = 'DAstrionics Technologies Pvt. Ltd.';
-const BRAND = 'Drone Anatomy';
+const BRAND = 'DroneAnatomy';
 const CONTACT_EMAIL = 'info@droneanatomy.com';
 const WEBSITE = 'https://droneanatomy.com';
 

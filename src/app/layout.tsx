@@ -68,6 +68,31 @@ export default function RootLayout({
   return (
     <html lang="en" className={robotoMono.variable}>
       <body>
+        {/* WHO WE ARE, machine-readable. alternateName is the point: the
+            web spells us "DroneAnatomy" and "Drone Anatomy" both, and this
+            tells search engines and AI assistants they are one company.
+            sameAs links the social profiles to the same entity. */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type': 'Organization',
+              name: SITE_NAME,
+              alternateName: ['Drone Anatomy'],
+              url: SITE_URL,
+              logo: `${SITE_URL}/images/logo.png`,
+              email: 'info@droneanatomy.com',
+              address: { '@type': 'PostalAddress', addressLocality: 'Delhi', addressCountry: 'IN' },
+              description:
+                'DroneAnatomy designs and builds autonomous aircraft in India, including the P10 Pro agricultural spraying drone.',
+              sameAs: [
+                'https://linkedin.com/company/droneanatomy',
+                'https://x.com/droneanatomy',
+              ],
+            }),
+          }}
+        />
         {/* Wraps the whole shell so any route can hold the curtain while
             its own assets land — see useBootGate. It renders its own
             overlay above these children, and the chrome with them. */}

@@ -1,0 +1,133 @@
+/* The readable floor under the P10 Pro's scroll film. Quiet on purpose:
+   type, hairlines, nothing that moves. */
+
+/* z-20, the footer's layer: FieldHero's closing card and stage are
+   position:fixed at z-10/z-11 and stay on screen after the hero's scroll
+   ends, so anything below the hero must out-rank them to scroll OVER them.
+   Still under FieldNav (z-114+). */
+.root {
+  position: relative;
+  z-index: 20;
+  background: var(--color-ink, #14151a);
+  color: rgba(240, 240, 250, 0.92);
+  padding: clamp(4rem, 10vw, 8rem) 16px;
+  font-family: var(--font-body);
+}
+
+.inner {
+  max-width: 860px;
+  margin: 0 auto;
+}
+
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: rgba(240, 240, 250, 0.55);
+  margin-bottom: 1rem;
+}
+
+.heading {
+  font-family: var(--font-display);
+  font-size: clamp(1.75rem, 4vw, 2.75rem);
+  font-weight: 500;
+  line-height: 1.1;
+  margin: 0 0 1.5rem;
+}
+
+.heading:not(:first-of-type) {
+  margin-top: clamp(3.5rem, 8vw, 6rem);
+}
+
+.lede {
+  font-size: 1.0625rem;
+  line-height: 1.6;
+  color: rgba(240, 240, 250, 0.75);
+  margin-bottom: 2.5rem;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9375rem;
+}
+
+.table th,
+.table td {
+  text-align: left;
+  vertical-align: top;
+  padding: 0.85rem 0;
+  border-bottom: 1px solid rgba(240, 240, 250, 0.12);
+}
+
+.table th[scope='row'] {
+  font-weight: 400;
+  color: rgba(240, 240, 250, 0.6);
+  width: 45%;
+  padding-right: 1rem;
+}
+
+.table td {
+  font-family: var(--font-mono);
+}
+
+.table .group {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: rgba(240, 240, 250, 0.45);
+  padding-top: 2.25rem;
+}
+
+.note {
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: rgba(240, 240, 250, 0.5);
+  margin-top: 1.25rem;
+}
+
+.faq details {
+  border-bottom: 1px solid rgba(240, 240, 250, 0.12);
+}
+
+.faq summary {
+  cursor: pointer;
+  padding: 1.1rem 2rem 1.1rem 0;
+  font-size: 1.0625rem;
+  list-style: none;
+  position: relative;
+}
+
+.faq summary::-webkit-details-marker {
+  display: none;
+}
+
+.faq summary::after {
+  content: '+';
+  position: absolute;
+  right: 0;
+  top: 1.1rem;
+  font-family: var(--font-mono);
+  color: rgba(240, 240, 250, 0.5);
+}
+
+.faq details[open] summary::after {
+  content: '−';
+}
+
+.faq p {
+  padding: 0 0 1.25rem;
+  line-height: 1.6;
+  color: rgba(240, 240, 250, 0.72);
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}

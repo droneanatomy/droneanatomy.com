@@ -42,8 +42,8 @@ const newsArticles: ContentItem[] = [
     },
     {
         id: '4',
-        title: 'Drone Anatomy',
-        excerpt: 'DD National feature highlighting Drone Anatomy.',
+        title: 'DroneAnatomy',
+        excerpt: 'DD National feature highlighting DroneAnatomy.',
         image: '/images/da-news.png',
         date: 'Nov 1, 2025',
         category: 'DD National',
@@ -63,7 +63,7 @@ const newsArticles: ContentItem[] = [
     {
         id: '6',
         title: 'Deeptech, Not Policy Alone, Will Drive India’s Drone Growth',
-        excerpt: 'Drone Anatomy CEO shares insights on India’s drone ecosystem.',
+        excerpt: 'DroneAnatomy CEO shares insights on India’s drone ecosystem.',
         image: 'https://techobserver.in/wp-content/uploads/2025/11/Saurabh-Jha-Founder-and-CEO-of-Drone-Anatomy-1068x601.webp',
         date: 'Nov 3, 2025',
         category: 'Tech Observer',
@@ -73,7 +73,7 @@ const newsArticles: ContentItem[] = [
     {
         id: '8',
         title: 'सौरव झा की उड़ान: गांव के लड़के ने बनाया देशी ड्रोन',
-        excerpt: 'Inspirational story of Drone Anatomy founder on DD National.',
+        excerpt: 'Inspirational story of DroneAnatomy founder on DD National.',
         image: 'https://img.youtube.com/vi/lc4bBdl1VDs/hqdefault.jpg',
         date: 'Nov 15, 2025',
         category: 'DD National',

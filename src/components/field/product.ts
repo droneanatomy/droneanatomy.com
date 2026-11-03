@@ -378,7 +378,7 @@ export const P10_PRO: ProductPage = {
           'Light enough to carry anywhere, saves transportation costs. ' +
           'Made for Indian conditions. Ultra Fast battery charging.',
         ],
-        title: ['Payload Capacity,', '10kg',]
+        title: ['Tank Capacity,', '10 L'],
       },
       {
         key: 'payload',

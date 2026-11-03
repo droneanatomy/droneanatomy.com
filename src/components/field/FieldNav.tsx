@@ -79,7 +79,7 @@ const SECTIONS: NavSection[] = [
       {
         kicker: 'Airframes',
         items: [
-          { label: 'P10 Pro', desc: 'Ten litres over six metres of swath', href: '/products/p10-pro' },
+          { label: 'P10 Pro', desc: '10 L tank, 4–6 m spray width', href: '/products/p10-pro' },
           { label: 'NOXR-1', desc: 'Multirole observation platform', href: '/products/noxr-1' },
           /* Also in Systems > Compact. This section is not rendered today
              — only Systems has a dropdown — but every airframe that
@@ -142,7 +142,7 @@ const SECTIONS: NavSection[] = [
       {
         kicker: 'Agri',
         items: [
-          { label: 'P10 Pro', desc: 'Ten litres over six metres of swath', href: '/products/p10-pro' },
+          { label: 'P10 Pro', desc: '10 L tank, 4–6 m spray width', href: '/products/p10-pro' },
         ],
       },
       {

@@ -52,7 +52,7 @@ export default function ProductsPage() {
 
             <Banner
                 title="P10 Pro"
-                subtitle="An ultra-compact agricultural drone, built specifically for Indian farming across steep terrain and tough rural environments. Ten litres over six metres of swath."
+                subtitle="An ultra-compact agricultural drone, built specifically for Indian farming across steep terrain and tough rural environments. A 10 L tank, a 4–6 m spray width and up to 30 minutes in the air."
                 ctaText="View the P10 Pro"
                 ctaLink="/products/p10-pro"
                 contentPosition="center-left"
